@@ -1,0 +1,37 @@
+Dear All,
+
+Below is a summary of the requirements and procedures for the laboratory assignment.
+The assignment may be completed in teams of up to four students, choosing one of two versions:
+a) The "basic" version: the task involves partitioning a set of numbers into two subsets with equal sums. Solutions for this version are graded on a scale up to 3.5, with the possibility of improving the grade to 4.0.
+b) The "more advanced" version: the task involves partitioning a set of numbers into $k$ subsets such that the sums of the numbers in each subset are as close to one another as possible. Solutions for this version are graded on the full scale up to 5.0.
+
+Input data will be provided in a standardized format to ensure compatibility across all teams. The data will be contained in text files, each describing one or more sets:
+
+    the first line of the file specifies the number of sets contained therein,
+    each subsequent line contains the numbers belonging to a set,
+    a single space separates numbers.
+    Examples of these files are attached to this email.
+
+The submission must consist of a report and a computer program that is compilable and executable on the Windows-based computers in the laboratory where the classes are held.
+The report should include:
+a) Descriptions/definitions of the relevant concepts, accompanied by justifications or proofs. These may be based on existing literature (in which case the source must be cited, along with a brief justification) or developed independently (in which case a brief rationale for the chosen definition is recommended).
+b) Descriptions of the algorithms used to implement these concepts, including an analysis of their computational complexity. If an exact algorithm has exponential complexity, an approximation algorithm with polynomial complexity must be developed.
+c) Results of computational tests, including performance characteristics (computation time as a function of problem size).
+d) A brief technical description of the program, along with detailed instructions for compiling and running it.
+e) Conclusions.
+
+The laboratory assignment may be completed in one of the following modes:
+a) Formal mode (rules are provided on the course webpage:https://homenda.mini.pw.edu.pl/pages/21.
+b) Individual mode.
+In both cases, the deadline for submitting the solution is the first week of December—specifically, no later than Dec 4. Teams are encouraged to submit their solutions earlier.
+
+Laboratory sessions are held on Fridays at 11:15, 12:15, 13:15, and 4:15, in room 203.
+A lab class will be closed:
+
+    once consultations have finished, or
+    if no one arrives within the first 15 minutes.
+    Note: Any deviations from the above arrangements must be agreed upon on an individual basis. Classes are held according to the following dates:
+    Oct 2, Oct 9, Oct 16, Oct 23, Oct 30, Nov 6, Nov 20, Nov 27, completion of laboratory assignments
+    Dec 4, Dec 11 – assessment/grading of solutions submitted by Dec 4,
+
+Notice: lab classes are conducted by MSc, PhD student, Rabiatul Adawiyah, and me. Any mail communication should be addressed to both of us: rabiatul.adawiyah.dokt@pw.edu.pl and wladyslaw.homenda@pw.edu.pl.

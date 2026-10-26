@@ -1,0 +1,36 @@
+Laboratories, realization - fall 2026
+
+Laboratory assignment is split between the following stages:
+
+1. Stage 1: organisation of student teams (who is with which team) and a conceptual solution of the problem (conceptual, meaning that you have a concrete idea, which you are able to express in words). Stage 1 is due on 8 X 2026. On this day students are present in the laboratory and talk with the teachers. No documentation/code is due on this day.
+2. Stage 2: documentation of algorithms, including algorithms pseudocode, exhaustive description, and analysis of their complexity. Due is documentation in an electronic form is sent it via email or brought on a flash drive on 29 X 2026 at the latest.
+3. Stage 3: implementation of the algorithms and sample input preparation. Materials are sent it via email or brought on a flash drive on 20 XI 2026 at the latest. Students present fully working code on faculty computers without compilers installed.
+4. Stage 4: empirical testing of algorithms and a report on those tests. Students deliver all materials (documentation, program, sources, examples) in electronic form on 4 XII 2026 at the latest.
+
+Grading scheme:
+
+1. Stage 1: -
+2. Stage 2: 33% of the grade
+3. Stage 3: 33% of the grade
+4. Stage 4: 34% of the grade
+
+Note, that:
+
+1. a student must obtain at least half of the required points at Stages 2-4 to pass the laboratory,
+2. absence on any Stage is equal to -10% of the final grade of the absentee,
+3. if a documentation is poorly edited, contains many typos, etc, then between 10% and 20% of the Stage's grade will be deducted (concerns Stages 2&4).
+
+Note: each team can establish an individual schedule and procedure for the implementation of the laboratory.
+
+Lectures, realization - fall 2025
+
+1. 2 X 2025. Organisational arrangements. Description of a laboratory task. Primitive recursive functions, definition, examples, sum, product, limited difference etc., bounded sum, bounded product, bounded minimum.
+2. 9 X 2025. Primitive recursive functions: bounded minimum, quotient, reminder, divisor, numer of divisors, prime numbers, proofs of primitive recursivity. Properties of primitive recursive functions: total functions, proof; Cantor encoding/decoding, proof; Godel encoding/decoding, proof - hints. Ackerman function, properties.
+3. 16 X 2025. Ackerman function, proof (basic steps) that is not primitive recursive. The hierarchy of recursive functions, strict inclusions. Equivalence of the classes of Turing machines and the classes of recursive functions, proofs (basic steps).
+4. 23 X 2025. Church hypothesis. Introduction to complexity theory: problem, instance of a problem, algorithm, elementary operations, dominant operations, cost functions, time and space complexity, pessimistic (the worst case) and average complexity, uniform and logarithmic criteria. (AM)
+5. 30 X 2025. Problems, decision problems, decision functions. Polynomial transformation, defintion, transitivity. Classes of decion problems P, NP, coNP, NPC. (AM)
+6. 6 XI 2025. Cook's Theorem, proof. (AM)
+7. 20 XI 2025. Savitch Theorem, proof. Attempts to prove the problem P=NP.
+8. 27 XI 2025. Selected NP complete problems, proofs of NP completness. Revision of material. (AM)
+9. 18 XII 2025. Passing the subject.
+10. 16 I 2024. Passing the subject - retake.
