@@ -119,15 +119,7 @@ The subtraction never underflows: a value is subtracted only if it was added bef
 
 **A YES instance.** Let $a = (3, 1, 4, 2)$, the same set as in Section 4.4. Then $S = 10$ is even, $T = 5$, $n = 4$, so $a_4 = 2$ stays in $B$ and the mask has $3$ bits: bit 0 is $a_1 = 3$, bit 1 is $a_2 = 1$, bit 2 is $a_3 = 4$.
 
-| `mask` | bits (2 1 0) | set $A$ | $\Sigma(A)$ | $= T$? |
-| ------ | ------------ | ------- | ----------- | ------ |
-| 0      | 000          | $\emptyset$ | 0       | no     |
-| 1      | 001          | $\{a_1\}$ | 3         | no     |
-| 2      | 010          | $\{a_2\}$ | 1         | no     |
-| 3      | 011          | $\{a_1, a_2\}$ | 4    | no     |
-| 4      | 100          | $\{a_3\}$ | 4         | no     |
-| 5      | 101          | $\{a_1, a_3\}$ | 7    | no     |
-| 6      | 110          | $\{a_2, a_3\}$ | 5    | **yes** |
+The masks $0, 1, \dots, 6$ give the sums $\Sigma(A) = 0, 3, 1, 4, 4, 7, 5$, and only the last one equals $T$.
 
 At `mask` $= 6$ the algorithm stops after $7$ of the $8$ masks and answers YES with $A = \{a_2, a_3\} = \{1, 4\}$ and $B = \{a_1, a_4\} = \{3, 2\}$, both with sum $5$.
 
@@ -197,14 +189,6 @@ Brute force is **never** the algorithm of choice for the final program; its role
 
 - **Oracle in the tests.** On random multisets with $n \le 20$ (including duplicates, zeros and odd sums) the answers of B, C (when $S$ is small) and E are compared with A, and every returned partition is checked to have two sums equal to $T$.
 - **Baseline in the time experiments.** The time of A against $n$ shows the $2^n$ growth that motivates B (about $2^{n/2}$) and C (about $n \cdot T / 64$), see Sections 3.4 and 4.8.
-
-|                            | A, brute force (Gray) | B, meet in the middle |
-| -------------------------- | --------------------- | --------------------- |
-| Time, $n = 30$             | $2^{29} \approx 5.4 \cdot 10^8$ operations | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
-| Memory                     | $O(n)$                | $16 \cdot 2^{n/2} \approx 0.5$ MB per half   |
-| Practical limit            | $n \le 30$            | $n \le 60$            |
-
-The gain of B over A grows exponentially with $n$. The price is the memory $O(2^{n/2})$, while A needs only $O(n)$; this is the only advantage that A keeps over B.
 
 ---
 
