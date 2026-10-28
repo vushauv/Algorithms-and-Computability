@@ -29,7 +29,7 @@ Checklist of what the instructors ask for (task.md section 3 and 4a-b):
 
 **Balanced partition.** A partition with $\Sigma(A) = \Sigma(B)$, equivalently $\Sigma(A) = \Sigma(M)/2$.
 
-**Discrepancy.** $d(A,B) = |\Sigma(A) - \Sigma(B)|$. A partition is balanced iff $d = 0$. This is the $k=2$ case of the spread objective already chosen in task.md section 6, so the basic and advanced versions share one quality measure.
+**Discrepancy.** $d(A,B) = |\Sigma(A) - \Sigma(B)|$. A partition is balanced iff $d = 0$. This is the quality measure for the approximation algorithm (task.md section 6).
 
 **The decision problem PARTITION.** *Instance:* a multiset $M$ of non-negative integers. *Question:* does a balanced partition exist?
 
@@ -45,10 +45,11 @@ Checklist of what the instructors ask for (task.md section 3 and 4a-b):
 
 ### 1.3 Computational model and number representation
 
-All numbers are **signed 128-bit integers** (see CONSTITUTION.md point 3 and task.md section 6). Consequences used throughout the analysis:
+All numbers are **unsigned 128-bit integers** (see CONSTITUTION.md point 3 and task.md section 6). Consequences used throughout the analysis:
 
 - Comparison, addition and subtraction cost $O(1)$.
-- A value has at most 38 decimal digits. Every input value and the total sum $\Sigma(M)$ must fit; the program checks this on input and aborts with a message if not.
+- Input constraints (task.md section 7): each $0 \le a_i < 10^{38}$, and the total $\Sigma(M) < 2^{128}$. The program checks both on input and aborts with a message if violated. Every intermediate value in every algorithm below is a subset sum or a difference of two subset sums, hence bounded by $\Sigma(M)$, so no other overflow can occur.
+- Limits on $n$ per algorithm are also in task.md section 7 and repeated in the summary table (Section 6).
 - Therefore every complexity bound below is stated in the **unit-cost RAM model**, in terms of $n$ and (for the DP) $\Sigma(M)$ only. We should write this sentence explicitly in the report: it is a standard assumption and the instructors will look for it.
 
 Memory is counted in machine words of 128 bits.
@@ -248,7 +249,7 @@ $O(n \log n)$. Worth one paragraph and a comparison in the Stage 4 experiments; 
 
 ### 5.6 Optional: complete Karmarkar-Karp (CKK)
 
-Korf 1998 turns KK into an anytime exact search: at each step branch on "opposite sides" ($x-y$) vs "same side" ($x+y$), KK first. Exponential worst case, but with pruning it solves many instances fast and returns the KK answer immediately. Only mention if the team wants a third exact method; it would be natural for the advanced version too.
+Korf 1998 turns KK into an anytime exact search: at each step branch on "opposite sides" ($x-y$) vs "same side" ($x+y$), KK first. Exponential worst case, but with pruning it solves many instances fast and returns the KK answer immediately. Only mention if the team wants a third exact method.
 
 ---
 
@@ -256,10 +257,10 @@ Korf 1998 turns KK into an anytime exact search: at each step branch on "opposit
 
 | Algorithm | Exact? | Time | Memory | Depends on magnitude? | Practical range |
 |---|---|---|---|---|---|
-| A. Brute force | yes | $O(n \cdot 2^n)$ | $O(n)$ | no | $n \lesssim 30$ |
-| B. Meet in the middle | yes | $O(n \cdot 2^{n/2})$ | $O(2^{n/2})$ | no | $n \lesssim 50$ |
-| C. Dynamic programming | yes | $O(n \cdot \Sigma)$ | $O(\Sigma)$ bits | **yes** | $\Sigma \lesssim 10^{10}$ |
-| D. Karmarkar-Karp | no | $O(n \log n)$ | $O(n)$ | no | any |
+| A. Brute force | yes | $O(n \cdot 2^n)$ | $O(n)$ | no | $n \le 30$ |
+| B. Meet in the middle | yes | $O(n \cdot 2^{n/2})$ | $O(2^{n/2})$ | no | $n \le 60$ |
+| C. Dynamic programming | yes | $O(n \cdot \Sigma)$ | $O(\Sigma)$ bits | **yes** | $\Sigma/2 \le 10^{10}$ |
+| D. Karmarkar-Karp | no | $O(n \log n)$ | $O(n)$ | no | $n \le 10^6$ |
 
 ---
 
@@ -271,8 +272,8 @@ Use the first set of `AaC_example_1.txt`: $\{11, 22, 33, 44, 55, 66, 77, 1, 2, 3
 
 ## 8. Notes for Stages 3 and 4 (not part of the Stage 2 PDF)
 
-- Number type: `using Num = __int128;` in one header, with `parse(string) -> Num` (reject $>38$ digits, reject non-digits, allow leading zeros) and `to_string(Num)`. Overflow check on summation via `__builtin_add_overflow`.
-- Masks in Algorithm B: `uint64_t` suffices for $n \le 128$; we cap $n$ for B at 60 anyway because of memory.
+- Number type: `using Num = unsigned __int128;` in one header, with `parse(string) -> Num` (reject $>38$ digits, reject non-digits, allow leading zeros) and `to_string(Num)`. Overflow check on summation via `__builtin_add_overflow`. Differences in Karmarkar-Karp are always $x - y$ with $x \ge y$, so unsigned is safe there; the discrepancy $|\Sigma(A)-\Sigma(B)|$ is computed as max minus min.
+- Masks in Algorithm B: `uint64_t` suffices since $n \le 60$ for B (task.md section 7).
 - Testing: random multisets with $n \le 20$, compare A, B, C (when $\Sigma$ small) for the YES/NO answer and verify the returned partitions sum to $T$. Check D's returned $d$ against the partition it returns.
 - Experiments: (i) time vs $n$ at fixed 25-digit magnitude for A, B, D; (ii) time vs magnitude at fixed $n = 20$ for B vs C; (iii) discrepancy of D vs greedy vs optimum (from B) for $n \le 40$.
 

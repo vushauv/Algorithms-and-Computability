@@ -9,13 +9,16 @@ University lab project (Algorithms and Computability, fall 2026): the **partitio
 
 ## Where we are
 
-**Stage 2 (documentation of algorithms), due Oct 30, 2026.** No code yet. We are in the **research phase**. We are deciding:
-- which version to pick (basic: 2 subsets with equal sums; advanced: k subsets with sums as close as possible),
-- which mode to use (formal or individual),
-- how to represent huge numbers,
-- which literature to reference.
+**Stage 2 (documentation of algorithms), due Oct 30, 2026.** No code yet. We are writing the Stage 2 document.
 
-Open decisions are in `task.md` section 6. Until they are settled, treat both versions as in scope.
+Decided (details in `task.md` section 6):
+- **Version: basic.** Partition a multiset into **2 subsets with equal sums**. The advanced version (k subsets) is out of scope; do not mention it in documents.
+- **Numbers: unsigned 128-bit integers** (`unsigned __int128`), with input constraints in `task.md` section 7.
+- **Language: C++**, prebuilt static Windows executable for the demo.
+
+Still open: mode (formal or individual), which literature to reference.
+
+The Stage 2 draft is `docs/stage2_basic.md`.
 
 ## Documents
 
@@ -26,6 +29,6 @@ The final documents are written in LaTeX and submitted as PDF. In this repo we d
 - This is a research and discussion phase: answer questions, compare options, point to sources. Don't write code or documents unless asked.
 - The Stage 2 deliverable is a PDF with pseudocode, a detailed description and a complexity analysis for every algorithm. Editing quality is graded.
 - Any exact exponential algorithm needs a polynomial-time approximation next to it.
-- Inputs are multisets with numbers of 25+ digits, so handle duplicates and big integers.
+- Inputs are multisets with numbers of about 25 digits, so handle duplicates and respect the 128-bit limits and input constraints in `task.md` section 7.
 - Cite sources with a short justification. Don't invent references; say so if one can't be verified.
 - When a decision is made, update `task.md` section 6, not just the chat.
