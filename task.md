@@ -6,11 +6,11 @@ Sources: `raw_regulations/` (course website, emails of 16.10.26 and 23.10.26, in
 
 ## 1. The problem
 
-Teams of up to 4 students. Both versions are currently considered, and we have not picked one yet.
+Teams of up to 4 students. The course offers two versions; **we chose the basic version** (decision of Oct 28, 2026). The advanced version is listed only for the record and is not mentioned in our documents.
 
 | Version | Task | Max grade |
 |---|---|---|
-| **a) Basic** | Partition a set of numbers into **2 subsets with equal sums** | up to 3.5, can be improved to 4.0 |
+| **a) Basic (chosen)** | Partition a set of numbers into **2 subsets with equal sums** | up to 3.5, can be improved to 4.0 |
 | **b) Advanced** | Partition a set of numbers into **k subsets** whose sums are as close to each other as possible | full scale, up to 5.0 |
 
 ### Input format (same for all teams)
@@ -84,7 +84,23 @@ The Stage 2 submission serves as the formal choice of procedure. We need to deci
 
 ## 6. Open decisions
 
-- [ ] Version: **basic** (2 subsets, equal sums, grade cap 4.0) or **advanced** (k subsets, grade up to 5.0). Until we choose, the Stage 2 draft should cover both.
+- [x] Version: **basic** (2 subsets with equal sums, grade cap 4.0). Decided Oct 28, 2026. The Stage 2 draft is `docs/stage2_basic.md`.
 - [ ] Mode: formal or individual.
 - [x] Implementation language: **C++**. It must still compile and run on the Windows lab machines, and the demo machines have no compiler, so we need a prebuilt Windows executable (ideally statically linked so it needs no extra DLLs).
-- [ ] Number representation. C++ has no built-in big integers, and the big-number example suggests arbitrary precision, so we need our own big-integer class or a library that is easy to ship on Windows.
+- [x] Quality measure for the approximation algorithm: the **discrepancy** $d = |\mathrm{sum}(A) - \mathrm{sum}(B)|$. It is 0 exactly when an equal-sum partition exists, so the exact algorithms decide the problem and the approximation minimises $d$.
+- [x] Number representation: **unsigned 128-bit integers** (`unsigned __int128` on GCC/Clang, which is what we build the static Windows executable with). Decided Oct 28, 2026. Rationale: 64 bits (19 digits) cannot hold the 25-digit values in `AaC_example_2.txt`; 128 bits hold values up to $2^{128}-1 \approx 3.4 \cdot 10^{38}$ (39 digits); inputs are non-negative so no sign bit is wasted; every arithmetic operation is $O(1)$, which keeps complexity bounds free of a digit-length factor. The concrete limits are in section 7; parsing and summation check them and fail with a clear error, never silently. The type sits behind one alias so it can be swapped for a big-integer class if the instructors ever test larger inputs. Since `std::cin`/`std::cout` do not support `__int128`, we write our own decimal parser and printer.
+
+## 7. Input constraints (our own, set Oct 28, 2026)
+
+The instructors gave no limits beyond the two examples, so we fix our own and state them in the report and in the program's error messages. They follow from the 128-bit representation and from the memory of the exact algorithms. If the instructors answer the question in `TODO.md`, these get revised.
+
+| Quantity | Constraint | Reason |
+|---|---|---|
+| Value of an element $a_i$ | integer, $0 \le a_i < 10^{38}$ (at most 38 decimal digits, leading zeros allowed) | fits in `unsigned __int128` with headroom; the examples use at most 25 digits |
+| Total sum of one set $S = \sum a_i$ | $S < 2^{128}$, checked at runtime with overflow detection | every intermediate sum in every algorithm is bounded by $S$ |
+| Number of elements per set $n$ | $1 \le n \le 10^6$ for the approximation algorithm; exact algorithms are run only for $n \le 60$ (meet in the middle) and $n \le 30$ (brute force), otherwise the program reports that the exact method is skipped | memory $O(2^{n/2})$ of meet in the middle; time $O(2^n)$ of brute force |
+| Dynamic programming over sums | run only when $S/2 \le 10^{10}$ (about 1.25 GB as a bitset), otherwise skipped with a message | table size is $O(S)$ bits |
+| Number of sets in a file $N$ | $1 \le N \le 10^4$ | arbitrary; sets are processed independently, one after another |
+| Format | decimal digits only, single spaces, Unix or Windows line endings, optional trailing newline | the examples |
+
+Anything outside these bounds is rejected with a clear error message and a non-zero exit code (CONSTITUTION point 3). The thresholds for the exact algorithms are configurable on the command line so that the Stage 4 experiments can push past them deliberately.

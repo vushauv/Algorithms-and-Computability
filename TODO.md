@@ -4,4 +4,5 @@
   - maximum number of sets in a file,
   - maximum number of elements in a set,
   - maximum size of a number (digits). The only evidence is `raw_regulations/AaC_example_2.txt` with about 25 digits.
-  - whether zero and duplicates are allowed, and whether `k` is given in the file or by us.
+  - whether zero and duplicates are allowed.
+  Until answered, we use our own constraints from `task.md` section 7.
