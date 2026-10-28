@@ -137,9 +137,9 @@ SUBSET-SUMS(b[1..m])
 
 ### 3.3 Correctness
 
-Every subset $A$ of $\{1..n\}$ decomposes uniquely as $A \cap L$ plus $A \cap R$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. So a balanced $A$ exists iff the sum $T$ is attainable as one element of $LS$ plus one of $RS$.
+Every subset $A$ of $\{1..n\}$ decomposes uniquely as $A \cap L$ + $A \cap R$ = $A$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. So a balanced $A$ exists iff the sum $T$ is attainable as one element of $LS$ plus one of $RS$.
 
-Two-pointer invariant: when the sweep advances $i$ because $LS[i] + RS[j] < T$, no $RS[j'] $ with $j' \ge j$ (all smaller or equal) can complete $LS[i]$ to $T$, and all $RS[j']$ with $j' < j$ were already shown too large for $LS[i'] \le LS[i]$... (write this out carefully in the final text: standard argument for "pair with given sum in two sorted arrays"). Symmetric for advancing $j$.
+Two-pointer invariant: initially, the smallest sum from $LS$ and largest sum from $RS$ are summed and compared against $T$. If not equal, depending whether the sum is smaller or larger than $T$, $i$ or $j$ is incremented respectively - advancing the sweep is symmetrical. Without loss of generality, consider the case when the sweep advances incrementing $i$ because $LS[i] + RS[j] < T$. Then, no $RS[j']$ with $j' \ge j$ (all smaller or equal) can complete $LS[i]$ to $T$, and all $RS[j']$ with $j' < j$ were already shown too large for $LS[i'] \le LS[i]$ - a standard argument for a pair with given sum in two sorted arrays. Due to symmetry, the same argument applies for advancing $j$.
 
 Duplicates: repeated values produce repeated sums in $LS$ or $RS$; the sweep handles equal keys correctly because it compares sums, not identities. Alternatively, note that the enumeration is over masks, so duplicates never need separate treatment.
 
@@ -154,7 +154,8 @@ Let $h = \lfloor n/2 \rfloor$.
 - Independent of the magnitude of $a_i$ (under the 128-bit model). Compare with the DP below.
 - Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 60$ gives $2^{30}$ entries of 16 bytes plus masks, about 20 GB per side, infeasible. So $n \le 50$ or so on the lab machines.
 
-Possible improvement to mention (not to implement unless time allows): Schroeppel-Shamir 1981 reduces memory to $O(2^{n/4})$ with the same time.
+### 3.5 Possible further improvement
+ Note: A possible further improvement to mention (not to implement unless time allows): Schroeppel-Shamir 1981 reduces memory to $O(2^{n/4})$ with the same time.
 
 ---
 
