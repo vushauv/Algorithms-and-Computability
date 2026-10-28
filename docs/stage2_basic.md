@@ -49,7 +49,7 @@ All numbers are **unsigned 128-bit integers** (see CONSTITUTION.md point 3 and t
 
 - Comparison, addition and subtraction cost $O(1)$.
 - Input constraints (task.md section 7): each $0 \le a_i < 10^{38}$, and the total $\Sigma(M) < 2^{128}$. The program checks both on input and aborts with a message if violated. Every intermediate value in every algorithm below is a subset sum or a difference of two subset sums, hence bounded by $\Sigma(M)$, so no other overflow can occur.
-- Limits on $n$ per algorithm are also in task.md section 7 and repeated in the summary table (Section 6).
+- Limits on $n$ per algorithm are also in task.md section 7 and repeated in the summary table (Section 7).
 - Therefore every complexity bound below is stated in the **unit-cost RAM model**, in terms of $n$ and (for the DP) $\Sigma(M)$ only. We should write this sentence explicitly in the report: it is a standard assumption and the instructors will look for it.
 
 Memory is counted in machine words of 128 bits.
@@ -253,7 +253,57 @@ Korf 1998 turns KK into an anytime exact search: at each step branch on "opposit
 
 ---
 
-## 6. Summary table (goes near the end of the report)
+## 6. Algorithm E: Final algorithm (input-dependent selection)
+
+**Role.** This is the algorithm the program actually runs. Algorithms A-D are its building blocks. It looks at the size $n$ and the total sum $S$ of the input, runs the cheapest exact method that is feasible under the limits of task.md section 7, and falls back to the Karmarkar-Karp approximation when no exact method is feasible. It always returns a partition and its discrepancy, and it says whether the answer is exact.
+
+### 6.1 Idea
+
+The exact methods have complementary ranges: dynamic programming is cheap when the numbers are small regardless of $n$, meet in the middle is cheap when $n$ is small regardless of the numbers, and brute force is only a reference. Karmarkar-Karp always runs: it is $O(n \log n)$, it gives the answer immediately when its discrepancy is 0, and it is the result we report when the exact methods are out of range.
+
+### 6.2 Pseudocode
+
+```
+SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)
+    S ← Σ a[i]                                   // with overflow check
+    if S is odd then
+        (A, B, d) ← KARMARKAR-KARP(a)
+        return (A, B, d, exact = TRUE)           // no balanced partition exists, d > 0 is a certificate-free answer
+    T ← S / 2
+    (A, B, d) ← KARMARKAR-KARP(a)                // O(n log n), always
+    if d = 0 then return (A, B, 0, exact = TRUE)
+    if T ≤ T_DP then
+        if DP-PARTITION(a) = YES then return (A', B', 0, exact = TRUE)   // A', B' reconstructed from the table
+        else return (A, B, d, exact = TRUE)      // DP proved no balanced partition; KK result is reported
+    if n ≤ N_MITM then
+        if MEET-IN-THE-MIDDLE(a) = YES then return (A', B', 0, exact = TRUE)
+        else return (A, B, d, exact = TRUE)
+    return (A, B, d, exact = FALSE)              // out of range for exact methods: approximation only
+```
+
+The thresholds `N_MITM` and `T_DP` are the limits from task.md section 7 and are command-line options, so the Stage 4 experiments can move them.
+
+### 6.3 Correctness
+
+- When `exact = TRUE` and $d = 0$, the returned partition is balanced (verified by the exact algorithm or by Karmarkar-Karp's own discrepancy, which equals the discrepancy of its partition, Section 5.3).
+- When `exact = TRUE` and $d > 0$, either $S$ is odd or an exact algorithm answered NO, so no balanced partition exists and the returned partition is the Karmarkar-Karp one. We report its discrepancy but make no claim that it is minimal; the decision answer is exact, the discrepancy is a heuristic.
+- When `exact = FALSE`, the input is beyond both exact methods; the answer is the Karmarkar-Karp partition and the program states that it is an approximation.
+
+Note for the report: the odd-sum case and the "exact algorithm says NO" case both answer the **decision** problem exactly. Minimising the discrepancy exactly when no balanced partition exists is a different, harder task (the optimisation version) and is out of scope; meet in the middle could be extended to it with a closest-pair sweep, worth one sentence.
+
+### 6.4 Complexity
+
+- Odd $S$ or Karmarkar-Karp succeeds: $O(n \log n)$.
+- Dynamic programming branch: $O(n \log n + n \cdot T)$ with $T \le T_{DP}$.
+- Meet-in-the-middle branch: $O(n \log n + n \cdot 2^{n/2})$ with $n \le N_{MITM}$.
+- Out of range: $O(n \log n)$.
+- Memory: the maximum of the branches taken, $O(T)$ bits or $O(2^{n/2})$ words, otherwise $O(n)$.
+
+The worst case is still exponential, which is unavoidable unless P = NP (Section 1.2); the selection only guarantees that the exponential branch is entered when it is known to finish within the limits.
+
+---
+
+## 7. Summary table (goes near the end of the report)
 
 | Algorithm | Exact? | Time | Memory | Depends on magnitude? | Practical range |
 |---|---|---|---|---|---|
@@ -261,16 +311,17 @@ Korf 1998 turns KK into an anytime exact search: at each step branch on "opposit
 | B. Meet in the middle | yes | $O(n \cdot 2^{n/2})$ | $O(2^{n/2})$ | no | $n \le 60$ |
 | C. Dynamic programming | yes | $O(n \cdot \Sigma)$ | $O(\Sigma)$ bits | **yes** | $\Sigma/2 \le 10^{10}$ |
 | D. Karmarkar-Karp | no | $O(n \log n)$ | $O(n)$ | no | $n \le 10^6$ |
+| E. Final (selection) | yes within limits, else approx. | max of the branch taken | max of the branch taken | via C only | any |
 
 ---
 
-## 7. Worked example (one for each algorithm)
+## 8. Worked example (one for each algorithm)
 
 Use the first set of `AaC_example_1.txt`: $\{11, 22, 33, 44, 55, 66, 77, 1, 2, 3, 4, 5, 6, 7, 8\}$, $n = 15$, $\Sigma = 344$, $T = 172$. TODO: trace B, C (small version) and D by hand or with a throwaway script, and paste the traces. Also show the odd-sum early exit on $\{999, 889, 778, 667, 123, 456, 133\}$ ($\Sigma = 4045$, odd, so NO immediately).
 
 ---
 
-## 8. Notes for Stages 3 and 4 (not part of the Stage 2 PDF)
+## 9. Notes for Stages 3 and 4 (not part of the Stage 2 PDF)
 
 - Number type: `using Num = unsigned __int128;` in one header, with `parse(string) -> Num` (reject $>38$ digits, reject non-digits, allow leading zeros) and `to_string(Num)`. Overflow check on summation via `__builtin_add_overflow`. Differences in Karmarkar-Karp are always $x - y$ with $x \ge y$, so unsigned is safe there; the discrepancy $|\Sigma(A)-\Sigma(B)|$ is computed as max minus min.
 - Masks in Algorithm B: `uint64_t` suffices since $n \le 60$ for B (task.md section 7).
@@ -279,7 +330,7 @@ Use the first set of `AaC_example_1.txt`: $\{11, 22, 33, 44, 55, 66, 77, 1, 2, 3
 
 ---
 
-## 9. References (to verify before submission)
+## 10. References (to verify before submission)
 
 - R. M. Karp, "Reducibility among combinatorial problems", in *Complexity of Computer Computations*, 1972. (NP-completeness of PARTITION.)
 - M. R. Garey, D. S. Johnson, *Computers and Intractability*, 1979. (Weak vs strong NP-hardness, pseudo-polynomial DP, Section 4.2.)

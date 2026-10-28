@@ -15,6 +15,7 @@ Decided (details in `task.md` section 6):
 - **Version: basic.** Partition a multiset into **2 subsets with equal sums**. The advanced version (k subsets) is out of scope; do not mention it in documents.
 - **Numbers: unsigned 128-bit integers** (`unsigned __int128`), with input constraints in `task.md` section 7.
 - **Language: C++**, prebuilt static Windows executable for the demo.
+- **Final algorithm:** the program picks an algorithm depending on the input (small sums: dynamic programming; small n: meet in the middle; otherwise Karmarkar-Karp approximation). The individual algorithms are documented separately, then the selection algorithm on top (`docs/stage2_basic.md` section 6).
 
 Still open: mode (formal or individual), which literature to reference.
 
