@@ -64,7 +64,7 @@ Memory is counted in machine words of 128 bits.
 
 Every partition $(A, B)$ of the indices $\{1, \dots, n\}$ corresponds to a bit vector $x \in \{0,1\}^n$ with $x_i = 1$ if and only if $i \in A$. The algorithm enumerates these vectors one after another, computes $\Sigma(A)$ for each, and stops as soon as $\Sigma(A) = T$. If the enumeration ends without a hit, no balanced partition exists.
 
-**Halving trick.** Swapping $A$ and $B$ gives the same partition and the same discrepancy, so we may assume that index $n$ lies in $B$. Only the first $n-1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. The vector is stored as an integer `mask` in $\{0, \dots, 2^{n-1} - 1\}$, where bit $i-1$ of `mask` is $x_i$.
+**Halving trick.** Swapping $A$ and $B$ gives the same two parts in the opposite order, with the same discrepancy, and a balanced pair stays balanced. So we may assume that index $n$ lies in $B$. Only the first $n-1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. The vector is stored as an integer `mask` in $\{0, \dots, 2^{n-1} - 1\}$, where bit $i-1$ of `mask` is $x_i$.
 
 **Why indices and not values.** The input may contain repeated values (course email of 16.10.26). The enumeration runs over index sets, so equal values at different positions are different elements and no special treatment of duplicates is needed. Elements equal to $0$ are handled in the same way.
 
@@ -90,7 +90,7 @@ For $n = 1$ the loop has the single value `mask` $= 0$ with `sumA` $= 0$, so the
 
 In the simple version every mask recomputes its sum from scratch in $n - 1$ steps. If the masks are visited in the order of the **binary reflected Gray code**, two consecutive masks differ in exactly one bit, so the sum can be updated with one addition or one subtraction.
 
-The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$ ($\oplus$ is bit-wise exclusive or, $\gg$ is a right shift). Two facts are used:
+Let $m = n - 1$ be the number of free bits. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$ ($\oplus$ is bit-wise exclusive or, $\gg$ is a right shift). Two facts are used:
 
 1. $k \mapsto g_k$ is a bijection of $\{0, \dots, 2^{m} - 1\}$ onto itself, so every mask is visited exactly once.
 2. $g_k \oplus g_{k-1} = 2^{j}$ where $j$ is the position of the lowest set bit of $k$ (`ctz(k)`, count of trailing zeros). So going from $g_{k-1}$ to $g_k$ flips only bit $j$.
@@ -113,7 +113,7 @@ BRUTE-FORCE-GRAY(a[1..n])
     return NO
 ```
 
-The subtraction never underflows: a value is subtracted only if it was added before and not yet removed, so it is part of `sumA`. The invariant is that `sumA` $= \sum_{i:\,\text{bit}(i-1)\text{ of }g = 1} a_i$ after every step. The documented baseline for Stage 4 is the simple version of Section 2.2; the Gray-code version is the one we implement for speed, and the two are compared in the tests (they must give the same YES/NO answer).
+The subtraction never underflows: a value is subtracted only if it was added before and not yet removed, so it is part of `sumA`. The invariant is that `sumA` $= \sum_{i:\,\text{bit}(i-1)\text{ of }g = 1} a_i$ after every step. The simple version of Section 2.2 is the documented reference and the test oracle, because it is the one that is obviously correct. We propose to implement the Gray-code version as well, for speed in the Stage 4 measurements, and to check it against the simple version in the tests (the two must give the same YES/NO answer). Whether the Gray-code version is implemented is a team decision.
 
 ### 2.4 Example
 
@@ -151,7 +151,7 @@ It stops after $5$ masks with the same partition $A = \{a_2, a_3\}$. Each step c
 
 _Proof._ The bits of the mask are the indicator vector of $A$. A bijection of the range permutes the masks and so visits each once. $\square$
 
-**Lemma 1 (reduction to $n \in B$).** A balanced partition of $\{1, \dots, n\}$ exists if and only if there is a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$.
+**Lemma 1 (reduction to $n \in B$).** Let $S$ be even and $T = S/2$. A balanced partition of $\{1, \dots, n\}$ exists if and only if there is a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$.
 
 _Proof._ ($\Leftarrow$) Take $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) = S - T = T = \Sigma(A)$. ($\Rightarrow$) Let $(A, B)$ be balanced. If $n \in B$, then $A \subseteq \{1, \dots, n-1\}$ and $\Sigma(A) = T$ because a balanced partition has $\Sigma(A) = S/2$. Otherwise $n \in A$, and then $(B, A)$ is also balanced, has $n$ in its second part, and its first part $B \subseteq \{1, \dots, n-1\}$ has $\Sigma(B) = T$. $\square$
 
@@ -176,7 +176,7 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.3 and
 
 **Constraints that the program enforces** (task.md section 7):
 
-1. **Preconditions.** Each $0 \le a_i < 10^{38}$ and $S < 2^{128}$ is checked with overflow detection (`__builtin_add_overflow`) while summing. If $S$ is odd, the program answers NO without enumerating.
+1. **Preconditions.** The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked with overflow detection (`__builtin_add_overflow`) while summing. If $S$ is odd, the program answers NO without enumerating.
 2. **Bound on $n$.** The exact algorithm is run only for $n \le 30$. For a larger $n$ the program reports SKIPPED together with the violated condition. The threshold can be changed on the command line so that the Stage 4 experiments can go past it on purpose.
 
 **Limitations.** The time doubles with every additional element. Assuming $10^{9}$ Gray-code steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4:
@@ -189,7 +189,7 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.3 and
 | 50  | $5.6 \cdot 10^{14}$ | about $6.5$ days             |
 | 60  | $5.8 \cdot 10^{17}$ | about $18$ years             |
 
-The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it takes tens of seconds rather than seconds. This is why the limit is $n \le 30$, and why sets with $n$ in the hundreds, as in `AaC_example_2.txt`, cannot be solved by this algorithm, whatever the size of the numbers.
+The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it takes tens of seconds rather than seconds. This is the reason for the limit $n \le 30$. The size of the numbers plays no role: `AaC_example_2.txt` has 25-digit numbers but only $n = 10$ elements, so it needs just $2^{9} = 512$ masks and is solved instantly, while a set with $n = 100$ small numbers is out of reach for this algorithm.
 
 ### 2.8 When to use it
 
@@ -200,11 +200,11 @@ Brute force is **never** the algorithm of choice for the final program; its role
 
 |                            | A, brute force (Gray) | B, meet in the middle |
 | -------------------------- | --------------------- | --------------------- |
-| Time, $n = 30$             | $2^{29} \approx 5.4 \cdot 10^8$ steps | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
+| Time, $n = 30$             | $2^{29} \approx 5.4 \cdot 10^8$ operations | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
 | Memory                     | $O(n)$                | $16 \cdot 2^{n/2} \approx 0.5$ MB per half   |
 | Practical limit            | $n \le 30$            | $n \le 60$            |
 
-The gain of B over A grows exponentially with $n$, and the price is the memory $O(2^{n/2})$, which is the only advantage that remains to A.
+The gain of B over A grows exponentially with $n$. The price is the memory $O(2^{n/2})$, while A needs only $O(n)$; this is the only advantage that A keeps over B.
 
 ---
 
