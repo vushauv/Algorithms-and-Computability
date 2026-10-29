@@ -24,4 +24,4 @@
 After these checks every algorithm may assume $\Sigma(M) > 0$, hence $T > 0$. Then:
 
 - **Non-empty parts.** Any index set $A$ with $\Sigma(A) = T$ is non-empty, because $T > 0$. Its complement $B$ satisfies $\Sigma(B) = \Sigma(M) - T = T > 0$, so it is non-empty as well.
-- **Consequence for the proofs.** The requirement of non-empty parts never appears in the correctness proofs. If $\Sigma(M) > 0$, a pair of index sets with equal sums is already a balanced partition in the sense above, even if empty parts were allowed with sum $0$.
+- **Consequence for the algorithms.** To solve the decision problem, an algorithm only has to find an index set $A$ with $\Sigma(A) = T$, or to establish that none exists. Every such $A$ and its complement $B$ form a partition into two non-empty parts, by the previous item. Hence no correctness proof needs an additional argument that the parts are non-empty.
