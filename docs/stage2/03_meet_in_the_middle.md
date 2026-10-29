@@ -134,16 +134,16 @@ Let $h = \lfloor n/2 \rfloor$.
 - Sweep: $O(2^{h} + 2^{n-h})$.
 - **Total time: $O(n \cdot 2^{n/2})$. Memory: $O(2^{n/2})$ words.**
 - Independent of the magnitude of $a_i$ (under the 128-bit model). Compare with the DP below.
-- Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 44$ gives $2^{22}$ entries of 16 bytes plus 8-byte masks, about 100 MB per side. $n = 60$ gives $2^{30}$ entries, about 25 GB per side, infeasible. So $n \le 44$ in practice.
+- Practical limit: memory. Each side stores $2^{n/2}$ sums of 16 bytes, so the memory doubles with every two additional elements. For a few tens of elements the lists are small, for about forty to fifty elements they take hundreds of megabytes to gigabytes, and for sixty elements they are far beyond the memory of a computer. The bound $N_{MITM}$ (Section 1.4) is therefore a few tens.
 
 ### 3.6 Constraints and limitations
 
 **Constraints that the program enforces**:
 
 1. **Preconditions.** Each value satisfies $0 \le a_i < 10^{38}$, and the total sum satisfies $S < 2^{128}$. The parser and summation check these conditions and report an error instead of truncating a value.
-2. **Bound on $n$.** The exact algorithm is run only when $n \le 44$, so that the subset lists fit in memory (about 100 MB per half). A larger input is reported as SKIPPED because the subset lists may require too much memory. The threshold is configurable for Stage 4 experiments.
+2. **Bound on $n$.** The exact algorithm is run only when $n \le N_{MITM}$ (Section 1.4), so that the subset lists fit in memory. A larger input is reported as SKIPPED. The bound is a parameter of the program.
 
-**Limitations.** The algorithm avoids dependence on the numeric magnitude of the values, but its memory and running time still grow exponentially with the number of elements. At $n=60$, each half has about $2^{30}$ subsets, so storing sums and masks requires many gigabytes. Meet in the middle is therefore unsuitable for large $n$, even when the input values are small. For such inputs the program uses dynamic programming when the target is small, or the polynomial-time approximation when neither exact method is feasible.
+**Limitations.** The algorithm avoids dependence on the numeric magnitude of the values, but its memory and running time still grow exponentially with the number of elements. For sixty elements each half has about $2^{30}$ subsets, so storing the sums requires many gigabytes. Meet in the middle is therefore unsuitable for large $n$, even when the input values are small. For such inputs the program uses dynamic programming when the target is small, or the polynomial-time approximation when neither exact method is feasible.
 
 ### 3.7 When to use it
 
