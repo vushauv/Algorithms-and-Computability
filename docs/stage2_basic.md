@@ -24,19 +24,17 @@ We present four algorithms.
 
 None of the four algorithms is efficient for every input. Section 6 defines a final algorithm that selects, for each input, the algorithm that best matches it. For each algorithm we give pseudocode, a description, a correctness proof and a complexity analysis.
 
-The remainder of this section is organised as follows: the assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
+The remainder of this section is organised as follows: the constraints and assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
 
-**Assumptions.** The problem statement fixes only the form of the input, so we state our assumptions explicitly. The definitions, the proofs and the complexity bounds below all rest on them. An implementation rejects an input that violates one of them with an error message; it never truncates or wraps a value around silently. Some assumptions are repeated where they are used.
+**Constraints on the input.** The input is a multiset $M = \{a_1, \dots, a_n\}$ of non-negative integers. Equal values are different elements and are distinguished by their position $1, \dots, n$. Both parts of a partition must be non-empty, because we do not assign a sum to the empty part, in particular we do not set it to $0$. Consequently $n \ge 2$, and a multiset with one element has no partition.
+
+**Assumptions.** The analysis also rests on the following assumptions. An input that violates one of them is rejected with an error message and is never truncated.
 
 | Assumption | Reason |
 | --- | --- |
-| Every element is a non-negative integer. Zero is allowed. | All algorithms rely on integer arithmetic, in particular on the parity test of the total and on the dynamic programming table indexed by sums. Zero fits the definitions and needs no special case: every algorithm treats it like any other value. |
-| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | Equal elements are different items of the multiset. Each of them must be placed in a group on its own. |
-| The multiset has at least two elements, $n \ge 2$. | A partition into two non-empty groups needs at least two elements. A multiset with a single element has no such partition and is reported as an error. |
-| Both groups of a partition are non-empty. | We read a partition into *two* groups as one into two non-empty groups. The requirement costs nothing: as shown under *Trivial cases* in Section 1.2, it matters only when all elements are $0$, where the group $\{1\}$ against the rest is used. |
-| Every element satisfies $0 \le a_i < 10^{38}$, and the total satisfies $\Sigma(M) < 2^{128}$. | Numbers are unsigned 128-bit integers (Section 1.4). The bound on the total is an assumption and is not repaired by arithmetic modulo $2^{128}$: equal remainders do not imply equal sums, and the target $\Sigma(M)/2$ cannot be recovered from the remainder of $\Sigma(M)$. An input whose total reaches $2^{128}$ is rejected. For numbers of $25$ digits the bound allows more than $10^{13}$ elements. |
-| A file may contain several multisets. Each is solved on its own, and the answers are independent. | The multisets do not interact. |
-| Each exponential algorithm is applied only within a stated range of $n$ or of the target sum (Section 1.4 and the summary table in Section 7). | Outside its range the algorithm may not finish or may not fit in memory. The final algorithm of Section 6 then falls back to the approximation. |
+| $0 \le a_i < 10^{38}$ | Numbers are unsigned 128-bit integers (Section 1.4); numbers of $25$ digits are covered. |
+| $\Sigma(M) < 2^{128}$ | Sums must fit in 128 bits. Arithmetic modulo $2^{128}$ is not used, because it would lose the target $\Sigma(M)/2$. |
+| Each exponential algorithm is applied only within a stated range of $n$ or of the target sum. | Outside its range it may not finish or fit in memory; Section 6 then uses the approximation. |
 
 ### 1.2 Definitions (report item a)
 
