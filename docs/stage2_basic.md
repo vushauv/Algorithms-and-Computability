@@ -10,7 +10,7 @@ For example, $\{3, 1, 4, 2\}$ splits into $\{3, 2\}$ and $\{1, 4\}$, both with s
 
 This gives two problems, which are defined formally in Section 1.2.
 
-- **The decision problem.** Does an equal split exist? If yes, we also want to see one.
+- **The decision problem.** Does an equal split exist? As a problem it asks only for YES or NO. Our algorithms also return such a split when the answer is YES, so that the answer can be checked by adding up its elements.
 - **The optimisation problem.** Find a split whose two sums are as close as possible. The distance between the sums is called the *discrepancy*; an equal split is exactly a split with discrepancy $0$.
 
 Both problems are hard. The decision problem is NP-complete [Karp 1972], so no known algorithm is fast on every input. It is, however, hard in a mild way: if the numbers are small, a dynamic programming table solves it quickly [Garey and Johnson 1979]. So there are two sources of difficulty, many elements and large numbers, and different algorithms suffer from different ones. This is the story of this report.
