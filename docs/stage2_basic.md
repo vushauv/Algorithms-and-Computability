@@ -22,7 +22,7 @@ We present four algorithms.
 - **Section 4, dynamic programming.** It computes the set of reachable subset sums. Time $O(n \cdot \Sigma(M))$, which is pseudo-polynomial.
 - **Section 5, Karmarkar-Karp differencing.** This is a polynomial-time approximation algorithm, with time $O(n \log n)$ [Karmarkar and Karp 1982]. It always returns a partition, and its discrepancy is bounded (Section 5.4). We also quote its expected behaviour on random inputs [Yakir 1996].
 
-None of the four algorithms is efficient for every input. Section 6 defines a final algorithm that selects, for each input, the cheapest method whose limits are satisfied. It applies dynamic programming if $\Sigma(M)/2 \le T_{DP}$, meet in the middle if $n \le N_{MITM}$, and the approximation otherwise; the limits $T_{DP}$ and $N_{MITM}$ are fixed in Section 6. For each algorithm we give pseudocode, a description, a correctness proof and a complexity analysis.
+None of the four algorithms is efficient for every input. Section 6 defines a final algorithm that selects, for each input, the algorithm that best matches it. For each algorithm we give pseudocode, a description, a correctness proof and a complexity analysis.
 
 The remainder of this section is organised as follows: the assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
 
