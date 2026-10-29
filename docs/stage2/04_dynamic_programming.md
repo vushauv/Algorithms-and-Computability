@@ -124,14 +124,14 @@ Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations o
 **Constraints that the program enforces**:
 
 1. **Preconditions of the table.** The table is built only if $S$ is even, $\max a_i \le T$ and $T \le T_{DP}$. If $S$ is odd or $\max a_i > T$, the algorithm returns FALSE. If $T > T_{DP}$, it reports SKIPPED together with the violated condition.
-2. **Bound on the target.** The parameter $T_{DP}$ is the largest target sum for which the table is built. Its default value is $10^{10}$ and it can be changed on the command line. For $T = 10^{10}$ the table has $10^{10}$ bits, which is $1.25$ GB, and one step processes about $1.6 \cdot 10^{8}$ words. This value is therefore the limit of both the memory and the time that we accept. A larger target is not processed, and the result is SKIPPED.
-3. **Number of elements.** The algorithm adds no limit on $n$, so only the global limit $n \le 10^6$ of the program applies.
+2. **Bound on the target.** The parameter $T_{DP}$ (Section 1.4) is the largest target sum for which the table is built. The table has $T + 1$ bits, so $T_{DP}$ is limited by memory: a target of order $10^{10}$ already needs about a gigabyte. A larger target is not processed, and the result is SKIPPED.
+3. **Number of elements.** The algorithm itself adds no limit on $n$.
 
 **Limitations.**
 
 - The cost grows with the magnitude of the numbers. For 25-digit values such as those in `AaC_example_2.txt` the target is about $10^{24}$ and the table would need $10^{21}$ bytes, so the algorithm cannot be applied to them.
 - The cost depends on $T$ and not only on $n$: for a small $n$ and large values, such as $n = 30$ numbers with 25 digits, it is far slower than meet in the middle.
-- The memory grows linearly with $T$, as $O(T)$ bits, while meet in the middle needs only $O(2^{n/2})$ words. For a small $n$ and large values dynamic programming therefore needs far more memory, and for $T = 10^{10}$ already $1.25$ GB.
+- The memory grows linearly with $T$, as $O(T)$ bits, while meet in the middle needs only $O(2^{n/2})$ words. For a small $n$ and large values dynamic programming therefore needs far more memory, and for $T$ of order $10^{10}$ already about a gigabyte.
 
 ### 4.8 When to use it
 
@@ -139,7 +139,7 @@ Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations o
 
 $$n > 2 \log_2 T - 12.$$
 
-For $T \le T_{DP} = 10^{10}$ the right-hand side is at most $54.5$, so dynamic programming is the cheaper one for every $n \ge 55$. The memory behaves similarly: dynamic programming needs $T/8$ bytes and meet in the middle at least $16 \cdot 2^{n/2}$ bytes, so dynamic programming uses less memory when $n > 2 \log_2 T - 14$. In addition, meet in the middle is run only for $n \le 44$, because it stores $2^{n/2}$ sums per half, which is already about 100 MB per half for $n = 44$. Dynamic programming has no such bound on $n$.
+Since $T \le T_{DP}$, the right-hand side is at most $2 \log_2 T_{DP} - 12$, so dynamic programming is the cheaper one for every $n$ above this value. For $T_{DP}$ of order $10^{10}$ this is a few tens. The memory behaves similarly: dynamic programming needs $T/8$ bytes and meet in the middle at least $16 \cdot 2^{n/2}$ bytes, so dynamic programming uses less memory when $n > 2 \log_2 T - 14$. In addition, meet in the middle is run only for $n \le N_{MITM}$, because it stores $2^{n/2}$ sums per half. Dynamic programming has no such bound on $n$.
 
 Two examples show how the choice is made.
 
@@ -149,11 +149,11 @@ Two examples show how the choice is made.
 | Target sum                  | $T \le 5 \cdot 10^{6}$                           | $T$ of order $10^{25}$                      |
 | Dynamic programming, time   | $n \cdot T/64 \approx 8 \cdot 10^{7}$ operations | not applicable, because $T > T_{DP}$        |
 | Dynamic programming, memory | $T/8 \le 0.7$ MB                                 | not applicable, because $T > T_{DP}$        |
-| Meet in the middle, time    | not applicable, because $n > 44$                 | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
-| Meet in the middle, memory  | not applicable, because $n > 44$                 | $16 \cdot 2^{n/2} \approx 0.5$ MB per half  |
+| Meet in the middle, time    | not applicable, because $n > N_{MITM}$          | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
+| Meet in the middle, memory  | not applicable, because $n > N_{MITM}$          | $16 \cdot 2^{n/2} \approx 0.5$ MB per half  |
 | Choice                      | dynamic programming                              | meet in the middle                          |
 
-In short, dynamic programming is the right choice for **many elements with small values**: $T \le T_{DP}$ together with either $n > 44$ or $n > 2 \log_2 T - 12$. The same holds for memory: dynamic programming needs $O(T)$ bits and meet in the middle $O(2^{n/2})$ words, so dynamic programming is also the smaller one when $n > 2 \log_2 T - 14$. For large values it is replaced by meet in the middle as long as $n$ is small enough, and when neither exact method is in range only an approximation is possible.
+In short, dynamic programming is the right choice for **many elements with small values**: $T \le T_{DP}$ together with either $n > N_{MITM}$ or $n > 2 \log_2 T - 12$. The same holds for memory: dynamic programming needs $O(T)$ bits and meet in the middle $O(2^{n/2})$ words, so dynamic programming is also the smaller one when $n > 2 \log_2 T - 14$. For large values it is replaced by meet in the middle as long as $n$ is small enough, and when neither exact method is in range only an approximation is possible.
 
 ---
 
