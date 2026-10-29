@@ -2,6 +2,8 @@
 
 ### 1.1 Introduction
 
+The terms used in this section are defined formally in Section 1.2.
+
 Let $M = \{a_1, \dots, a_n\}$ be a finite multiset of non-negative integers, that is, a collection in which values may repeat. A *partition* of $M$ is a division of it into two non-empty parts $A$ and $B$. It is *balanced* if $\Sigma(A) = \Sigma(B)$, where $\Sigma$ denotes the sum of the elements of a part.
 
 For example, $\{3, 1, 4, 2\}$ has the balanced partition $A = \{3, 2\}$, $B = \{1, 4\}$, with $\Sigma(A) = \Sigma(B) = 5$. The multiset $\{1, 1, 4\}$ has no balanced partition: it would require $\Sigma(A) = \Sigma(M)/2 = 3$, but no subset of $\{1, 1, 4\}$ has sum $3$.
@@ -31,6 +33,6 @@ The remainder of this section is organised as follows: the constraints and assum
 | Assumption | Reason |
 | --- | --- |
 | $0 \le a_i < 10^{38}$ | The numbers of interest have about $25$ digits, which exceed $64$ bits, so we use unsigned 128-bit integers (Section 1.4). A wider integer type would lift the bound without changing the algorithms. We do not need it: dynamic programming is already infeasible for numbers of this size, and the cost of the other algorithms does not depend on the magnitude of the numbers. |
-| $\Sigma(M) < 2^{128}$ | Sums must fit in 128 bits. |
+| $\Sigma(M) < 2^{128}$ | The same reason as for the bound above: the total is also an unsigned 128-bit integer. |
 | Each exponential algorithm is applied only within a stated range of $n$ or of the target sum. | Outside its range it may not finish or fit in memory; Section 6 then uses the approximation. |
 

@@ -1,6 +1,12 @@
-### 1.3 Hardness (report item a, cited)
+### 1.3 Hardness
 
-- PARTITION is **NP-complete**. It is one of Karp's 21 problems [Karp 1972]; the reduction is from SUBSET SUM (or 3-dimensional matching in Karp's original). Membership in NP: a partition is a certificate checkable in $O(n)$ additions.
-- PARTITION is **weakly** NP-hard, not strongly: it has a pseudo-polynomial algorithm (Section 4) whose running time is polynomial in $n$ and in the *magnitude* $\Sigma(M)$, but exponential in the *number of digits* of the input [Garey and Johnson 1979, Section 4.2].
-- Consequence for us: with 25-digit numbers (as in `AaC_example_2.txt`) the pseudo-polynomial algorithm is infeasible, and the only exact approach that scales is one whose cost depends on $n$ alone (Section 3). This is the central argument of the whole document and should be stated early.
+**Theorem 1.1** (Karp [1972]). PARTITION is NP-complete.
 
+PARTITION belongs to NP: a balanced partition is a certificate, and checking it takes $O(n)$ additions. NP-hardness was shown by Karp, who lists PARTITION among his 21 NP-complete problems. We quote this result and do not reprove it.
+
+**Weak hardness.** PARTITION is NP-complete only in the weak sense. It is solved in time $O(n \cdot \Sigma(M))$ by dynamic programming (Section 4). This bound is polynomial in $n$ and in the *magnitude* $\Sigma(M)$, but exponential in the *length* of the input, which is proportional to $n$ times the number of digits of the elements. Such an algorithm is called pseudo-polynomial. Unless P = NP, a problem with a pseudo-polynomial algorithm is not NP-complete in the strong sense [Garey and Johnson 1979, Section 4.2].
+
+**Consequences for the algorithms.**
+
+- **Large numbers.** For numbers of about $25$ digits, $\Sigma(M)$ is of order $10^{25}$ and the cost $O(n \cdot \Sigma(M))$ is out of reach. An exact algorithm must then have a cost that depends on $n$ alone. The best ones are exponential in $n$ (Sections 2 and 3).
+- **Approximation.** Since PARTITION is NP-complete, no polynomial-time algorithm for it is known, and none exists unless P = NP.
