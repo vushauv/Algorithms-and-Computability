@@ -2,7 +2,26 @@
 
 ## 1. Problem statement
 
-### 1.1 Definitions (report item a)
+### 1.1 Problem statement
+
+The input is a multiset of non-negative integers, one line of the input file. The question is whether its elements can be split into two groups so that the two groups have the same sum. Formally this is the decision problem PARTITION of Section 1.2: given the multiset, answer YES or NO. Our exact algorithms (Sections 2, 3 and 4) answer this question and, when the answer is YES, also return the two groups as a witness that can be checked by adding up their elements.
+
+Every exact algorithm for this problem that we know of needs exponential time or a table whose size depends on the magnitude of the numbers (Section 1.3), so the assignment also asks for a polynomial-time approximation algorithm. Our approximation (Section 5) always returns a partition into two groups, and its quality is measured by the **discrepancy** $d = |\Sigma(A) - \Sigma(B)|$, the absolute difference of the two sums. The discrepancy is $0$ exactly when the two groups have equal sums, so a partition with $d = 0$ is a YES answer with a witness, while $d > 0$ gives no information about the decision problem. The final program (Section 6) runs an exact algorithm whenever the input is within the limits below and otherwise reports the approximation together with its discrepancy.
+
+**Assumptions.** The assignment fixes only the file format and gives two examples (`raw_regulations/AaC_example_1.txt` and `AaC_example_2.txt`). Everything below is our own reading of the task and is stated here so that the definitions, the proofs and the program all rest on the same assumptions. The program enforces them: an input that violates one of them is rejected with an error message and a non-zero exit code, nothing is silently truncated. Some of them are repeated later where they are used.
+
+| Assumption | Reason |
+| --- | --- |
+| Every element is an integer, not a fraction or a decimal number. | The examples contain only integers. All algorithms rely on integer arithmetic, in particular the parity test of the total sum and the dynamic programming table indexed by sums. |
+| Every element is non-negative. Zero is allowed. | The examples contain only non-negative integers, and the problem is stated for numbers of this kind. Zero fits the definitions and needs no special case: every algorithm treats it like any other value. |
+| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | The course email of 16.10.26 states that a set may contain several equal elements. |
+| The multiset has at least two elements, $n \ge 2$. | A partition into two non-empty groups needs at least two elements. A line with a single number has no such partition and is reported as an error. |
+| Both groups of a partition are non-empty. | The assignment asks for *two* subsets. The requirement costs nothing: as shown under *Trivial cases* in Section 1.2, it matters only when all elements are $0$, where the group $\{1\}$ against the rest is used. |
+| Every element satisfies $0 \le a_i < 10^{38}$ and the total satisfies $\Sigma(M) < 2^{128}$. | The 128-bit representation of Section 1.4. The examples have at most 25 digits. |
+| A file may contain several multisets; each is solved on its own and the answers are independent. | The input format: the first line gives the number of sets, each further line is one set. |
+| Upper bounds on $n$ and on the target sum per algorithm (Section 1.4 and task.md section 7). | The exponential algorithms are run only when they are known to finish; outside their range the program reports that the method is skipped and falls back to the approximation (Section 6). |
+
+### 1.2 Definitions (report item a)
 
 **Multiset.** A multiset $M$ over $\mathbb{N} = \{0, 1, 2, \dots\}$ is a pair $(U, m)$ where $U$ is a finite set and $m: U \to \{1, 2, 3, \dots\}$ gives the multiplicity of each element. We write it as a list $M = \{a_1, a_2, \dots, a_n\}$ in which values may repeat, and $n = \sum_{u \in U} m(u)$ is its size.
 
@@ -22,24 +41,13 @@
 
 **Trivial cases.** Every algorithm below starts with the same two checks. If $\Sigma(M)$ is odd, the answer is NO. If $\Sigma(M) = 0$, every element is $0$ and the partition $A = \{1\}$, $B = \{2, \dots, n\}$ is balanced, so the answer is YES with this partition; it has two non-empty sides because $n \ge 2$. After these checks the algorithms may assume $\Sigma(M) > 0$, hence $T > 0$. Then any index set $A$ with $\Sigma(A) = T$ is automatically non-empty, and so is its complement, because $\Sigma(B) = \Sigma(M) - T = T > 0$. This is why the requirement of non-empty sides never appears in the correctness proofs: once $\Sigma(M) > 0$, a balanced partition in the loose sense (sides allowed to be empty) is already a balanced partition in our sense.
 
-**Constraints on the input multiset.** The assignment fixes only the file format and gives two examples (`raw_regulations/AaC_example_1.txt` and `AaC_example_2.txt`), so the following constraints are our own. They are stated in the report and enforced by the program: an input that violates one of them is rejected with an error message and a non-zero exit code, nothing is silently truncated.
-
-| Constraint | Reason |
-| --- | --- |
-| Every element is a non-negative integer. | The examples contain only non-negative integers, and the problem is stated for numbers of this kind. Zero is allowed: it fits the definitions and needs no special case (every algorithm treats it like any other value). |
-| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | The course email of 16.10.26 states that a set may contain several equal elements. |
-| The size satisfies $n \ge 2$. | A partition into two non-empty subsets needs at least two elements. A line with a single number has no partition in our sense and is reported as an error. |
-| Both sides of a partition are non-empty. | The assignment asks for two subsets. As shown under *Trivial cases*, this costs nothing: it matters only for $\Sigma(M) = 0$, where the partition $\{1\}$ against the rest is used. |
-| Every element satisfies $0 \le a_i < 10^{38}$ and the total satisfies $\Sigma(M) < 2^{128}$. | The 128-bit representation of Section 1.3. The examples have at most 25 digits. |
-| Upper bounds on $n$ and on $T$ per algorithm (Section 1.3 and task.md section 7). | The exponential algorithms are run only when they are known to finish; outside their range the program reports that the method is skipped and falls back to the approximation (Section 6). |
-
-### 1.2 Hardness (report item a, cited)
+### 1.3 Hardness (report item a, cited)
 
 - PARTITION is **NP-complete**. It is one of Karp's 21 problems [Karp 1972]; the reduction is from SUBSET SUM (or 3-dimensional matching in Karp's original). Membership in NP: a partition is a certificate checkable in $O(n)$ additions.
 - PARTITION is **weakly** NP-hard, not strongly: it has a pseudo-polynomial algorithm (Section 4) whose running time is polynomial in $n$ and in the *magnitude* $\Sigma(M)$, but exponential in the *number of digits* of the input [Garey and Johnson 1979, Section 4.2].
 - Consequence for us: with 25-digit numbers (as in `AaC_example_2.txt`) the pseudo-polynomial algorithm is infeasible, and the only exact approach that scales is one whose cost depends on $n$ alone (Section 3). This is the central argument of the whole document and should be stated early.
 
-### 1.3 Computational model and number representation
+### 1.4 Computational model and number representation
 
 All numbers are **unsigned 128-bit integers** (see CONSTITUTION.md point 3 and task.md section 6). Consequences used throughout the analysis:
 
@@ -70,7 +78,7 @@ Every partition $(A, B)$ of the indices $\{1, \dots, n\}$ corresponds to a bit v
 BRUTE-FORCE(a[1..n])
     S ← Σ a[i]                              // with overflow check, see Section 2.7
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
     T ← S / 2
     for mask ← 0 to 2^(n−1) − 1 do          // bit i−1 of mask puts a[i] in A; a[n] is always in B
         sumA ← 0
@@ -81,7 +89,7 @@ BRUTE-FORCE(a[1..n])
     return NO
 ```
 
-The two trivial cases of Section 1.1 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every returned $A$ and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
+The two trivial cases of Section 1.2 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every returned $A$ and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
 
 ### 2.3 Gray-code variant
 
@@ -96,7 +104,7 @@ Let $m = n - 1$ be the number of free bits. The $k$-th Gray code word is $g_k = 
 BRUTE-FORCE-GRAY(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
     T ← S / 2
     m ← n − 1
     g ← 0;  sumA ← 0                        // g is the current mask, A = ∅, and sumA = 0 < T
@@ -152,7 +160,7 @@ Duplicates and zeros need no case analysis, since the proof works on index sets 
 
 ### 2.6 Complexity
 
-We count operations on 128-bit numbers in the unit-cost model of Section 1.3 and use $m = n - 1$.
+We count operations on 128-bit numbers in the unit-cost model of Section 1.4 and use $m = n - 1$.
 
 - **Preliminaries.** The sum and the parity test cost $O(n)$.
 - **Simple version.** The outer loop has $2^{n-1}$ masks (in the worst case all of them, when the answer is NO or the hit is the last mask) and the inner loop has $n - 1$ iterations with one test and at most one addition. The worst-case time is therefore $\Theta(n \cdot 2^{n-1}) = \Theta(n \cdot 2^n)$, that is $O(n \cdot 2^n)$.
@@ -224,7 +232,7 @@ The running time depends on $n$, not on the magnitude of the input values. This 
 MEET-IN-THE-MIDDLE(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
     T ← S / 2
     h ← ⌊n / 2⌋
     LS ← SUBSET-SUMS(a[1..h])             // list of (sum, mask), 2^h entries
@@ -312,7 +320,7 @@ When $x+y=T$, the required pair has been found. Repeating these safe steps canno
 
 **Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists, and the returned sets form a balanced partition.
 
-_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ is balanced with two non-empty sides (Section 1.1). Let $S$ be even and positive, so $T > 0$. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced, and both sides are non-empty because $T > 0$ (the empty subsets in the two lists can only combine to the sum $0 \ne T$). If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
+_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ is balanced with two non-empty sides (Section 1.2). Let $S$ be even and positive, so $T > 0$. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced, and both sides are non-empty because $T > 0$ (the empty subsets in the two lists can only combine to the sum $0 \ne T$). If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
 
 The proof uses indexed elements rather than distinct values. Therefore duplicate values produce separate masks and repeated sums when appropriate; they are neither merged nor lost. Zero-valued elements are also represented by masks and require no special case.
 
@@ -351,7 +359,7 @@ Exact algorithm whose cost depends on the size of the numbers. Choosing for each
 
 ### 4.1 From the partition problem to subset sum
 
-Let $M = \{a_1, \dots, a_n\}$ be the input multiset and $S = \Sigma(M)$ its total sum (Section 1.1).
+Let $M = \{a_1, \dots, a_n\}$ be the input multiset and $S = \Sigma(M)$ its total sum (Section 1.2).
 
 **Step 1: parity test.** In a balanced partition both sides have the same sum $\Sigma(A) = \Sigma(B)$, so $S = \Sigma(A) + \Sigma(B) = 2\,\Sigma(A)$ is even. Hence if $S$ is odd, no balanced partition exists and the algorithm can return the answer immediately, at the cost of one pass over the input.
 
@@ -415,7 +423,7 @@ The cell `reach[s − a[i]]` has a smaller index than `reach[s]`, so it is still
 DP-PARTITION(a[1..n], T_DP)
     S ← a[1] + a[2] + ... + a[n]        // with overflow check
     if S is odd then return FALSE       // Step 1
-    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.1: A = {1}, B = {2, ..., n}
+    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.2: A = {1}, B = {2, ..., n}
     T ← S / 2                           // Step 2
     if max a[i] > T then return FALSE   // Step 4
     if T > T_DP then return SKIPPED     // table too large, see Section 4.7
@@ -451,11 +459,11 @@ _Proof._ Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_
 
 **Theorem.** `DP-PARTITION` returns TRUE if and only if a balanced partition of $M$ exists, provided that the table is built, see Section 4.7.
 
-_Proof._ If $S$ is odd, there is no balanced partition (Step 1), and FALSE is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced (Section 1.1), and TRUE is correct (Step 1'). From now on $T > 0$, so a subset with sum $T$ is non-empty and so is its complement. If $\max a_i > T$, FALSE is correct (Step 4). Otherwise, by Lemma 2 the final value of `reach[T]` is $R_n(T)$, unless the loop stopped earlier at a step $i < n$ with `reach[T]` TRUE; this is also correct, because a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_i(T)$ implies $R_n(T)$. By the definition of $R_n$ this holds if and only if a subset with sum $T$ exists, and by Lemma 1 this is equivalent to the existence of a balanced partition. $\square$
+_Proof._ If $S$ is odd, there is no balanced partition (Step 1), and FALSE is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced (Section 1.2), and TRUE is correct (Step 1'). From now on $T > 0$, so a subset with sum $T$ is non-empty and so is its complement. If $\max a_i > T$, FALSE is correct (Step 4). Otherwise, by Lemma 2 the final value of `reach[T]` is $R_n(T)$, unless the loop stopped earlier at a step $i < n$ with `reach[T]` TRUE; this is also correct, because a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_i(T)$ implies $R_n(T)$. By the definition of $R_n$ this holds if and only if a subset with sum $T$ exists, and by Lemma 1 this is equivalent to the existence of a balanced partition. $\square$
 
 ### 4.6 Complexity
 
-Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations on machine words in the unit-cost model of Section 1.3.
+Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations on machine words in the unit-cost model of Section 1.4.
 
 - **Preliminaries.** The sum, the parity test and the maximum cost $O(n)$.
 - **Boolean array.** Each of the $n$ steps visits at most $T$ cells, hence time $O(n \cdot T)$, with $O(T)$ cells of memory.
@@ -593,7 +601,7 @@ Here $x_{u}$ means the value $x$ with the id of $u$. The final entry is $d = 0$.
 
 ### 5.6 Complexity
 
-We count operations on 128-bit numbers in the unit-cost model of Section 1.3.
+We count operations on 128-bit numbers in the unit-cost model of Section 1.4.
 
 - Building the heap with `heapify` costs $O(n)$.
 - The loop has $n - 1$ rounds. Each round has two extractions and one insertion, $O(\log n)$ each, so $O(n \log n)$ in total.
@@ -639,7 +647,7 @@ SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)          // requires n ≥ 2, c
     if S is odd then
         (A, B, d) ← KARMARKAR-KARP(a)
         return (A, B, d, exact = TRUE)           // no balanced partition exists, d > 0 is a certificate-free answer
-    if S = 0 then return ({1}, {2, ..., n}, 0, exact = TRUE)     // trivial case, Section 1.1
+    if S = 0 then return ({1}, {2, ..., n}, 0, exact = TRUE)     // trivial case, Section 1.2
     T ← S / 2
     (A, B, d) ← KARMARKAR-KARP(a)                // O(n log n), always
     if d = 0 then return (A, B, 0, exact = TRUE)
@@ -670,7 +678,7 @@ Note for the report: the odd-sum case and the "exact algorithm says NO" case bot
 - Out of range: $O(n \log n)$.
 - Memory: the maximum of the branches taken, $O(T)$ bits or $O(2^{n/2})$ words, otherwise $O(n)$.
 
-The worst case is still exponential, which is unavoidable unless P = NP (Section 1.2); the selection only guarantees that the exponential branch is entered when it is known to finish within the limits.
+The worst case is still exponential, which is unavoidable unless P = NP (Section 1.3); the selection only guarantees that the exponential branch is entered when it is known to finish within the limits.
 
 ---
 
