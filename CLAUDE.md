@@ -15,11 +15,13 @@ Decided (details in `task.md` section 6):
 - **Version: basic.** Partition a multiset into **2 subsets with equal sums**. The advanced version (k subsets) is out of scope; do not mention it in documents.
 - **Numbers: unsigned 128-bit integers** (`unsigned __int128`), with input constraints in `task.md` section 7.
 - **Language: C++**, prebuilt static Windows executable for the demo.
-- **Final algorithm:** the program picks an algorithm depending on the input (small sums: dynamic programming; small n: meet in the middle; otherwise Karmarkar-Karp approximation). The individual algorithms are documented separately, then the selection algorithm on top (`docs/stage2_basic.md` section 6).
+- **Final algorithm:** the program picks an algorithm depending on the input (small sums: dynamic programming; small n: meet in the middle; otherwise Karmarkar-Karp approximation). The individual algorithms are documented separately, then the selection algorithm on top (`docs/stage2/06_final_algorithm.md`).
 
 Still open: mode (formal or individual), which literature to reference.
 
-The Stage 2 draft is `docs/stage2_basic.md`.
+The Stage 2 draft is split into one file per section in `docs/stage2/`, numbered in reading order (`00_title.md`, `01_1_introduction.md`, ..., `10_references.md`). To get the whole document, run `cat docs/stage2/[0-9]*.md`.
+
+**Frozen sections (reviewed by the team, do not edit unless asked):** `01_1_introduction.md`.
 
 ## Documents
 
@@ -27,7 +29,7 @@ The final documents are written in LaTeX and submitted as PDF. In this repo we d
 
 ### Style of the Stage 2 document
 
-`docs/stage2_basic.md` is a **mathematical report in the style of a paper**, not project notes.
+The files in `docs/stage2/` form a **mathematical report in the style of a paper**, not project notes.
 
 - Formal mathematical language: definitions, lemmas, theorems and proofs, with algorithms as pseudocode and complexity bounds stated as theorems.
 - A readable, coherent story with a clear order: motivation, problem, hardness, the algorithms, how they compare, and how they combine into the final one. The reader should want to read on; each section says why the next one is needed.
