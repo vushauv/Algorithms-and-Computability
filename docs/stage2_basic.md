@@ -1,25 +1,10 @@
 # Stage 2: Documentation of Algorithms (basic version)
 
-> **Status:** working scratch, not the submission. Markdown that converts to LaTeX: math in `$...$`, pseudocode in fenced blocks, no HTML.
-> **Scope:** the basic version of the assignment, partition a multiset into **two subsets with equal sums**.
-> **Due:** Oct 30, 2026 (we aim for Oct 29). Must state clearly that it is **Stage 2**.
-
-Checklist of what the instructors ask for (task.md section 3 and 4a-b):
-
-- [ ] a) Concepts: definitions with justification or source.
-- [ ] b) For **every** algorithm: pseudocode, exhaustive description, complexity analysis.
-- [ ] Every exponential exact algorithm has a polynomial-time approximation next to it.
-- [ ] Duplicates and large numbers are addressed explicitly.
-- [ ] References verified.
-- [ ] Proofread (10-20% penalty for sloppy editing).
-
----
-
 ## 1. Problem statement
 
 ### 1.1 Definitions (report item a)
 
-**Multiset.** A multiset $M$ over $\mathbb{Z}_{\ge 0}$ is a pair $(U, m)$ where $U$ is a finite set and $m: U \to \mathbb{Z}_{>0}$ gives the multiplicity of each element. We write it as a list $M = \{a_1, a_2, \dots, a_n\}$ in which values may repeat, and $n = \sum_{u \in U} m(u)$ is its size.
+**Multiset.** A multiset $M$ over $\mathbb{N} = \{0, 1, 2, \dots\}$ is a pair $(U, m)$ where $U$ is a finite set and $m: U \to \{1, 2, 3, \dots\}$ gives the multiplicity of each element. We write it as a list $M = \{a_1, a_2, \dots, a_n\}$ in which values may repeat, and $n = \sum_{u \in U} m(u)$ is its size.
 
 *Rationale for defining it this way:* the input lines of the assignment may contain repeated values (course email of 16.10.26), so the elements must be distinguished by **position**, not by value. All algorithms below work on indices $1..n$, which handles duplicates with no special cases.
 
