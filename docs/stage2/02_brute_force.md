@@ -6,7 +6,7 @@ The most direct way to decide PARTITION is to examine every candidate. By Sectio
 
 Every subset $A \subseteq \{1, \dots, n\}$ corresponds to a bit vector $x \in \{0,1\}^n$ with $x_i = 1$ if and only if $i \in A$. The algorithm enumerates these vectors, computes $\Sigma(A)$ for each, and stops as soon as $\Sigma(A) = T$. If the enumeration ends without a hit, no balanced partition exists.
 
-**Halving.** The partitions $(A, B)$ and $(B, A)$ have the same sums, so we may assume that the index $n$ lies in $B$. Only the first $n - 1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. A vector is stored as an integer $\mathrm{mask} \in \{0, \dots, 2^{n-1} - 1\}$ whose bit $i - 1$ is $x_i$.
+**Halving.** The partitions $(A, B)$ and $(B, A)$ have the same sums, so we may assume that the index $n$ lies in $B$. Only the first $n - 1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. A vector is stored as an integer $\mathrm{mask} \in \{0, 1, 2, \dots, 2^{n-1} - 1\}$ whose binary digits are the bits $x_i$: the lowest digit (bit $0$) is $x_1$, the next one (bit $1$) is $x_2$, and in general bit $i - 1$ is $x_i$. For $n = 4$ the masks are $0, 1, \dots, 7$. For example, $\mathrm{mask} = 5 = 101_2$ has bits $0$ and $2$ set, so it stands for $A = \{1, 3\}$, and $\mathrm{mask} = 0$ stands for $A = \emptyset$.
 
 **Indices instead of values.** The enumeration runs over index sets, so equal values at different positions are different elements, and no special treatment of duplicates or of zeros is needed.
 
