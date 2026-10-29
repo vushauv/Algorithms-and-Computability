@@ -14,6 +14,8 @@ The algorithm computes the lists `LS` and `RS` of all $2^h$ subset sums of $L$ a
 
 ### 3.2 Algorithm
 
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1).
+
 ```
 MEET-IN-THE-MIDDLE(a[1..n])
     S ← Σ a[i]
@@ -85,7 +87,7 @@ For $a = (2, 3, 4)$ the sum $S = 9$ is odd and the answer NO is given before the
 
 **Theorem 3.4.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists.
 
-*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4. Let $S$ be even and positive, so $T > 0$. If the algorithm answers YES, it has found $x \in$ `LS` and $y \in$ `RS` with $x + y = T$, so by Lemma 3.2 there is $A$ with $\Sigma(A) = T$. Its complement has sum $S - T = T$, so $(A, B)$ is a balanced partition, and both parts are non-empty because $T > 0$. Conversely, if a balanced partition exists, there is $A$ with $\Sigma(A) = T$, so by Lemma 3.2 and Lemma 3.3 the sweep answers YES. $\square$
+*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4; the latter uses $n \ge 2$. Let $S$ be even and positive, so $T > 0$. If the algorithm answers YES, it has found $x \in$ `LS` and $y \in$ `RS` with $x + y = T$, so by Lemma 3.2 there is $A$ with $\Sigma(A) = T$. Its complement has sum $S - T = T$, so $(A, B)$ is a balanced partition, and both parts are non-empty because $T > 0$. Conversely, if a balanced partition exists, there is $A$ with $\Sigma(A) = T$, so by Lemma 3.2 and Lemma 3.3 the sweep answers YES. $\square$
 
 The proof works with indices, so equal values give separate masks and are neither merged nor lost, and zeros need no special case.
 
