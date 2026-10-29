@@ -4,7 +4,7 @@
 
 **Sum.** $\Sigma(M) = \sum_{i=1}^{n} a_i$. For an index set $I \subseteq \{1,\dots,n\}$, $\Sigma(I) = \sum_{i \in I} a_i$.
 
-**Partition into two subsets.** A pair $(A, B)$ of **non-empty** index sets with $A \cup B = \{1,\dots,n\}$ and $A \cap B = \emptyset$. The sum of the empty part is not defined, and we do not set it to $0$ (see *Constraints on the input* in Section 1.1). Consequently $n \ge 2$.
+**Partition into two subsets.** A pair $(A, B)$ of **non-empty** index sets with $A \cup B = \{1,\dots,n\}$ and $A \cap B = \emptyset$. The non-emptiness of both parts is a constraint on the input (Section 1.1) and implies $n \ge 2$.
 
 **Balanced partition.** A partition with $\Sigma(A) = \Sigma(B)$, equivalently $\Sigma(A) = \Sigma(M)/2$.
 
