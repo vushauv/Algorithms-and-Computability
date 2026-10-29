@@ -198,9 +198,28 @@ Brute force is **never** the algorithm of choice for the final program; its role
 
 ### 3.1 Idea
 
-Split the indices into halves $L = \{1..\lfloor n/2 \rfloor\}$ and $R$ = the rest. Enumerate all $2^{|L|}$ subset sums of $L$ and all $2^{|R|}$ subset sums of $R$. A balanced partition exists iff there are $s_L$ from the first list and $s_R$ from the second with $s_L + s_R = T$. Finding such a pair in two lists is done by sorting and a two-pointer sweep (or a hash set).
+The algorithm reduces the number of combinations that must be considered by splitting the input into two parts. Let
 
-Cost drops from $2^n$ to about $2 \cdot 2^{n/2}$, at the price of storing $2^{n/2}$ sums. Crucially, the running time **does not depend on the magnitude of the numbers**, which is why it is our main exact algorithm for 25-digit inputs.
+$$
+L = \{1,\dots,h\}, \qquad R = \{h+1,\dots,n\}, \qquad h = \lfloor n/2 \rfloor.
+$$
+
+Every subset $A$ of the whole input has exactly one decomposition
+
+$$
+A = (A \cap L) \cup (A \cap R).
+$$
+
+Consequently, its sum is the sum of one subset sum from the left half and one subset sum from the right half. The algorithm therefore works in four stages:
+
+1. Compute the total sum $S$ and reject the instance if $S$ is odd. Otherwise set the target to $T = S/2$.
+2. Enumerate every subset of $L$ and store its sum together with its bit mask in a list `LS`.
+3. Enumerate every subset of $R$ and store its sum together with its bit mask in a list `RS`.
+4. Search the two lists for a pair whose sums add to $T$. When such a pair is found, the two masks identify one side of the partition; the other side is its complement.
+
+There are $2^h$ subsets of $L$ and $2^{n-h}$ subsets of $R$, rather than $2^n$ subsets in one list. The lists are sorted so that a two-pointer sweep can find a pair with sum $T$ without testing every possible pair. The algorithm is exact: it does not discard any subset, and it returns NO only after every possible left/right combination has been ruled out.
+
+The running time depends on $n$, not on the magnitude of the input values. This makes meet in the middle the main exact algorithm for inputs containing 25-digit numbers. Its disadvantage is the memory required for the two lists.
 
 ### 3.2 Pseudocode
 
@@ -231,15 +250,75 @@ SUBSET-SUMS(b[1..m])
     return list of (sums[mask], mask) for all mask
 ```
 
-### 3.3 Correctness
+`SUBSET-SUMS` represents a subset by a bit mask. Bit $k$ is 1 exactly when the corresponding element belongs to the subset. To calculate a new sum, it removes one set bit from `mask`; the remaining mask has already been processed, so the new sum is obtained with one addition. The stored mask is retained because a numerical sum alone is not enough to reconstruct the partition.
 
-Every subset $A$ of $\{1..n\}$ decomposes uniquely as $A \cap L$ + $A \cap R$ = $A$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. So a balanced $A$ exists iff the sum $T$ is attainable as one element of $LS$ plus one of $RS$.
+After both lists have been generated, `LS` is sorted in ascending order and `RS` in descending order. The pointers initially refer to the smallest left sum and the largest right sum. If their total is less than $T$, the right sum cannot be increased while keeping the current left sum, so the left pointer is advanced. If their total is greater than $T$, the left sum cannot be decreased while keeping the current right sum, so the right pointer is advanced. Each pointer only moves forward, and the sweep stops when it finds the target or one list is exhausted.
 
-Two-pointer invariant: initially, the smallest sum from $LS$ and largest sum from $RS$ are summed and compared against $T$. If not equal, depending whether the sum is smaller or larger than $T$, $i$ or $j$ is incremented respectively - advancing the sweep is symmetrical. Without loss of generality, consider the case when the sweep advances incrementing $i$ because $LS[i] + RS[j] < T$. Then, no $RS[j']$ with $j' \ge j$ (all smaller or equal) can complete $LS[i]$ to $T$, and all $RS[j']$ with $j' < j$ were already shown too large for $LS[i'] \le LS[i]$ - a standard argument for a pair with given sum in two sorted arrays. Due to symmetry, the same argument applies for advancing $j$.
+### 3.3 Example
 
-Duplicates: repeated values produce repeated sums in $LS$ or $RS$; the sweep handles equal keys correctly because it compares sums, not identities. Alternatively, note that the enumeration is over masks, so duplicates never need separate treatment.
+Consider the input
 
-### 3.4 Complexity
+$$
+a = (3,1,4,2).
+$$
+
+The total is $S = 10$, so the target is $T = 5$. With $h = 2$, the left half is $(3,1)$ and the right half is $(4,2)$.
+
+The subset lists, including the empty subset, are:
+
+The rightmost mask bit is bit 0 and refers to the first element in that half. Thus, for the left half, `01` means $\{3\}$ and `10` means $\{1\}$; for the right half, `01` means $\{4\}$ and `10` means $\{2\}$.
+
+| mask | left subset | left sum | mask | right subset | right sum |
+| ---- | ----------- | -------- | ---- | ------------ | --------- |
+| 00 | $\emptyset$ | $0$ | 00 | $\emptyset$ | $0$ |
+| 01 | $\{3\}$ | $3$ | 01 | $\{4\}$ | $4$ |
+| 10 | $\{1\}$ | $1$ | 10 | $\{2\}$ | $2$ |
+| 11 | $\{3,1\}$ | $4$ | 11 | $\{4,2\}$ | $6$ |
+
+After sorting, the left sums are $(0,1,3,4)$ and the right sums are $(6,4,2,0)$ in the order used by the sweep. The pointer steps are:
+
+| left sum | right sum | total | action |
+| -------- | --------- | ----- | ------ |
+| $0$ | $6$ | $6$ | too large; advance the right pointer |
+| $0$ | $4$ | $4$ | too small; advance the left pointer |
+| $1$ | $4$ | $5$ | target found |
+
+The corresponding subsets are $\{1\}$ from the left half and $\{4\}$ from the right half. Thus one side is $\{1,4\}$ and the other is $\{3,2\}$; both sums are $5$. The algorithm stops as soon as this pair is found.
+
+If the total sum is odd, for example $a=(2,3,4)$ with $S=9$, the algorithm stops before generating either list and returns NO. If no pair of list entries adds to $T$, the sweep exhausts one list and returns NO.
+
+### 3.4 Correctness
+
+**Lemma 1 (subset-sum enumeration).** `SUBSET-SUMS(b[1..m])` returns exactly one entry for every subset of the $m$ indexed elements, and the stored sum is the sum of that subset.
+
+_Proof._ We use induction on the mask value. The mask 0 represents the empty subset and has sum 0. For a nonzero mask, the algorithm chooses one set bit $k$. The mask with this bit removed is a smaller mask, so by the induction hypothesis its stored sum is correct. Adding $b[k+1]$ gives precisely the sum of the original mask. Every mask has one unique bit pattern, so every subset is represented once. $\square$
+
+**Lemma 2 (reduction to two lists).** A subset $A \subseteq \{1,\dots,n\}$ with sum $T$ exists if and only if there are entries $s_L$ in `LS` and $s_R$ in `RS` such that $s_L+s_R=T$.
+
+_Proof._ If $A$ exists, take $A_L=A\cap L$ and $A_R=A\cap R$. These are represented in the two lists by Lemma 1, and
+
+$$
+\Sigma(A)=\Sigma(A_L)+\Sigma(A_R)=T.
+$$
+
+Conversely, if two list entries have sums adding to $T$, take the union of their represented subsets. The halves are disjoint, so the union is a subset of the whole input with sum $T$. $\square$
+
+**Lemma 3 (two-pointer sweep).** The sweep does not skip any pair of entries that could have sum $T$.
+
+_Proof._ Suppose the current entries have sums $x$ from `LS` and $y$ from `RS`.
+
+- If $x+y<T$, `RS` is descending, so every later right entry is at most $y$. Therefore $x+y' \le x+y<T$ for every right entry $y'$ at or after the current right pointer. No such entry can complete the current $x$ to $T$, so advancing the left pointer is safe.
+- If $x+y>T$, `LS` is ascending, so every later left entry is at least $x$. Therefore $x'+y \ge x+y>T$ for every left entry $x'$ at or after the current left pointer. No such entry can complete the current $y$ to $T$, so advancing the right pointer is safe.
+
+When $x+y=T$, the required pair has been found. Repeating these safe steps cannot remove a possible pair before it is examined. $\square$
+
+**Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists, and the returned sets form a balanced partition.
+
+_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. Let $S$ be even. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced. If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
+
+The proof uses indexed elements rather than distinct values. Therefore duplicate values produce separate masks and repeated sums when appropriate; they are neither merged nor lost. Zero-valued elements are also represented by masks and require no special case.
+
+### 3.5 Complexity
 
 Let $h = \lfloor n/2 \rfloor$.
 
@@ -250,7 +329,20 @@ Let $h = \lfloor n/2 \rfloor$.
 - Independent of the magnitude of $a_i$ (under the 128-bit model). Compare with the DP below.
 - Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 60$ gives $2^{30}$ entries of 16 bytes plus masks, about 20 GB per side, infeasible. So $n \le 50$ or so on the lab machines.
 
-### 3.5 Possible further improvement
+### 3.6 Constraints and limitations
+
+**Constraints that the program enforces**:
+
+1. **Preconditions.** Each value satisfies $0 \le a_i < 10^{38}$, and the total sum satisfies $S < 2^{128}$. The parser and summation check these conditions and report an error instead of truncating a value.
+2. **Bound on $n$.** The exact algorithm is run only when $n \le 60$, as stated in `task.md`. A larger input is reported as SKIPPED because the subset lists may require too much memory. The threshold is configurable for Stage 4 experiments.
+
+**Limitations.** The algorithm avoids dependence on the numeric magnitude of the values, but its memory and running time still grow exponentially with the number of elements. At $n=60$, each half has about $2^{30}$ subsets, so storing sums and masks requires many gigabytes. Meet in the middle is therefore unsuitable for large $n$, even when the input values are small. For such inputs the program uses dynamic programming when the target is small, or the polynomial-time approximation when neither exact method is feasible.
+
+### 3.7 When to use it
+
+Meet in the middle is the preferred exact algorithm when the input has relatively few elements and the target sum is too large for dynamic programming. It is especially useful for large values such as those in `AaC_example_2.txt`, because its cost depends on $n$ rather than on the number of digits. The final algorithm-selection procedure compares the applicable limits for dynamic programming and meet in the middle before falling back to the approximation algorithm.
+
+### 3.8 Possible further improvement
  Note: A possible further improvement to mention (not to implement unless time allows): Schroeppel-Shamir 1981 reduces memory to $O(2^{n/4})$ with the same time.
 
 ---
