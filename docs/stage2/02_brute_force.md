@@ -30,11 +30,25 @@ BRUTE-FORCE(a[1..n])
 
 After the two trivial cases of Section 1.2 we have $T > 0$. Hence $\mathrm{mask} = 0$, which stands for $A = \emptyset$, never succeeds, and every set $A$ that succeeds is non-empty together with its complement. We keep $\mathrm{mask} = 0$ in the loop so that the masks are exactly all the subsets. Skipping it would save one of the $2^{n-1}$ iterations.
 
-**Gray-code variant.** The inner loop recomputes the sum of $A$ from scratch. If the masks are visited in the order of the binary reflected Gray code, two consecutive masks differ in exactly one bit, and the sum is updated with a single addition or subtraction. Let $m = n - 1$. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$, where $\oplus$ is the bitwise exclusive or and $\gg$ the right shift. We use two facts.
+**Gray-code variant.** The inner loop recomputes the sum of $A$ from scratch. If the masks are visited in the order of the binary reflected Gray code, two consecutive masks differ in exactly one bit, and the sum is updated with a single addition or subtraction. Let $m = n - 1$. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$, where $\oplus$ is the bitwise exclusive or and $\gg$ the right shift. The function $\mathrm{ctz}(k)$, "count trailing zeros", is the number of zeros at the right end of the binary notation of $k$. For example, $12 = 1100_2$ has $\mathrm{ctz} = 2$ and $5 = 101_2$ has $\mathrm{ctz} = 0$. We use two facts.
 
 1. The map $k \mapsto g_k$ is a bijection of $\{0, \dots, 2^m - 1\}$ onto itself, so every mask is visited exactly once.
-2. $g_k \oplus g_{k-1} = 2^{j}$, where $j$ is the number of trailing zeros of $k$, written $\mathrm{ctz}(k)$. Hence going from $g_{k-1}$ to $g_k$ flips only bit $j$.
+2. $g_k \oplus g_{k-1} = 2^{j}$, where $j = \mathrm{ctz}(k)$. Hence going from $g_{k-1}$ to $g_k$ flips only bit $j$.
 
+For $m = 3$ free bits ($n = 4$) the words are
+
+| $k$ | binary | $\mathrm{ctz}(k)$ | $g_k$ | bit flipped |
+| --- | ------ | ----------------- | ----- | ----------- |
+| 0   | 000    |                   | 000   |             |
+| 1   | 001    | 0                 | 001   | 0           |
+| 2   | 010    | 1                 | 011   | 1           |
+| 3   | 011    | 0                 | 010   | 0           |
+| 4   | 100    | 2                 | 110   | 2           |
+| 5   | 101    | 0                 | 111   | 0           |
+| 6   | 110    | 1                 | 101   | 1           |
+| 7   | 111    | 0                 | 100   | 0           |
+
+Consecutive words differ in one bit, namely bit $\mathrm{ctz}(k)$, and every value from $0$ to $7$ occurs once. The algorithm does not compute $g_k$ by the formula: it keeps the current mask and flips bit $\mathrm{ctz}(k)$ of it.
 ```
 BRUTE-FORCE-GRAY(a[1..n])
     S ← Σ a[i]
