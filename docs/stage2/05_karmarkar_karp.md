@@ -10,6 +10,8 @@ The simple greedy method, which puts the next largest number into the lighter pa
 
 ### 5.2 Algorithm
 
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1).
+
 ```
 KARMARKAR-KARP(a[1..n])
     H ← max-heap of the pairs (a[i], i)
