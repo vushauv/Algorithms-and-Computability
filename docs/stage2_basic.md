@@ -6,8 +6,6 @@
 
 **Multiset.** A multiset $M$ over $\mathbb{N} = \{0, 1, 2, \dots\}$ is a pair $(U, m)$ where $U$ is a finite set and $m: U \to \{1, 2, 3, \dots\}$ gives the multiplicity of each element. We write it as a list $M = \{a_1, a_2, \dots, a_n\}$ in which values may repeat, and $n = \sum_{u \in U} m(u)$ is its size.
 
-*Rationale for defining it this way:* the input lines of the assignment may contain repeated values (course email of 16.10.26), so the elements must be distinguished by **position**, not by value. All algorithms below work on indices $1..n$, which handles duplicates with no special cases.
-
 **Sum.** $\Sigma(M) = \sum_{i=1}^{n} a_i$. For an index set $I \subseteq \{1,\dots,n\}$, $\Sigma(I) = \sum_{i \in I} a_i$.
 
 **Partition into two subsets.** A pair $(A, B)$ with $A \cup B = \{1,\dots,n\}$ and $A \cap B = \emptyset$. Either side may be empty.
