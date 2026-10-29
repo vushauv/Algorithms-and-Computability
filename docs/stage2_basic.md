@@ -4,29 +4,27 @@
 
 ### 1.1 Introduction
 
-We are given a collection of non-negative integers in which a value may occur several times. Such a collection is called a *multiset*. We want to split it into two groups that have the same sum.
+Let $M = \{a_1, \dots, a_n\}$ be a finite multiset of non-negative integers, that is, a collection in which values may repeat. A *partition* of $M$ is a division of it into two non-empty parts $A$ and $B$. It is *balanced* if $\Sigma(A) = \Sigma(B)$, where $\Sigma$ denotes the sum of the elements of a part.
 
-For example, $\{3, 1, 4, 2\}$ splits into $\{3, 2\}$ and $\{1, 4\}$, both with sum $5$. The multiset $\{1, 1, 4\}$ cannot be split evenly: the target is $3$, and no group of elements adds up to it.
+For example, $\{3, 1, 4, 2\}$ has the balanced partition $A = \{3, 2\}$, $B = \{1, 4\}$, with $\Sigma(A) = \Sigma(B) = 5$. The multiset $\{1, 1, 4\}$ has no balanced partition: it would require $\Sigma(A) = \Sigma(M)/2 = 3$, but no subset of $\{1, 1, 4\}$ has sum $3$.
 
-This gives two problems, which are defined formally in Section 1.2.
+We consider two problems. Section 1.2 gives their formal definitions.
 
-- **The decision problem.** Does an equal split exist? As a problem it asks only for YES or NO. Our algorithms also return such a split when the answer is YES, so that the answer can be checked by adding up its elements.
-- **The optimisation problem.** Find a split whose two sums are as close as possible. The distance between the sums is called the *discrepancy*; an equal split is exactly a split with discrepancy $0$.
+- **The decision problem.** Given $M$, decide whether a balanced partition exists. The answer is YES or NO. Each exact algorithm below additionally returns a balanced partition when the answer is YES, which certifies the answer in $O(n)$ additions.
+- **The optimisation problem.** Given $M$, find a partition minimising the *discrepancy* $d(A, B) = |\Sigma(A) - \Sigma(B)|$. A partition is balanced if and only if $d(A, B) = 0$.
 
-Both problems are hard. The decision problem is NP-complete [Karp 1972], so no known algorithm is fast on every input. It is, however, hard in a mild way: if the numbers are small, a dynamic programming table solves it quickly [Garey and Johnson 1979]. So there are two sources of difficulty, many elements and large numbers, and different algorithms suffer from different ones. This is the story of this report.
+The decision problem is NP-complete [Karp 1972]. Hence no polynomial-time algorithm for it is known, and none exists unless P = NP. It is NP-complete only in the weak sense: it admits an algorithm whose running time is polynomial in $n$ and $\Sigma(M)$, a *pseudo-polynomial* algorithm [Garey and Johnson 1979]. Two parameters therefore govern the cost: the number of elements $n$ and the magnitude of $\Sigma(M)$. The algorithms below differ in which of them their cost depends on.
 
 We present four algorithms.
 
-- **Section 2, brute force.** It tries all $2^n$ splits. It is simple and obviously correct, and it serves as the reference for the others, but it is usable only for about $30$ elements.
-- **Section 3, meet in the middle.** It is still exponential, but its running time grows like $2^{n/2}$ instead of $2^n$ [Horowitz and Sahni 1974]. It does not care how large the numbers are, and it reaches about $44$ elements.
-- **Section 4, dynamic programming.** Its cost grows with the total sum of the numbers, not with their number of digits. It is excellent for small numbers and hopeless for numbers of $25$ digits.
-- **Section 5, Karmarkar-Karp differencing.** It runs in polynomial time and always returns a split, but it is not exact: it may miss an equal split. We bound its discrepancy and explain why it is typically very small on large, well-spread numbers [Karmarkar and Karp 1982].
+- **Section 2, brute force.** It enumerates all $2^n$ subsets. Time $O(2^n)$, memory $O(n)$.
+- **Section 3, meet in the middle.** It splits $M$ into two halves and combines their subset sums [Horowitz and Sahni 1974]. Time $O(n \cdot 2^{n/2})$, memory $O(2^{n/2})$, independent of the magnitude of the elements.
+- **Section 4, dynamic programming.** It computes the set of reachable subset sums. Time $O(n \cdot \Sigma(M))$, which is pseudo-polynomial.
+- **Section 5, Karmarkar-Karp differencing.** This is a polynomial-time approximation algorithm, with time $O(n \log n)$ [Karmarkar and Karp 1982]. It always returns a partition, and its discrepancy is bounded (Section 5.4). We also quote its expected behaviour on random inputs [Yakir 1996].
 
-Each exact algorithm is limited by $n$ or by the magnitude of the sum, and the approximation gives no guarantee of finding an equal split. No single method is best for all inputs.
+None of the four algorithms is efficient for every input. Section 6 defines a final algorithm that selects, for each input, the cheapest method whose limits are satisfied. It applies dynamic programming if $\Sigma(M)/2 \le T_{DP}$, meet in the middle if $n \le N_{MITM}$, and the approximation otherwise; the limits $T_{DP}$ and $N_{MITM}$ are fixed in Section 6. For each algorithm we give pseudocode, a description, a correctness proof and a complexity analysis.
 
-Section 6 therefore combines them into a final algorithm. It inspects the input: the parity of the total, the number of elements and the size of the sum. It then applies the cheapest method that is known to finish. In short, small sums go to dynamic programming, few elements go to meet in the middle, and everything else goes to the approximation, whose result is reported together with its discrepancy. For every algorithm we give pseudocode, a detailed description, a proof of correctness and an analysis of time and space.
-
-The rest of this section fixes the setting: the assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
+The remainder of this section is organised as follows: the assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
 
 **Assumptions.** The problem statement fixes only the form of the input, so we state our assumptions explicitly. The definitions, the proofs and the complexity bounds below all rest on them. An implementation rejects an input that violates one of them with an error message; it never truncates or wraps a value around silently. Some assumptions are repeated where they are used.
 
