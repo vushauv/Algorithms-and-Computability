@@ -19,9 +19,9 @@ $$
 Consequently, its sum is the sum of one subset sum from the left half and one subset sum from the right half. The algorithm therefore works in four stages:
 
 1. Compute the total sum $S$ and reject the instance if $S$ is odd. Otherwise set the target to $T = S/2$.
-2. Enumerate every subset of $L$ and store its sum together with its bit mask in a list `LS`.
-3. Enumerate every subset of $R$ and store its sum together with its bit mask in a list `RS`.
-4. Search the two lists for a pair whose sums add to $T$. When such a pair is found, the two masks identify one side of the partition; the other side is its complement.
+2. Enumerate every subset of $L$ and store its sum in a list `LS`.
+3. Enumerate every subset of $R$ and store its sum in a list `RS`.
+4. Search the two lists for a pair whose sums add to $T$. Such a pair exists if and only if a balanced partition exists (Lemma 2 below).
 
 There are $2^h$ subsets of $L$ and $2^{n-h}$ subsets of $R$, rather than $2^n$ subsets in one list. The lists are sorted so that a two-pointer sweep can find a pair with sum $T$ without testing every possible pair. The algorithm is exact: it does not discard any subset, and it returns NO only after every possible left/right combination has been ruled out.
 
@@ -33,17 +33,17 @@ The running time depends on $n$, not on the magnitude of the input values. This 
 MEET-IN-THE-MIDDLE(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
+    if S = 0 then return YES                 // trivial case, Section 1.2
     T ← S / 2
     h ← ⌊n / 2⌋
-    LS ← SUBSET-SUMS(a[1..h])             // list of (sum, mask), 2^h entries
+    LS ← SUBSET-SUMS(a[1..h])             // list of sums, 2^h entries
     RS ← SUBSET-SUMS(a[h+1..n])           // 2^(n−h) entries
     sort LS by sum ascending
     sort RS by sum descending
     i ← 1; j ← 1
     while i ≤ |LS| and j ≤ |RS| do
         s ← LS[i].sum + RS[j].sum
-        if s = T then return YES, A = indices of LS[i].mask ∪ RS[j].mask
+        if s = T then return YES
         if s < T then i ← i + 1
         else j ← j + 1
     return NO
@@ -54,10 +54,10 @@ SUBSET-SUMS(b[1..m])
     for mask ← 1 to 2^m − 1 do
         k ← index of lowest set bit of mask
         sums[mask] ← sums[mask without bit k] + b[k+1]   // one addition per subset
-    return list of (sums[mask], mask) for all mask
+    return sums
 ```
 
-`SUBSET-SUMS` represents a subset by a bit mask. Bit $k$ is 1 exactly when the corresponding element belongs to the subset. To calculate a new sum, it removes one set bit from `mask`; the remaining mask has already been processed, so the new sum is obtained with one addition. The stored mask is retained because a numerical sum alone is not enough to reconstruct the partition.
+`SUBSET-SUMS` represents a subset by a bit mask, which is the index into `sums`. Bit $k$ is 1 exactly when the corresponding element belongs to the subset. To calculate a new sum, it removes one set bit from `mask`; the remaining mask has already been processed, so the new sum is obtained with one addition. Only the sums are kept, because the algorithm decides existence and does not construct the partition.
 
 After both lists have been generated, `LS` is sorted in ascending order and `RS` in descending order. The pointers initially refer to the smallest left sum and the largest right sum. If their total is less than $T$, the right sum cannot be increased while keeping the current left sum, so the left pointer is advanced. If their total is greater than $T$, the left sum cannot be decreased while keeping the current right sum, so the right pointer is advanced. Each pointer only moves forward, and the sweep stops when it finds the target or one list is exhausted.
 
@@ -71,7 +71,7 @@ $$
 
 The total is $S = 10$, so the target is $T = 5$. With $h = 2$, the left half is $(3,1)$ and the right half is $(4,2)$.
 
-The subset lists, including the empty subset, are:
+The subset lists, including the empty subset, are given below.
 
 The rightmost mask bit is bit 0 and refers to the first element in that half. Thus, for the left half, `01` means $\{3\}$ and `10` means $\{1\}$; for the right half, `01` means $\{4\}$ and `10` means $\{2\}$.
 
@@ -90,7 +90,7 @@ After sorting, the left sums are $(0,1,3,4)$ and the right sums are $(6,4,2,0)$ 
 | $0$ | $4$ | $4$ | too small; advance the left pointer |
 | $1$ | $4$ | $5$ | target found |
 
-The corresponding subsets are $\{1\}$ from the left half and $\{4\}$ from the right half. Thus one side is $\{1,4\}$ and the other is $\{3,2\}$; both sums are $5$. The algorithm stops as soon as this pair is found.
+The sums $1$ and $4$ come from the subsets $\{1\}$ of the left half and $\{4\}$ of the right half, so $\{1,4\}$ and its complement $\{3,2\}$ both have sum $5$. The algorithm stops as soon as this pair is found and answers YES.
 
 If the total sum is odd, for example $a=(2,3,4)$ with $S=9$, the algorithm stops before generating either list and returns NO. If no pair of list entries adds to $T$, the sweep exhausts one list and returns NO.
 
@@ -119,9 +119,9 @@ _Proof._ Suppose the current entries have sums $x$ from `LS` and $y$ from `RS`.
 
 When $x+y=T$, the required pair has been found. Repeating these safe steps cannot remove a possible pair before it is examined. $\square$
 
-**Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists, and the returned sets form a balanced partition.
+**Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists.
 
-_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ is balanced with two non-empty sides (Section 1.2). Let $S$ be even and positive, so $T > 0$. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced, and both sides are non-empty because $T > 0$ (the empty subsets in the two lists can only combine to the sum $0 \ne T$). If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
+_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced with two non-empty sides (Section 1.2). Let $S$ be even and positive, so $T > 0$. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. A pair with $x+y=T$ is the sum of a subset $A$ with $\Sigma(A)=T$; its complement has sum $S-T=T$, so a balanced partition exists, and both sides are non-empty because $T > 0$. If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
 
 The proof uses indexed elements rather than distinct values. Therefore duplicate values produce separate masks and repeated sums when appropriate; they are neither merged nor lost. Zero-valued elements are also represented by masks and require no special case.
 
