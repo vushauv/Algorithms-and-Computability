@@ -25,6 +25,15 @@ The Stage 2 draft is `docs/stage2_basic.md`.
 
 The final documents are written in LaTeX and submitted as PDF. In this repo we draft them in Markdown and then transform them to LaTeX. So write Markdown that converts cleanly: math in `$...$` and `$$...$$`, pseudocode in fenced code blocks, no raw HTML.
 
+### Style of the Stage 2 document
+
+`docs/stage2_basic.md` is a **mathematical report in the style of a paper**, not project notes.
+
+- Formal mathematical language: definitions, lemmas, theorems and proofs, with algorithms as pseudocode and complexity bounds stated as theorems.
+- A readable, coherent story with a clear order: motivation, problem, hardness, the algorithms, how they compare, and how they combine into the final one. The reader should want to read on; each section says why the next one is needed.
+- The text never refers to project internals: no `CONSTITUTION.md`, `task.md`, `CLAUDE.md`, no "our team decided", no drafting notes, checklists or TODOs. Assumptions and limits are stated as part of the mathematical setting (for example "we assume $n \ge 2$ and $0 \le a_i < 10^{38}$"), with their reasons given in mathematical terms. Cross-references point only to sections of the report itself or to cited literature.
+- The existing draft still contains such references (for example "task.md section 7", "CONSTITUTION.md point 3") and notes for ourselves (sections 9 and 10 headed "not part of the Stage 2 PDF" or "to verify"). Remove or rewrite them when editing.
+
 ## How to work here
 
 - This is a research and discussion phase: answer questions, compare options, point to sources. Don't write code or documents unless asked.

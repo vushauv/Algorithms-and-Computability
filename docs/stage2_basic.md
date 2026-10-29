@@ -2,24 +2,43 @@
 
 ## 1. Problem statement
 
-### 1.1 Problem statement
+### 1.1 Introduction
 
-The input is a multiset of non-negative integers, one line of the input file. The question is whether its elements can be split into two groups so that the two groups have the same sum. Formally this is the decision problem PARTITION of Section 1.2: given the multiset, answer YES or NO. Our exact algorithms (Sections 2, 3 and 4) answer this question and, when the answer is YES, also return the two groups as a witness that can be checked by adding up their elements.
+We are given a collection of non-negative integers in which a value may occur several times. Such a collection is called a *multiset*. We want to split it into two groups that have the same sum.
 
-Every exact algorithm for this problem that we know of needs exponential time or a table whose size depends on the magnitude of the numbers (Section 1.3), so the assignment also asks for a polynomial-time approximation algorithm. Our approximation (Section 5) always returns a partition into two groups, and its quality is measured by the **discrepancy** $d = |\Sigma(A) - \Sigma(B)|$, the absolute difference of the two sums. The discrepancy is $0$ exactly when the two groups have equal sums, so a partition with $d = 0$ is a YES answer with a witness, while $d > 0$ gives no information about the decision problem. The final program (Section 6) runs an exact algorithm whenever the input is within the limits below and otherwise reports the approximation together with its discrepancy.
+For example, $\{3, 1, 4, 2\}$ splits into $\{3, 2\}$ and $\{1, 4\}$, both with sum $5$. The multiset $\{1, 1, 4\}$ cannot be split evenly: the target is $3$, and no group of elements adds up to it.
 
-**Assumptions.** The assignment fixes only the file format and gives two examples (`raw_regulations/AaC_example_1.txt` and `AaC_example_2.txt`). Everything below is our own reading of the task and is stated here so that the definitions, the proofs and the program all rest on the same assumptions. The program enforces them: an input that violates one of them is rejected with an error message and a non-zero exit code, nothing is silently truncated. Some of them are repeated later where they are used.
+This gives two problems, which are defined formally in Section 1.2.
+
+- **The decision problem.** Does an equal split exist? If yes, we also want to see one.
+- **The optimisation problem.** Find a split whose two sums are as close as possible. The distance between the sums is called the *discrepancy*; an equal split is exactly a split with discrepancy $0$.
+
+Both problems are hard. The decision problem is NP-complete [Karp 1972], so no known algorithm is fast on every input. It is, however, hard in a mild way: if the numbers are small, a dynamic programming table solves it quickly [Garey and Johnson 1979]. So there are two sources of difficulty, many elements and large numbers, and different algorithms suffer from different ones. This is the story of this report.
+
+We present four algorithms.
+
+- **Section 2, brute force.** It tries all $2^n$ splits. It is simple and obviously correct, and it serves as the reference for the others, but it is usable only for about $30$ elements.
+- **Section 3, meet in the middle.** It is still exponential, but its running time grows like $2^{n/2}$ instead of $2^n$ [Horowitz and Sahni 1974]. It does not care how large the numbers are, and it reaches about $44$ elements.
+- **Section 4, dynamic programming.** Its cost grows with the total sum of the numbers, not with their number of digits. It is excellent for small numbers and hopeless for numbers of $25$ digits.
+- **Section 5, Karmarkar-Karp differencing.** It runs in polynomial time and always returns a split, but it is not exact: it may miss an equal split. We bound its discrepancy and explain why it is typically very small on large, well-spread numbers [Karmarkar and Karp 1982].
+
+Each exact algorithm is limited by $n$ or by the magnitude of the sum, and the approximation gives no guarantee of finding an equal split. No single method is best for all inputs.
+
+Section 6 therefore combines them into a final algorithm. It inspects the input: the parity of the total, the number of elements and the size of the sum. It then applies the cheapest method that is known to finish. In short, small sums go to dynamic programming, few elements go to meet in the middle, and everything else goes to the approximation, whose result is reported together with its discrepancy. For every algorithm we give pseudocode, a detailed description, a proof of correctness and an analysis of time and space.
+
+The rest of this section fixes the setting: the assumptions on the input (below), the formal definitions (Section 1.2), the hardness results (Section 1.3) and the computational model (Section 1.4).
+
+**Assumptions.** The problem statement fixes only the form of the input, so we state our assumptions explicitly. The definitions, the proofs and the complexity bounds below all rest on them. An implementation rejects an input that violates one of them with an error message; it never truncates or wraps a value around silently. Some assumptions are repeated where they are used.
 
 | Assumption | Reason |
 | --- | --- |
-| Every element is an integer, not a fraction or a decimal number. | The examples contain only integers. All algorithms rely on integer arithmetic, in particular the parity test of the total sum and the dynamic programming table indexed by sums. |
-| Every element is non-negative. Zero is allowed. | The examples contain only non-negative integers, and the problem is stated for numbers of this kind. Zero fits the definitions and needs no special case: every algorithm treats it like any other value. |
-| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | The course email of 16.10.26 states that a set may contain several equal elements. |
-| The multiset has at least two elements, $n \ge 2$. | A partition into two non-empty groups needs at least two elements. A line with a single number has no such partition and is reported as an error. |
-| Both groups of a partition are non-empty. | The assignment asks for *two* subsets. The requirement costs nothing: as shown under *Trivial cases* in Section 1.2, it matters only when all elements are $0$, where the group $\{1\}$ against the rest is used. |
-| Every element satisfies $0 \le a_i < 10^{38}$ and the total satisfies $\Sigma(M) < 2^{128}$. | The 128-bit representation of Section 1.4. The examples have at most 25 digits. |
-| A file may contain several multisets; each is solved on its own and the answers are independent. | The input format: the first line gives the number of sets, each further line is one set. |
-| Upper bounds on $n$ and on the target sum per algorithm (Section 1.4 and task.md section 7). | The exponential algorithms are run only when they are known to finish; outside their range the program reports that the method is skipped and falls back to the approximation (Section 6). |
+| Every element is a non-negative integer. Zero is allowed. | All algorithms rely on integer arithmetic, in particular on the parity test of the total and on the dynamic programming table indexed by sums. Zero fits the definitions and needs no special case: every algorithm treats it like any other value. |
+| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | Equal elements are different items of the multiset. Each of them must be placed in a group on its own. |
+| The multiset has at least two elements, $n \ge 2$. | A partition into two non-empty groups needs at least two elements. A multiset with a single element has no such partition and is reported as an error. |
+| Both groups of a partition are non-empty. | We read a partition into *two* groups as one into two non-empty groups. The requirement costs nothing: as shown under *Trivial cases* in Section 1.2, it matters only when all elements are $0$, where the group $\{1\}$ against the rest is used. |
+| Every element satisfies $0 \le a_i < 10^{38}$, and the total satisfies $\Sigma(M) < 2^{128}$. | Numbers are unsigned 128-bit integers (Section 1.4). The bound on the total is an assumption and is not repaired by arithmetic modulo $2^{128}$: equal remainders do not imply equal sums, and the target $\Sigma(M)/2$ cannot be recovered from the remainder of $\Sigma(M)$. An input whose total reaches $2^{128}$ is rejected. For numbers of $25$ digits the bound allows more than $10^{13}$ elements. |
+| A file may contain several multisets. Each is solved on its own, and the answers are independent. | The multisets do not interact. |
+| Each exponential algorithm is applied only within a stated range of $n$ or of the target sum (Section 1.4 and the summary table in Section 7). | Outside its range the algorithm may not finish or may not fit in memory. The final algorithm of Section 6 then falls back to the approximation. |
 
 ### 1.2 Definitions (report item a)
 
@@ -31,7 +50,7 @@ Every exact algorithm for this problem that we know of needs exponential time or
 
 **Balanced partition.** A partition with $\Sigma(A) = \Sigma(B)$, equivalently $\Sigma(A) = \Sigma(M)/2$.
 
-**Discrepancy.** $d(A,B) = |\Sigma(A) - \Sigma(B)|$. A partition is balanced iff $d = 0$. This is the quality measure for the approximation algorithm (task.md section 6).
+**Discrepancy.** $d(A,B) = |\Sigma(A) - \Sigma(B)|$. A partition is balanced iff $d = 0$. This is the quality measure for the approximation algorithm.
 
 **The decision problem PARTITION.** *Instance:* a multiset $M$ of non-negative integers. *Question:* does a balanced partition exist?
 
@@ -49,12 +68,13 @@ Every exact algorithm for this problem that we know of needs exponential time or
 
 ### 1.4 Computational model and number representation
 
-All numbers are **unsigned 128-bit integers** (see CONSTITUTION.md point 3 and task.md section 6). Consequences used throughout the analysis:
+All numbers are **unsigned 128-bit integers**. This is enough for the numbers of interest: $2^{128} - 1 \approx 3.4 \cdot 10^{38}$ has $39$ digits, and the elements are non-negative, so no sign bit is wasted. Consequences used throughout the analysis:
 
 - Comparison, addition and subtraction cost $O(1)$.
-- Input constraints (task.md section 7): each $0 \le a_i < 10^{38}$, and the total $\Sigma(M) < 2^{128}$. The program checks both on input and aborts with a message if violated. Every intermediate value in every algorithm below is a subset sum or a difference of two subset sums, hence bounded by $\Sigma(M)$, so no other overflow can occur.
-- Limits on $n$ per algorithm are also in task.md section 7 and repeated in the summary table (Section 7).
-- Therefore every complexity bound below is stated in the **unit-cost RAM model**, in terms of $n$ and (for the DP) $\Sigma(M)$ only. We should write this sentence explicitly in the report: it is a standard assumption and the instructors will look for it.
+- Input constraints (Section 1.1): each $0 \le a_i < 10^{38}$, and the total $\Sigma(M) < 2^{128}$. Both are checked on input. Every intermediate value in every algorithm below is a subset sum or a difference of two subset sums, hence bounded by $\Sigma(M)$, so no other overflow can occur.
+- Some algorithms need less than this. Karmarkar-Karp (Section 5) handles only differences, each at most $\max_i a_i$, and dynamic programming (Section 4) handles sums up to $\Sigma(M)/2 \le T_{DP}$, so neither can overflow.
+- The range of $n$ in which each exact algorithm is run is given in the summary table (Section 7).
+- Therefore every complexity bound below is stated in the **unit-cost RAM model**: an arithmetic operation on a number costs $O(1)$, and the bounds are expressed in $n$ and, for dynamic programming, in $\Sigma(M)$ only.
 
 Memory is counted in machine words of 128 bits.
 
@@ -62,7 +82,7 @@ Memory is counted in machine words of 128 bits.
 
 ## 2. Algorithm A: Brute force (exhaustive search)
 
-**Role.** Reference solution for correctness testing of everything else (CONSTITUTION point 7). It also serves as the baseline in the Stage 4 time measurements. It is an exact algorithm with exponential time; the polynomial-time approximation that goes with it (task.md 4b, CONSTITUTION 6) is Algorithm D in Section 5.
+**Role.** Reference solution for correctness testing of everything else. It also serves as the baseline in the Stage 4 time measurements. It is an exact algorithm with exponential time; the polynomial-time approximation that goes with it (task.md 4b, CONSTITUTION 6) is Algorithm D in Section 5.
 
 ### 2.1 Idea
 
@@ -171,9 +191,9 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4 and
 
 ### 2.7 Constraints and limitations
 
-**Constraints that the program enforces** (task.md section 7):
+**Constraints that the program enforces**:
 
-1. **Preconditions.** The input has $n \ge 2$ elements (Section 1.1). The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked with overflow detection (`__builtin_add_overflow`) while summing. If $S$ is odd or $S = 0$, the program answers without enumerating.
+1. **Preconditions.** The input has $n \ge 2$ elements (Section 1.1). The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked while summing. If $S$ is odd or $S = 0$, the program answers without enumerating.
 2. **Bound on $n$.** The exact algorithm is run only for $n \le 30$. For a larger $n$ the program reports SKIPPED together with the violated condition. The threshold can be changed on the command line so that the Stage 4 experiments can go past it on purpose.
 
 **Limitations.** The time doubles with every additional element. Assuming $10^{9}$ Gray-code steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4:
@@ -333,14 +353,14 @@ Let $h = \lfloor n/2 \rfloor$.
 - Sweep: $O(2^{h} + 2^{n-h})$.
 - **Total time: $O(n \cdot 2^{n/2})$. Memory: $O(2^{n/2})$ words.**
 - Independent of the magnitude of $a_i$ (under the 128-bit model). Compare with the DP below.
-- Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 60$ gives $2^{30}$ entries of 16 bytes plus masks, about 20 GB per side, infeasible. So $n \le 50$ or so on the lab machines.
+- Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 44$ gives $2^{22}$ entries of 16 bytes plus 8-byte masks, about 100 MB per side. $n = 60$ gives $2^{30}$ entries, about 25 GB per side, infeasible. So $n \le 44$ in practice.
 
 ### 3.6 Constraints and limitations
 
 **Constraints that the program enforces**:
 
 1. **Preconditions.** Each value satisfies $0 \le a_i < 10^{38}$, and the total sum satisfies $S < 2^{128}$. The parser and summation check these conditions and report an error instead of truncating a value.
-2. **Bound on $n$.** The exact algorithm is run only when $n \le 60$, as stated in `task.md`. A larger input is reported as SKIPPED because the subset lists may require too much memory. The threshold is configurable for Stage 4 experiments.
+2. **Bound on $n$.** The exact algorithm is run only when $n \le 44$, so that the subset lists fit in memory (about 100 MB per half). A larger input is reported as SKIPPED because the subset lists may require too much memory. The threshold is configurable for Stage 4 experiments.
 
 **Limitations.** The algorithm avoids dependence on the numeric magnitude of the values, but its memory and running time still grow exponentially with the number of elements. At $n=60$, each half has about $2^{30}$ subsets, so storing sums and masks requires many gigabytes. Meet in the middle is therefore unsuitable for large $n$, even when the input values are small. For such inputs the program uses dynamic programming when the target is small, or the polynomial-time approximation when neither exact method is feasible.
 
@@ -494,7 +514,7 @@ Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations o
 
 $$n > 2 \log_2 T - 12.$$
 
-For $T \le T_{DP} = 10^{10}$ the right-hand side is at most $54.5$, so dynamic programming is the cheaper one for every $n \ge 55$. The memory behaves similarly: dynamic programming needs $T/8$ bytes and meet in the middle at least $16 \cdot 2^{n/2}$ bytes, so dynamic programming uses less memory when $n > 2 \log_2 T - 14$. In addition, meet in the middle is run only for $n \le 60$, because it stores $2^{n/2}$ sums per half, which is already $2^{30}$ for $n = 60$. Dynamic programming has no such bound on $n$.
+For $T \le T_{DP} = 10^{10}$ the right-hand side is at most $54.5$, so dynamic programming is the cheaper one for every $n \ge 55$. The memory behaves similarly: dynamic programming needs $T/8$ bytes and meet in the middle at least $16 \cdot 2^{n/2}$ bytes, so dynamic programming uses less memory when $n > 2 \log_2 T - 14$. In addition, meet in the middle is run only for $n \le 44$, because it stores $2^{n/2}$ sums per half, which is already about 100 MB per half for $n = 44$. Dynamic programming has no such bound on $n$.
 
 Two examples show how the choice is made.
 
@@ -504,11 +524,11 @@ Two examples show how the choice is made.
 | Target sum                  | $T \le 5 \cdot 10^{6}$                           | $T$ of order $10^{25}$                      |
 | Dynamic programming, time   | $n \cdot T/64 \approx 8 \cdot 10^{7}$ operations | not applicable, because $T > T_{DP}$        |
 | Dynamic programming, memory | $T/8 \le 0.7$ MB                                 | not applicable, because $T > T_{DP}$        |
-| Meet in the middle, time    | not applicable, because $n > 60$                 | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
-| Meet in the middle, memory  | not applicable, because $n > 60$                 | $16 \cdot 2^{n/2} \approx 0.5$ MB per half  |
+| Meet in the middle, time    | not applicable, because $n > 44$                 | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
+| Meet in the middle, memory  | not applicable, because $n > 44$                 | $16 \cdot 2^{n/2} \approx 0.5$ MB per half  |
 | Choice                      | dynamic programming                              | meet in the middle                          |
 
-In short, dynamic programming is the right choice for **many elements with small values**: $T \le T_{DP}$ together with either $n > 60$ or $n > 2 \log_2 T - 12$. The same holds for memory: dynamic programming needs $O(T)$ bits and meet in the middle $O(2^{n/2})$ words, so dynamic programming is also the smaller one when $n > 2 \log_2 T - 14$. For large values it is replaced by meet in the middle as long as $n$ is small enough, and when neither exact method is in range only an approximation is possible.
+In short, dynamic programming is the right choice for **many elements with small values**: $T \le T_{DP}$ together with either $n > 44$ or $n > 2 \log_2 T - 12$. The same holds for memory: dynamic programming needs $O(T)$ bits and meet in the middle $O(2^{n/2})$ words, so dynamic programming is also the smaller one when $n > 2 \log_2 T - 14$. For large values it is replaced by meet in the middle as long as $n$ is small enough, and when neither exact method is in range only an approximation is possible.
 
 ---
 
@@ -570,7 +590,7 @@ _Proof._ Each round removes two entries and inserts one, so $|H|$ drops by $1$ a
 
 ### 5.4 Quality of the result
 
-The quality measure is the discrepancy $d$ (task.md section 6). Since the optimum can be $0$, a ratio on $d$ is meaningless, so we state the following.
+The quality measure is the discrepancy $d$. Since the optimum can be $0$, a ratio on $d$ is meaningless, so we state the following.
 
 **Proposition 5.2 (bound on $d$).** Let $M = \max a_i$. Then $d \le M$.
 
@@ -611,7 +631,7 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4.
 
 ### 5.7 Constraints and limitations
 
-**Constraints that the program enforces** (task.md section 7):
+**Constraints that the program enforces**:
 
 1. **Preconditions.** Each $0 \le a_i < 10^{38}$. The sum $S$ is not needed by the algorithm, and every difference $x - y$ is at most $\max a_i$, so no overflow can occur.
 2. **Bound on $n$.** $1 \le n \le 10^6$. For $n = 10^6$ the heap, the edges and the adjacency list take well under $100$ MB, and about $3 \cdot 10^6$ heap operations of $20$ steps each are expected to run in under a second (to be measured in Stage 4). The algorithm is never skipped.
@@ -633,7 +653,7 @@ Karmarkar-Karp is the only algorithm that works for every input: it needs $O(n \
 
 ## 6. Algorithm E: Final algorithm (input-dependent selection)
 
-**Role.** This is the algorithm the program actually runs. Algorithms A-D are its building blocks. It looks at the size $n$ and the total sum $S$ of the input, runs the cheapest exact method that is feasible under the limits of task.md section 7, and falls back to the Karmarkar-Karp approximation when no exact method is feasible. It always returns a partition and its discrepancy, and it says whether the answer is exact.
+**Role.** This is the algorithm the program actually runs. Algorithms A-D are its building blocks. It looks at the size $n$ and the total sum $S$ of the input, runs the cheapest exact method that is feasible under the limits of Section 1.4, and falls back to the Karmarkar-Karp approximation when no exact method is feasible. It always returns a partition and its discrepancy, and it says whether the answer is exact.
 
 ### 6.1 Idea
 
@@ -642,7 +662,7 @@ The exact methods have complementary ranges: dynamic programming is cheap when t
 ### 6.2 Pseudocode
 
 ```
-SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)          // requires n ≥ 2, checked when the input is parsed
+SOLVE(a[1..n], limits N_MITM = 44, T_DP = 10^10)          // requires n ≥ 2, checked when the input is parsed
     S ← Σ a[i]                                   // with overflow check
     if S is odd then
         (A, B, d) ← KARMARKAR-KARP(a)
@@ -660,7 +680,7 @@ SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)          // requires n ≥ 2, c
     return (A, B, d, exact = FALSE)              // out of range for exact methods: approximation only
 ```
 
-The thresholds `N_MITM` and `T_DP` are the limits from task.md section 7 and are command-line options, so the Stage 4 experiments can move them.
+The thresholds `N_MITM` and `T_DP` are the limits of Section 1.4 and are adjustable parameters of the algorithm.
 
 ### 6.3 Correctness
 
@@ -687,7 +707,7 @@ The worst case is still exponential, which is unavoidable unless P = NP (Section
 | Algorithm | Exact? | Time | Memory | Depends on magnitude? | Practical range |
 |---|---|---|---|---|---|
 | A. Brute force | yes | $O(n \cdot 2^n)$, $O(2^n)$ with Gray code | $O(n)$ | no | $n \le 30$ |
-| B. Meet in the middle | yes | $O(n \cdot 2^{n/2})$ | $O(2^{n/2})$ | no | $n \le 60$ |
+| B. Meet in the middle | yes | $O(n \cdot 2^{n/2})$ | $O(2^{n/2})$ | no | $n \le 44$ |
 | C. Dynamic programming | yes | $O(n \cdot \Sigma)$ | $O(\Sigma)$ bits | **yes** | $\Sigma/2 \le 10^{10}$ |
 | D. Karmarkar-Karp | no | $O(n \log n)$ | $O(n)$ | no | $n \le 10^6$ |
 | E. Final (selection) | yes within limits, else approx. | max of the branch taken | max of the branch taken | via C only | any |
@@ -703,7 +723,7 @@ Use the first set of `AaC_example_1.txt`: $\{11, 22, 33, 44, 55, 66, 77, 1, 2, 3
 ## 9. Notes for Stages 3 and 4 (not part of the Stage 2 PDF)
 
 - Number type: `using Num = unsigned __int128;` in one header, with `parse(string) -> Num` (reject $>38$ digits, reject non-digits, allow leading zeros) and `to_string(Num)`. Overflow check on summation via `__builtin_add_overflow`. Differences in Karmarkar-Karp are always $x - y$ with $x \ge y$, so unsigned is safe there; the discrepancy $|\Sigma(A)-\Sigma(B)|$ is computed as max minus min.
-- Masks in Algorithm B: `uint64_t` suffices since $n \le 60$ for B (task.md section 7).
+- Masks in Algorithm B: `uint64_t` suffices since $n \le 44$ for B.
 - Testing: random multisets with $n \le 20$, compare A, B, C (when $\Sigma$ small) for the YES/NO answer and verify the returned partitions sum to $T$. Check D's returned $d$ against the partition it returns.
 - Experiments: (i) time vs $n$ at fixed 25-digit magnitude for A, B, D; (ii) time vs magnitude at fixed $n = 20$ for B vs C; (iii) discrepancy of D vs greedy vs optimum (from B) for $n \le 40$.
 
