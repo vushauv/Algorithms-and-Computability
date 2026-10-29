@@ -8,7 +8,7 @@
 
 **Sum.** $\Sigma(M) = \sum_{i=1}^{n} a_i$. For an index set $I \subseteq \{1,\dots,n\}$, $\Sigma(I) = \sum_{i \in I} a_i$.
 
-**Partition into two subsets.** A pair $(A, B)$ with $A \cup B = \{1,\dots,n\}$ and $A \cap B = \emptyset$. Either side may be empty.
+**Partition into two subsets.** A pair $(A, B)$ of **non-empty** index sets with $A \cup B = \{1,\dots,n\}$ and $A \cap B = \emptyset$. The assignment asks for a partition into *two* subsets, so we read a subset as a non-empty one; the consequences are discussed under *Constraints on the input* below.
 
 **Balanced partition.** A partition with $\Sigma(A) = \Sigma(B)$, equivalently $\Sigma(A) = \Sigma(M)/2$.
 
@@ -19,6 +19,19 @@
 **The optimisation problem.** Find a partition minimising $d(A,B)$. Its optimum is $0$ iff the decision instance is a yes-instance, so an exact optimiser also decides PARTITION.
 
 **Target sum.** $T = \Sigma(M)/2$. If $\Sigma(M)$ is odd there is no balanced partition. (Trivial necessary condition, checked first by every algorithm.)
+
+**Trivial cases.** Every algorithm below starts with the same two checks. If $\Sigma(M)$ is odd, the answer is NO. If $\Sigma(M) = 0$, every element is $0$ and the partition $A = \{1\}$, $B = \{2, \dots, n\}$ is balanced, so the answer is YES with this partition; it has two non-empty sides because $n \ge 2$. After these checks the algorithms may assume $\Sigma(M) > 0$, hence $T > 0$. Then any index set $A$ with $\Sigma(A) = T$ is automatically non-empty, and so is its complement, because $\Sigma(B) = \Sigma(M) - T = T > 0$. This is why the requirement of non-empty sides never appears in the correctness proofs: once $\Sigma(M) > 0$, a balanced partition in the loose sense (sides allowed to be empty) is already a balanced partition in our sense.
+
+**Constraints on the input multiset.** The assignment fixes only the file format and gives two examples (`raw_regulations/AaC_example_1.txt` and `AaC_example_2.txt`), so the following constraints are our own. They are stated in the report and enforced by the program: an input that violates one of them is rejected with an error message and a non-zero exit code, nothing is silently truncated.
+
+| Constraint | Reason |
+| --- | --- |
+| Every element is a non-negative integer. | The examples contain only non-negative integers, and the problem is stated for numbers of this kind. Zero is allowed: it fits the definitions and needs no special case (every algorithm treats it like any other value). |
+| Values may repeat (the input is a multiset) and are distinguished by their position $1, \dots, n$, never by their value. | The course email of 16.10.26 states that a set may contain several equal elements. |
+| The size satisfies $n \ge 2$. | A partition into two non-empty subsets needs at least two elements. A line with a single number has no partition in our sense and is reported as an error. |
+| Both sides of a partition are non-empty. | The assignment asks for two subsets. As shown under *Trivial cases*, this costs nothing: it matters only for $\Sigma(M) = 0$, where the partition $\{1\}$ against the rest is used. |
+| Every element satisfies $0 \le a_i < 10^{38}$ and the total satisfies $\Sigma(M) < 2^{128}$. | The 128-bit representation of Section 1.3. The examples have at most 25 digits. |
+| Upper bounds on $n$ and on $T$ per algorithm (Section 1.3 and task.md section 7). | The exponential algorithms are run only when they are known to finish; outside their range the program reports that the method is skipped and falls back to the approximation (Section 6). |
 
 ### 1.2 Hardness (report item a, cited)
 
@@ -57,6 +70,7 @@ Every partition $(A, B)$ of the indices $\{1, \dots, n\}$ corresponds to a bit v
 BRUTE-FORCE(a[1..n])
     S ← Σ a[i]                              // with overflow check, see Section 2.7
     if S is odd then return NO
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
     T ← S / 2
     for mask ← 0 to 2^(n−1) − 1 do          // bit i−1 of mask puts a[i] in A; a[n] is always in B
         sumA ← 0
@@ -67,7 +81,7 @@ BRUTE-FORCE(a[1..n])
     return NO
 ```
 
-For $n = 1$ the loop has the single value `mask` $= 0$ with `sumA` $= 0$, so the answer is YES exactly when $a_1 = 0$, which is correct. For $S = 0$ (all elements zero) the first mask already succeeds with $A = \emptyset$, which is a valid partition because either side may be empty (Section 1.1).
+The two trivial cases of Section 1.1 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every returned $A$ and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
 
 ### 2.3 Gray-code variant
 
@@ -82,10 +96,10 @@ Let $m = n - 1$ be the number of free bits. The $k$-th Gray code word is $g_k = 
 BRUTE-FORCE-GRAY(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
     T ← S / 2
     m ← n − 1
-    g ← 0;  sumA ← 0                        // g is the current mask, A = ∅
-    if sumA = T then return YES, A = ∅
+    g ← 0;  sumA ← 0                        // g is the current mask, A = ∅, and sumA = 0 < T
     for k ← 1 to 2^m − 1 do
         j ← ctz(k)                          // the one bit that changes
         g ← g XOR 2^j
@@ -132,7 +146,7 @@ _Proof._ ($\Leftarrow$) Take $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) 
 
 **Theorem.** `BRUTE-FORCE` and `BRUTE-FORCE-GRAY` return YES if and only if a balanced partition exists, and the sets they return form a balanced partition.
 
-_Proof._ If $S$ is odd, no balanced partition exists, because $\Sigma(A) = \Sigma(B)$ would give $S = 2\Sigma(A)$, and NO is correct. Let $S$ be even. _Soundness:_ the algorithm answers YES only when `sumA` $= T$, and `sumA` is the sum of the returned set $A$ (in the simple version by construction of the inner loop, in the Gray version by the invariant of Section 2.3, which follows by induction on $k$ since every step adds or subtracts the one element whose bit was flipped). Then $B$ is the complement and $\Sigma(B) = S - T = T$, so the partition is balanced. _Completeness:_ if a balanced partition exists, Lemma 1 gives a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 0 its mask is visited unless the algorithm stops earlier. It stops earlier only with a YES, which is correct by soundness. If the loop ends without a hit, no such subset exists, hence by Lemma 1 no balanced partition exists, and NO is correct. The algorithm terminates because the loop runs over a finite range. $\square$
+_Proof._ If $S$ is odd, no balanced partition exists, because $\Sigma(A) = \Sigma(B)$ would give $S = 2\Sigma(A)$, and NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ has two zero sums and two non-empty sides since $n \ge 2$, so YES is correct. Let $S$ be even and positive, so $T > 0$. _Soundness:_ the algorithm answers YES only when `sumA` $= T$, and `sumA` is the sum of the returned set $A$ (in the simple version by construction of the inner loop, in the Gray version by the invariant of Section 2.3, which follows by induction on $k$ since every step adds or subtracts the one element whose bit was flipped). Then $B$ is the complement and $\Sigma(B) = S - T = T$, so the partition is balanced, and both sides are non-empty because both sums are $T > 0$. _Completeness:_ if a balanced partition exists, Lemma 1 gives a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 0 its mask is visited unless the algorithm stops earlier. It stops earlier only with a YES, which is correct by soundness. If the loop ends without a hit, no such subset exists, hence by Lemma 1 no balanced partition exists, and NO is correct. The algorithm terminates because the loop runs over a finite range. $\square$
 
 Duplicates and zeros need no case analysis, since the proof works on index sets and never uses that the values are distinct or positive.
 
@@ -145,13 +159,13 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.3 and
 - **Gray-code version.** Each step does one bit-flip, one `ctz`, one addition or subtraction and one comparison, which is $O(1)$ ($\text{ctz}$ is a single instruction on current processors, and even when computed by a loop it takes $O(1)$ amortised, because it inspects $j + 1$ bits and half of all $k$ have $j = 0$, a quarter have $j = 1$, and so on). The worst-case time is $\Theta(2^{n-1}) = O(2^n)$, which is smaller by a factor $n$.
 - **Recovering the partition.** On YES, building $A$ and $B$ from the mask costs $O(n)$ once.
 - **Memory.** The input of $n$ numbers, `sumA`, `S`, `T` and one mask: $O(n)$ words in total, and $O(1)$ beyond the input. The mask fits in a `uint64_t` while $n \le 64$, which is far above the limit of Section 2.7.
-- **Best and worst case.** The best case is a YES instance whose first mask succeeds ($S = 0$), or an odd $S$, which costs only $O(n)$. The worst case is a NO instance with even $S$, which executes all masks. The running time does **not** depend on the magnitude of the numbers, only on $n$.
+- **Best and worst case.** The best case is an odd $S$ or $S = 0$, both answered before the loop in $O(n)$. The worst case is a NO instance with even $S$, which executes all masks. The running time does **not** depend on the magnitude of the numbers, only on $n$.
 
 ### 2.7 Constraints and limitations
 
 **Constraints that the program enforces** (task.md section 7):
 
-1. **Preconditions.** The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked with overflow detection (`__builtin_add_overflow`) while summing. If $S$ is odd, the program answers NO without enumerating.
+1. **Preconditions.** The input has $n \ge 2$ elements (Section 1.1). The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked with overflow detection (`__builtin_add_overflow`) while summing. If $S$ is odd or $S = 0$, the program answers without enumerating.
 2. **Bound on $n$.** The exact algorithm is run only for $n \le 30$. For a larger $n$ the program reports SKIPPED together with the violated condition. The threshold can be changed on the command line so that the Stage 4 experiments can go past it on purpose.
 
 **Limitations.** The time doubles with every additional element. Assuming $10^{9}$ Gray-code steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4:
@@ -210,6 +224,7 @@ The running time depends on $n$, not on the magnitude of the input values. This 
 MEET-IN-THE-MIDDLE(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
+    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.1
     T ← S / 2
     h ← ⌊n / 2⌋
     LS ← SUBSET-SUMS(a[1..h])             // list of (sum, mask), 2^h entries
@@ -297,7 +312,7 @@ When $x+y=T$, the required pair has been found. Repeating these safe steps canno
 
 **Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists, and the returned sets form a balanced partition.
 
-_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. Let $S$ be even. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced. If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
+_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ is balanced with two non-empty sides (Section 1.1). Let $S$ be even and positive, so $T > 0$. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced, and both sides are non-empty because $T > 0$ (the empty subsets in the two lists can only combine to the sum $0 \ne T$). If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
 
 The proof uses indexed elements rather than distinct values. Therefore duplicate values produce separate masks and repeated sums when appropriate; they are neither merged nor lost. Zero-valued elements are also represented by masks and require no special case.
 
@@ -400,6 +415,7 @@ The cell `reach[s − a[i]]` has a smaller index than `reach[s]`, so it is still
 DP-PARTITION(a[1..n], T_DP)
     S ← a[1] + a[2] + ... + a[n]        // with overflow check
     if S is odd then return FALSE       // Step 1
+    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.1: A = {1}, B = {2, ..., n}
     T ← S / 2                           // Step 2
     if max a[i] > T then return FALSE   // Step 4
     if T > T_DP then return SKIPPED     // table too large, see Section 4.7
@@ -435,7 +451,7 @@ _Proof._ Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_
 
 **Theorem.** `DP-PARTITION` returns TRUE if and only if a balanced partition of $M$ exists, provided that the table is built, see Section 4.7.
 
-_Proof._ If $S$ is odd, there is no balanced partition (Step 1), and FALSE is correct. If $\max a_i > T$, FALSE is correct (Step 4). Otherwise, by Lemma 2 the final value of `reach[T]` is $R_n(T)$, unless the loop stopped earlier at a step $i < n$ with `reach[T]` TRUE; this is also correct, because a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_i(T)$ implies $R_n(T)$. By the definition of $R_n$ this holds if and only if a subset with sum $T$ exists, and by Lemma 1 this is equivalent to the existence of a balanced partition. $\square$
+_Proof._ If $S$ is odd, there is no balanced partition (Step 1), and FALSE is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced (Section 1.1), and TRUE is correct (Step 1'). From now on $T > 0$, so a subset with sum $T$ is non-empty and so is its complement. If $\max a_i > T$, FALSE is correct (Step 4). Otherwise, by Lemma 2 the final value of `reach[T]` is $R_n(T)$, unless the loop stopped earlier at a step $i < n$ with `reach[T]` TRUE; this is also correct, because a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_i(T)$ implies $R_n(T)$. By the definition of $R_n$ this holds if and only if a subset with sum $T$ exists, and by Lemma 1 this is equivalent to the existence of a balanced partition. $\square$
 
 ### 4.6 Complexity
 
@@ -517,7 +533,7 @@ KARMARKAR-KARP(a[1..n])
     return (A, B, d)
 ```
 
-For $n = 1$ the loop does not run, $d = a_1$, $A = \{1\}$ and $B = \emptyset$. The subtraction $x - y$ is always done with $x \ge y$, so unsigned 128-bit numbers never overflow. The pseudocode keeps the id of the **larger** element on purpose: Section 5.3 shows that this is what makes the colouring step correct.
+The input has $n \ge 2$ (Section 1.1), so the loop runs at least once and $E$ is non-empty. The subtraction $x - y$ is always done with $x \ge y$, so unsigned 128-bit numbers never overflow. The pseudocode keeps the id of the **larger** element on purpose: Section 5.3 shows that this is what makes the colouring step correct.
 
 ### 5.3 Correctness
 
@@ -536,9 +552,9 @@ For part 2, let $P$ have classes $H_P$ (the larger sum, containing $u$) and $L_P
 $$(\Sigma(H_P) + \Sigma(L_Q)) - (\Sigma(L_P) + \Sigma(H_Q)) = x - y \ge 0,$$
 and the class $H_P \cup L_Q$ is the larger one and contains $u$. $\square$
 
-**Theorem 5.1.** `KARMARKAR-KARP` terminates after $n - 1$ rounds, $G$ is a tree on all $n$ vertices, and the returned $d$ is the discrepancy of the returned partition: $d = |\Sigma(A) - \Sigma(B)|$.
+**Theorem 5.1.** `KARMARKAR-KARP` terminates after $n - 1$ rounds, $G$ is a tree on all $n$ vertices, both $A$ and $B$ are non-empty, and the returned $d$ is the discrepancy of the returned partition: $d = |\Sigma(A) - \Sigma(B)|$.
 
-_Proof._ Each round removes two entries and inserts one, so $|H|$ drops by $1$ and the loop ends after $n - 1$ rounds, with exactly one entry left. By Lemma 5.1 there is one component, so $G$ is a tree with $n - 1$ edges. A tree is bipartite, so the colouring exists, and $(A, B)$ are its two classes. By part 2 of the lemma, the single entry $d$ is the difference of their sums. $\square$
+_Proof._ Each round removes two entries and inserts one, so $|H|$ drops by $1$ and the loop ends after $n - 1$ rounds, with exactly one entry left. By Lemma 5.1 there is one component, so $G$ is a tree with $n - 1$ edges. A tree is bipartite, so the colouring exists, and $(A, B)$ are its two classes. By part 2 of the lemma, the single entry $d$ is the difference of their sums. Since $n \ge 2$, the tree has at least one edge, and the ends of an edge get different colours, so both colour classes $A$ and $B$ are non-empty. $\square$
 
 **What it decides.** If $d = 0$, then $(A, B)$ is a balanced partition, so the answer YES is correct and the sets are a certificate. If $d > 0$, nothing follows: the algorithm is **not exact**, as the example in Section 5.5 shows. Because $d = |S - 2\Sigma(B)|$, the discrepancy always has the same parity as $S$.
 
@@ -618,11 +634,12 @@ The exact methods have complementary ranges: dynamic programming is cheap when t
 ### 6.2 Pseudocode
 
 ```
-SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)
+SOLVE(a[1..n], limits N_MITM = 60, T_DP = 10^10)          // requires n ≥ 2, checked when the input is parsed
     S ← Σ a[i]                                   // with overflow check
     if S is odd then
         (A, B, d) ← KARMARKAR-KARP(a)
         return (A, B, d, exact = TRUE)           // no balanced partition exists, d > 0 is a certificate-free answer
+    if S = 0 then return ({1}, {2, ..., n}, 0, exact = TRUE)     // trivial case, Section 1.1
     T ← S / 2
     (A, B, d) ← KARMARKAR-KARP(a)                // O(n log n), always
     if d = 0 then return (A, B, 0, exact = TRUE)
