@@ -68,7 +68,7 @@ The cell `reach[s − a[i]]` has a smaller index than `reach[s]`, so it is still
 DP-PARTITION(a[1..n], T_DP)
     S ← a[1] + a[2] + ... + a[n]        // with overflow check
     if S is odd then return FALSE       // Step 1
-    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.2: A = {1}, B = {2, ..., n}
+    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.2
     T ← S / 2                           // Step 2
     if max a[i] > T then return FALSE   // Step 4
     if T > T_DP then return SKIPPED     // table too large, see Section 4.7
