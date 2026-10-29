@@ -1,159 +1,109 @@
-## 4. Dynamic programming over subset sums
+## 4. Dynamic programming
 
-Exact algorithm whose cost depends on the size of the numbers. Choosing for each element whether it joins the subset or not spans a decision tree with $2^n$ leaves, but many branches reach the same partial sum. The algorithm memoizes every partial result in a table the first time it is obtained and reuses it afterwards. This replaces the $2^n$ branches by a cost proportional to $n$ times the target sum, at the price of memory proportional to the target sum; whether this is a gain depends on how large the target is (Sections 4.6 and 4.8).
+Brute force and meet in the middle look at subsets, and their cost grows with $n$ whatever the numbers are. Dynamic programming looks at subset *sums* instead. Many different subsets have the same sum, and only the sums between $0$ and $T$ matter, because all elements are non-negative. The cost therefore depends on the magnitude of the target $T$ and not only on $n$. This makes the algorithm pseudo-polynomial in the sense of Section 1.3: it is the best choice for many small numbers and the worst for few large ones, which is the opposite of meet in the middle.
 
-### 4.1 From the partition problem to subset sum
+### 4.1 Preliminary checks
 
-Let $M = \{a_1, \dots, a_n\}$ be the input multiset and $S = \Sigma(M)$ its total sum (Section 1.2).
+Let $S = \Sigma(M)$ and $T = S/2$ as in Section 1.2. If $S$ is odd, no balanced partition exists, and if $S = 0$ one exists. Let $S$ be even and positive. By Section 1.2 the question is whether some index set $A$ has $\Sigma(A) = T$. One more case is decided at once: if some element satisfies $a_j > T$, then every set containing $j$ has a sum larger than $T$, and every set not containing $j$ has a complement that does. Hence the sums of the two parts cannot be equal, and the answer is NO. After this check $a_j \le T$ for all $j$.
 
-**Step 1: parity test.** In a balanced partition both sides have the same sum $\Sigma(A) = \Sigma(B)$, so $S = \Sigma(A) + \Sigma(B) = 2\,\Sigma(A)$ is even. Hence if $S$ is odd, no balanced partition exists and the algorithm can return the answer immediately, at the cost of one pass over the input.
+### 4.2 Idea
 
-**Step 2: target sum.** If $S$ is even, set $T = S/2$, where $T$ is the target sum: the sum that each side of a balanced partition must have.
+For $0 \le i \le n$ and $0 \le s \le T$ let
+$$
+R_i(s) = \text{TRUE} \iff \text{some subset of } \{a_1, \dots, a_i\} \text{ has sum } s .
+$$
+We want $R_n(T)$. With no elements the only obtainable sum is the empty sum, so
+$$
+R_0(s) = \begin{cases} \text{TRUE} & s = 0, \\ \text{FALSE} & s > 0. \end{cases}
+$$
+A subset of $\{a_1, \dots, a_i\}$ with sum $s$ either does not contain $a_i$, and is then a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s$, or contains $a_i$, and removing it leaves a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s - a_i$. Hence for $i \ge 1$
+$$
+R_i(s) = \begin{cases} R_{i-1}(s) & s < a_i, \\ R_{i-1}(s) \lor R_{i-1}(s - a_i) & s \ge a_i. \end{cases}
+$$
+Equal values need no special treatment: two equal elements are two indices and give two steps of the recurrence.
 
-**Step 3: reduction to the subset sum problem.** With the target $T$ fixed, the question becomes the following problem.
+**One row.** Row $i$ depends only on row $i - 1$, so a single array `reach[0..T]` suffices, which after step $i$ holds $R_i$. The step reads `reach[s − a[i]]`, which must still hold the value of row $i - 1$. Since $s - a_i < s$ whenever $a_i > 0$, this is guaranteed if the cells are updated from the largest index to the smallest.
 
-> **Subset sum problem.** _Given:_ a multiset $M$ of non-negative integers and a target $T$. _Question:_ is there an index set $A \subseteq \{1, \dots, n\}$ with $\Sigma(A) = T$?
+**Bitset.** Every cell is a single bit, so the array is stored as a bitset of $T + 1$ bits packed into words of $w = 64$ bits. The update of the whole row is then `reach ← reach OR (reach << a[i])`, truncated at bit $T$. It is carried out word by word, in the order from the highest word to the lowest when it is done in place, and needs about $T/w$ word operations instead of $T$ cell updates.
 
-**Lemma 1.** Let $S$ be even and $T = S/2$. A balanced partition of $M$ exists if and only if some subset of $M$ has sum exactly $T$.
-
-_Proof._ If $(A, B)$ is balanced then $\Sigma(A) = S/2 = T$, so $A$ is a solution of the subset sum problem. Conversely, if $\Sigma(A) = T$, put $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) = S - T = T = \Sigma(A)$, so $(A, B)$ is balanced. $\square$
-
-A solution $A$ of the subset sum problem is therefore at the same time one side of a balanced partition, and the other side is its complement. From now on the task is to decide whether a subset with sum exactly $T$ exists.
-
-**Step 4: oversized elements.** If some element satisfies $a_j > T$, the side containing it has a sum larger than $T = S/2$, so the two sides cannot be equal and the answer is FALSE. This step does not affect correctness: it saves building the table in this case and guarantees that
-
-$$a_j \le T \quad \text{for every } j \in \{1, \dots, n\}$$
-
-holds for all elements processed later.
-
-### 4.2 The idea
-
-**Why not enumerate subsets.** Brute force and meet in the middle (Sections 2 and 3) examine subsets and there are $2^n$ of them. Many different subsets have the same sum, and only the values $0, 1, \dots, T$ matter for our question. All elements are non-negative, so a sum larger than $T$ can never be completed to $T$. The dynamic programming approach exploits this: instead of remembering subsets, it remembers which _sums_ can be obtained, and there are only $T + 1$ candidates for them.
-
-**The table.** For $0 \le i \le n$ and $0 \le s \le T$ define
-
-$$R_i(s) = \text{TRUE} \iff \text{some subset of } \{a_1, \dots, a_i\} \text{ has sum } s.$$
-
-$R_i$ describes which sums are obtainable from the first $i$ elements. We want $R_n(T)$.
-
-**The recurrence.** Whether a sum $s$ is obtainable from the first $i$ elements depends only on the sums obtainable from the first $i-1$ elements. So the values $R_i(s)$ satisfy a one-step recurrence relation, which consists of a base case and a recurrence step.
-
-_Base case._ With no elements the only obtainable sum is the empty sum $0$:
-
-$$R_0(s) = \begin{cases} \text{TRUE} & s = 0, \\ \text{FALSE} & s > 0. \end{cases}$$
-
-_Recurrence step._ For $i \ge 1$, a subset of $\{a_1, \dots, a_i\}$ with sum $s$ either does not contain $a_i$, and then it is a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s$, or it contains $a_i$, and then removing $a_i$ leaves a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s - a_i$. Hence
-
-$$R_i(s) = \begin{cases} R_{i-1}(s) & s < a_i, \\ R_{i-1}(s) \lor R_{i-1}(s - a_i) & s \ge a_i. \end{cases}$$
-
-If $s < a_i$ the second option is impossible, because the remaining sum $s - a_i$ would be negative.
-
-Applying the recurrence step for $i = 1, \dots, n$ yields $R_n(T)$, which by Lemma 1 is TRUE if and only if a balanced partition exists. Equal values need no special treatment, because two equal elements are two different indices and hence two different steps of the recurrence.
-
-**Storing a single row.** Row $i$ depends only on row $i-1$, so the algorithm does not store all rows. It keeps one array `reach[0..T]` and overwrites it, so that after step $i$ the array holds $R_i$. The order in which the cells are overwritten matters, because the recurrence step reads the cell `reach[s − a[i]]` and must find there the value from row $i-1$.
-
-The cell `reach[s − a[i]]` has a smaller index than `reach[s]`, so it is still unchanged when `reach[s]` is computed, provided that the cells are updated from the largest index to the smallest. Hence the sums have to be processed in descending order.
-
-**Bitset form.** Each cell of the array `reach` holds only true or false, so one bit is enough for it. Packing the $T+1$ cells as bits into machine words gives a _bitset_ of $T+1$ bits. A boolean array normally uses one byte per cell, so the bitset needs 8 times less memory. It is also faster: the loop over all $s$ is replaced by the operation `reach ← reach OR (reach << a[i])`, which shifts the whole array by $a_i$ positions and combines it with the old one. The machine carries it out word by word, and each word holds 64 cells, so one step needs about $T/64$ word operations instead of $T$ cell updates. This is the most efficient form to implement.
-
-### 4.3 Pseudocode
-
-**Input.** `a[1..n]` is the multiset of $n$ non-negative integers, and `T_DP` is the largest target sum for which the table is built (Section 4.7).
-
-**Output.** TRUE if a balanced partition exists, FALSE if it does not, and SKIPPED if the target sum exceeds `T_DP`.
-
-**Variables.** `S` is the sum of all elements and `T` is the target sum. `reach[0..T]` is the table of the current row, where `reach[s]` is TRUE if the sum `s` is obtainable. `top` is an upper bound on the sums that are obtainable so far, so that cells above it need not be visited. The pseudocode uses a boolean array, and the bitset form of Section 4.2 replaces its inner loop.
+### 4.3 Algorithm
 
 ```
-DP-PARTITION(a[1..n], T_DP)
-    S ← a[1] + a[2] + ... + a[n]        // with overflow check
-    if S is odd then return FALSE       // Step 1
-    if S = 0 then return TRUE           // Step 1', trivial case of Section 1.2
-    T ← S / 2                           // Step 2
-    if max a[i] > T then return FALSE   // Step 4
-    if T > T_DP then return SKIPPED     // table too large, see Section 4.7
+DP-PARTITION(a[1..n])
+    S ← Σ a[i]
+    if S is odd then return NO
+    if S = 0 then return YES                       // Section 1.2
+    T ← S / 2
+    if max a[i] > T then return NO                 // Section 4.1
     reach[0..T] ← FALSE
     reach[0] ← TRUE
-    top ← 0
+    top ← 0                                        // upper bound on the obtainable sums
     for i ← 1 to n do
         top ← min(T, top + a[i])
-        for s ← top down to a[i] do     // descending order, see Section 4.2
+        for s ← top down to a[i] do
             reach[s] ← reach[s] OR reach[s − a[i]]
-        if reach[T] then return TRUE    // the target is already obtainable
-    return FALSE
+        if reach[T] then return YES
+    return NO
 ```
+
+The variable `top` bounds the obtainable sums after step $i$ by $a_1 + \dots + a_i$ and by $T$, so cells above it are not visited. The inner loop is replaced by the shift of Section 4.2 in the bitset form.
 
 ### 4.4 Example
 
-Let $a = (3, 1, 4, 2)$. Then $S = 10$ is even, $T = 5$, and $\max a_i = 4 \le T$. Obtainable sums after each step:
+Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$ and $\max a_i = 4 \le T$. The obtainable sums not exceeding $T$ are
 
-| step $i$ | element $a_i$ | obtainable sums $\le T$ |
-| -------- | ------------- | ----------------------- |
-| 0        |               | $\{0\}$                 |
-| 1        | 3             | $\{0, 3\}$              |
-| 2        | 1             | $\{0, 1, 3, 4\}$        |
-| 3        | 4             | $\{0, 1, 3, 4, 5\}$     |
+| step $i$ | element $a_i$ | obtainable sums |
+| -------- | ------------- | --------------- |
+| 0        |               | $\{0\}$         |
+| 1        | $3$           | $\{0, 3\}$      |
+| 2        | $1$           | $\{0, 1, 3, 4\}$ |
+| 3        | $4$           | $\{0, 1, 3, 4, 5\}$ |
 
-After step 3 the target $T = 5$ is obtainable, so the algorithm stops and answers TRUE. Indeed, the elements $1$ and $4$ form one side with sum $5$, and the elements $3$ and $2$ form the other side with sum $5$.
+After step $3$ the target $5$ is obtainable and the algorithm answers YES. Indeed, $1 + 4 = 3 + 2 = 5$.
 
 ### 4.5 Correctness
 
-**Lemma 2 (invariant).** After step $i$ of the main loop, `reach[s]` $= R_i(s)$ for all $0 \le s \le T$.
+**Lemma 4.1** (invariant). After step $i$ of the loop, `reach[s]` $= R_i(s)$ for all $0 \le s \le T$.
 
-_Proof._ Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_0$. Assume `reach` $= R_{i-1}$ before step $i$. Consider the moment when the loop handles a sum $s \ge a_i$. Cells with an index larger than $s$ have already been rewritten, but those with an index at most $s$ have not, and `reach[s − a[i]]` is among the latter because $s - a_i \le s$. So it still holds $R_{i-1}(s - a_i)$, and the cell `reach[s]` receives $R_{i-1}(s) \lor R_{i-1}(s - a_i)$, which is $R_i(s)$ by the recurrence of Section 4.2. For $s < a_i$ the recurrence gives $R_i(s) = R_{i-1}(s)$, and these cells are not modified. The bound `top` skips only cells that are FALSE in both rows, because no subset of $\{a_1, \dots, a_i\}$ has a sum larger than $a_1 + \dots + a_i$. $\square$
+*Proof.* Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_0$. Assume that `reach` $= R_{i-1}$ before step $i$. Consider the moment at which the loop handles $s \ge a_i$. The cells with an index larger than $s$ have been rewritten, those with an index at most $s$ have not, and `reach[s − a[i]]` is among the latter. So it holds $R_{i-1}(s - a_i)$, and `reach[s]` receives $R_{i-1}(s) \lor R_{i-1}(s - a_i) = R_i(s)$. For $s < a_i$ the cell is not modified, and $R_i(s) = R_{i-1}(s)$. The bound `top` skips only cells that are FALSE in both rows, because no subset of $\{a_1, \dots, a_i\}$ has a sum larger than $a_1 + \dots + a_i$. $\square$
 
-**Theorem.** `DP-PARTITION` returns TRUE if and only if a balanced partition of $M$ exists, provided that the table is built, see Section 4.7.
+**Theorem 4.2.** `DP-PARTITION` returns YES if and only if a balanced partition exists.
 
-_Proof._ If $S$ is odd, there is no balanced partition (Step 1), and FALSE is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced (Section 1.2), and TRUE is correct (Step 1'). From now on $T > 0$, so a subset with sum $T$ is non-empty and so is its complement. If $\max a_i > T$, FALSE is correct (Step 4). Otherwise, by Lemma 2 the final value of `reach[T]` is $R_n(T)$, unless the loop stopped earlier at a step $i < n$ with `reach[T]` TRUE; this is also correct, because a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_i(T)$ implies $R_n(T)$. By the definition of $R_n$ this holds if and only if a subset with sum $T$ exists, and by Lemma 1 this is equivalent to the existence of a balanced partition. $\square$
+*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4, and the case $\max a_i > T$ is Section 4.1. Otherwise $T > 0$, and by Section 1.2 a balanced partition exists if and only if $R_n(T)$ holds. By Lemma 4.1 the value of `reach[T]` after the last step is $R_n(T)$. If the loop stops earlier, at a step $i < n$ with `reach[T]` $= R_i(T)$ TRUE, then a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_n(T)$ holds as well. $\square$
 
 ### 4.6 Complexity
 
-Let $T = S/2$ and $w = 64$ be the word size of the bitset. We count operations on machine words in the unit-cost model of Section 1.4.
+**Theorem 4.3.** `DP-PARTITION` takes time $O(n \cdot T)$ with a boolean array and $O(n + n \cdot T/w)$ with the bitset, where $w = 64$ is the word length. It needs $T + 1$ bits of memory.
 
-- **Preliminaries.** The sum, the parity test and the maximum cost $O(n)$.
-- **Boolean array.** Each of the $n$ steps visits at most $T$ cells, hence time $O(n \cdot T)$, with $O(T)$ cells of memory.
-- **Bitset version.** One step consists of a shift and an OR over $\lceil (T+1)/w \rceil$ words, hence $O(n \cdot T/w)$ for the main loop.
-- **Total time:** $O(n + n \cdot T/w)$. Since $T = S/2$, this is $O(n + n \cdot S/w)$, that is $O(n \cdot S)$ if the factor $w$ is dropped. The bound `top` makes the early steps cheaper but does not change the worst case.
-- **Memory:** the table has $T + 1$ cells, which take $T + 1$ bits as a bitset. So the memory is $O(T)$ bits, that is $O(T/w)$ machine words, and in terms of the input sum $O(S)$ bits.
-- **Best and worst case.** The early exit shortens the run only if the answer is TRUE. If the answer is FALSE and $S$ is even with $\max a_i \le T$, all $n$ steps are executed.
+*Proof.* The sum, the parity test and the maximum take $O(n)$. Each of the $n$ steps visits at most $T$ cells of the array, or shifts and combines $\lceil (T+1)/w \rceil$ words of the bitset. The table has $T + 1$ cells of one bit. $\square$
 
-**Pseudo-polynomial time.** An algorithm is _pseudo-polynomial_ if its running time is polynomial in the numeric values of the input but not in the length of its encoding [Garey and Johnson 1979, Section 4.2]. Here the input length is $\Theta(n \log S)$ bits, while the running time contains the factor $T = S/2$, which grows tenfold with every additional decimal digit. So the algorithm is exponential in the input length, in agreement with the weak NP-hardness of the partition problem.
+Since $T = S/2$, the time is $O(n \cdot \Sigma(M))$, as stated in Section 1.1. The bound `top` makes the early steps cheaper but does not change the worst case, and the early exit helps only for YES instances: for a NO instance with even $S$ and $\max a_i \le T$ all $n$ steps are executed.
 
-### 4.7 Constraints and limitations
+**Pseudo-polynomial time.** The length of the input is $\Theta(n \log S)$ bits, whereas the running time contains the factor $T$, which grows tenfold with every additional decimal digit of the numbers. The algorithm is thus exponential in the length of the input, in agreement with the NP-completeness of PARTITION (Section 1.3).
 
-**Constraints that the program enforces**:
+### 4.7 Range of application and comparison with meet in the middle
 
-1. **Preconditions of the table.** The table is built only if $S$ is even, $\max a_i \le T$ and $T \le T_{DP}$. If $S$ is odd or $\max a_i > T$, the algorithm returns FALSE. If $T > T_{DP}$, it reports SKIPPED together with the violated condition.
-2. **Bound on the target.** The parameter $T_{DP}$ (Section 1.4) is the largest target sum for which the table is built. The table has $T + 1$ bits, so $T_{DP}$ is limited by memory: a target of order $10^{10}$ already needs about a gigabyte. A larger target is not processed, and the result is SKIPPED.
-3. **Number of elements.** The algorithm itself adds no limit on $n$.
+The table has $T + 1$ bits, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). A target of order $10^{10}$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$, which is far out of range.
 
-**Limitations.**
+Section 3 gives the alternative whose cost depends on $n$ only. Ignoring constant factors, the bitset version of dynamic programming costs $n \cdot T/w$ and meet in the middle costs $n \cdot 2^{n/2}$ operations. The common factor $n$ cancels.
 
-- The cost grows with the magnitude of the numbers. For 25-digit values such as those in `AaC_example_2.txt` the target is about $10^{24}$ and the table would need $10^{21}$ bytes, so the algorithm cannot be applied to them.
-- The cost depends on $T$ and not only on $n$: for a small $n$ and large values, such as $n = 30$ numbers with 25 digits, it is far slower than meet in the middle.
-- The memory grows linearly with $T$, as $O(T)$ bits, while meet in the middle needs only $O(2^{n/2})$ words. For a small $n$ and large values dynamic programming therefore needs far more memory, and for $T$ of order $10^{10}$ already about a gigabyte.
+**Proposition 4.4.** Dynamic programming performs fewer operations than meet in the middle if and only if $T/64 < 2^{n/2}$, that is,
+$$
+n > 2 \log_2 T - 12 .
+$$
+It needs less memory if and only if $T/8 < 16 \cdot 2^{n/2}$ bytes, that is, $n > 2 \log_2 T - 14$.
 
-### 4.8 When to use it
+*Proof.* Take logarithms to base $2$ in the two inequalities. $\square$
 
-**Comparison with meet in the middle (Section 3).** Meet in the middle takes about $n \cdot 2^{n/2}$ operations whatever the values are; dynamic programming takes about $n \cdot T/64$ and depends on the values only through $T$. The factor $n$ is common to both costs and cancels, so dynamic programming is the cheaper one when $T/64 < 2^{n/2}$, that is, when $T < 2^{n/2+6}$ or, equivalently,
+Since $T \le T_{DP}$, the threshold is at most $2 \log_2 T_{DP} - 12$, which is of the order of fifty for $T_{DP}$ of order $10^{10}$. Moreover, meet in the middle is applied only for $n \le N_{MITM}$, whereas dynamic programming has no bound on $n$. Two examples illustrate the choice.
 
-$$n > 2 \log_2 T - 12.$$
+| | many small numbers | few large numbers |
+| --- | --- | --- |
+| Input | $n = 1000$ elements below $10^4$ | $n = 30$ elements of $25$ digits |
+| Target | $T \le 5 \cdot 10^6$ | $T$ of order $10^{25}$ |
+| Dynamic programming | $n \cdot T/64 \approx 8 \cdot 10^7$ operations, $T/8 \le 0.7$ MB | not applicable, since $T > T_{DP}$ |
+| Meet in the middle | not applicable, since $n > N_{MITM}$ | $n \cdot 2^{n/2} \approx 10^6$ operations, $16 \cdot 2^{n/2} \approx 0.5$ MB per half |
 
-Since $T \le T_{DP}$, the right-hand side is at most $2 \log_2 T_{DP} - 12$, so dynamic programming is the cheaper one for every $n$ above this value. For $T_{DP}$ of order $10^{10}$ this is a few tens. The memory behaves similarly: dynamic programming needs $T/8$ bytes and meet in the middle at least $16 \cdot 2^{n/2}$ bytes, so dynamic programming uses less memory when $n > 2 \log_2 T - 14$. In addition, meet in the middle is run only for $n \le N_{MITM}$, because it stores $2^{n/2}$ sums per half. Dynamic programming has no such bound on $n$.
-
-Two examples show how the choice is made.
-
-|                             | Example 1                                        | Example 2                                   |
-| --------------------------- | ------------------------------------------------ | ------------------------------------------- |
-| Input                       | $n = 1000$ elements below $10^4$                 | $n = 30$ elements with 25 digits            |
-| Target sum                  | $T \le 5 \cdot 10^{6}$                           | $T$ of order $10^{25}$                      |
-| Dynamic programming, time   | $n \cdot T/64 \approx 8 \cdot 10^{7}$ operations | not applicable, because $T > T_{DP}$        |
-| Dynamic programming, memory | $T/8 \le 0.7$ MB                                 | not applicable, because $T > T_{DP}$        |
-| Meet in the middle, time    | not applicable, because $n > N_{MITM}$          | $n \cdot 2^{n/2} \approx 10^{6}$ operations |
-| Meet in the middle, memory  | not applicable, because $n > N_{MITM}$          | $16 \cdot 2^{n/2} \approx 0.5$ MB per half  |
-| Choice                      | dynamic programming                              | meet in the middle                          |
-
-In short, dynamic programming is the right choice for **many elements with small values**: $T \le T_{DP}$ together with either $n > N_{MITM}$ or $n > 2 \log_2 T - 12$. The same holds for memory: dynamic programming needs $O(T)$ bits and meet in the middle $O(2^{n/2})$ words, so dynamic programming is also the smaller one when $n > 2 \log_2 T - 14$. For large values it is replaced by meet in the middle as long as $n$ is small enough, and when neither exact method is in range only an approximation is possible.
+Dynamic programming is thus the method for many elements with small values, and meet in the middle for few elements with arbitrary values. When both are out of range, only the approximation of Section 5 remains.
 
 ---
-
