@@ -16,18 +16,17 @@ Every partition $(A, B)$ of the indices $\{1, \dots, n\}$ corresponds to a bit v
 BRUTE-FORCE(a[1..n])
     S ← Σ a[i]                              // with overflow check, see Section 2.7
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
+    if S = 0 then return YES                 // trivial case, Section 1.2
     T ← S / 2
     for mask ← 0 to 2^(n−1) − 1 do          // bit i−1 of mask puts a[i] in A; a[n] is always in B
         sumA ← 0
         for i ← 1 to n − 1 do
             if bit (i−1) of mask = 1 then sumA ← sumA + a[i]
-        if sumA = T then
-            return YES, A = { i : bit (i−1) of mask = 1 }, B = the other indices
+        if sumA = T then return YES
     return NO
 ```
 
-The two trivial cases of Section 1.2 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every returned $A$ and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
+The two trivial cases of Section 1.2 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every set $A$ that succeeds and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
 
 ### 2.3 Gray-code variant
 
@@ -42,7 +41,7 @@ Let $m = n - 1$ be the number of free bits. The $k$-th Gray code word is $g_k = 
 BRUTE-FORCE-GRAY(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
+    if S = 0 then return YES                 // trivial case, Section 1.2
     T ← S / 2
     m ← n − 1
     g ← 0;  sumA ← 0                        // g is the current mask, A = ∅, and sumA = 0 < T
@@ -51,8 +50,7 @@ BRUTE-FORCE-GRAY(a[1..n])
         g ← g XOR 2^j
         if bit j of g = 1 then sumA ← sumA + a[j+1]     // a[j+1] entered A
         else                   sumA ← sumA − a[j+1]     // a[j+1] left A
-        if sumA = T then
-            return YES, A = { i : bit (i−1) of g = 1 }
+        if sumA = T then return YES
     return NO
 ```
 
@@ -64,7 +62,7 @@ The subtraction never underflows: a value is subtracted only if it was added bef
 
 The masks $0, 1, \dots, 6$ give the sums $\Sigma(A) = 0, 3, 1, 4, 4, 7, 5$, and only the last one equals $T$.
 
-At `mask` $= 6$ the algorithm stops after $7$ of the $8$ masks and answers YES with $A = \{a_2, a_3\} = \{1, 4\}$ and $B = \{a_1, a_4\} = \{3, 2\}$, both with sum $5$.
+At `mask` $= 6$ the algorithm stops after $7$ of the $8$ masks and answers YES. This mask stands for $A = \{a_2, a_3\} = \{1, 4\}$, whose complement $\{a_1, a_4\} = \{3, 2\}$ has the same sum $5$.
 
 **The Gray-code variant on the same input.** The masks come in the order $000, 001, 011, 010, 110, \dots$
 
@@ -76,7 +74,7 @@ At `mask` $= 6$ the algorithm stops after $7$ of the $8$ masks and answers YES w
 | 3        | 0               | $a_1 = 3$ leaves | 010 | $4 - 3 = 1$  | no     |
 | 4        | 2               | $a_3 = 4$ enters | 110 | $1 + 4 = 5$  | **yes** |
 
-It stops after $5$ masks with the same partition $A = \{a_2, a_3\}$. Each step costs one addition or subtraction instead of up to $3$.
+It stops after $5$ masks at the same set $A = \{a_2, a_3\}$ and answers YES. Each step costs one addition or subtraction instead of up to $3$.
 
 **A NO instance.** Let $a = (2, 3, 7)$. Then $S = 12$, $T = 6$, and the mask has $2$ bits for $a_1 = 2$ and $a_2 = 3$. The four masks give $\Sigma(A) \in \{0, 2, 3, 5\}$ and none equals $6$, so all masks are examined and the answer is NO. Indeed, $7$ alone already exceeds $T$.
 
@@ -90,9 +88,9 @@ _Proof._ The bits of the mask are the indicator vector of $A$. A bijection of th
 
 _Proof._ ($\Leftarrow$) Take $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) = S - T = T = \Sigma(A)$. ($\Rightarrow$) Let $(A, B)$ be balanced. If $n \in B$, then $A \subseteq \{1, \dots, n-1\}$ and $\Sigma(A) = T$ because a balanced partition has $\Sigma(A) = S/2$. Otherwise $n \in A$, and then $(B, A)$ is also balanced, has $n$ in its second part, and its first part $B \subseteq \{1, \dots, n-1\}$ has $\Sigma(B) = T$. $\square$
 
-**Theorem.** `BRUTE-FORCE` and `BRUTE-FORCE-GRAY` return YES if and only if a balanced partition exists, and the sets they return form a balanced partition.
+**Theorem.** `BRUTE-FORCE` and `BRUTE-FORCE-GRAY` return YES if and only if a balanced partition exists.
 
-_Proof._ If $S$ is odd, no balanced partition exists, because $\Sigma(A) = \Sigma(B)$ would give $S = 2\Sigma(A)$, and NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ has two zero sums and two non-empty sides since $n \ge 2$, so YES is correct. Let $S$ be even and positive, so $T > 0$. _Soundness:_ the algorithm answers YES only when `sumA` $= T$, and `sumA` is the sum of the returned set $A$ (in the simple version by construction of the inner loop, in the Gray version by the invariant of Section 2.3, which follows by induction on $k$ since every step adds or subtracts the one element whose bit was flipped). Then $B$ is the complement and $\Sigma(B) = S - T = T$, so the partition is balanced, and both sides are non-empty because both sums are $T > 0$. _Completeness:_ if a balanced partition exists, Lemma 1 gives a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 0 its mask is visited unless the algorithm stops earlier. It stops earlier only with a YES, which is correct by soundness. If the loop ends without a hit, no such subset exists, hence by Lemma 1 no balanced partition exists, and NO is correct. The algorithm terminates because the loop runs over a finite range. $\square$
+_Proof._ If $S$ is odd, no balanced partition exists, because $\Sigma(A) = \Sigma(B)$ would give $S = 2\Sigma(A)$, and NO is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ has two zero sums and two non-empty sides since $n \ge 2$, so YES is correct. Let $S$ be even and positive, so $T > 0$. _Soundness:_ the algorithm answers YES only when `sumA` $= T$, and `sumA` is the sum of the set $A$ of the current mask (in the simple version by construction of the inner loop, in the Gray version by the invariant of Section 2.3, which follows by induction on $k$ since every step adds or subtracts the one element whose bit was flipped). Its complement $B$ has $\Sigma(B) = S - T = T$, so $(A, B)$ is a balanced partition, and both sides are non-empty because both sums are $T > 0$. _Completeness:_ if a balanced partition exists, Lemma 1 gives a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 0 its mask is visited unless the algorithm stops earlier. It stops earlier only with a YES, which is correct by soundness. If the loop ends without a hit, no such subset exists, hence by Lemma 1 no balanced partition exists, and NO is correct. The algorithm terminates because the loop runs over a finite range. $\square$
 
 Duplicates and zeros need no case analysis, since the proof works on index sets and never uses that the values are distinct or positive.
 
@@ -103,7 +101,6 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4 and
 - **Preliminaries.** The sum and the parity test cost $O(n)$.
 - **Simple version.** The outer loop has $2^{n-1}$ masks (in the worst case all of them, when the answer is NO or the hit is the last mask) and the inner loop has $n - 1$ iterations with one test and at most one addition. The worst-case time is therefore $\Theta(n \cdot 2^{n-1}) = \Theta(n \cdot 2^n)$, that is $O(n \cdot 2^n)$.
 - **Gray-code version.** Each step does one bit-flip, one `ctz`, one addition or subtraction and one comparison, which is $O(1)$ ($\text{ctz}$ is a single instruction on current processors, and even when computed by a loop it takes $O(1)$ amortised, because it inspects $j + 1$ bits and half of all $k$ have $j = 0$, a quarter have $j = 1$, and so on). The worst-case time is $\Theta(2^{n-1}) = O(2^n)$, which is smaller by a factor $n$.
-- **Recovering the partition.** On YES, building $A$ and $B$ from the mask costs $O(n)$ once.
 - **Memory.** The input of $n$ numbers, `sumA`, `S`, `T` and one mask: $O(n)$ words in total, and $O(1)$ beyond the input. The mask fits in a `uint64_t` while $n \le 64$, which is far above the limit of Section 2.7.
 - **Best and worst case.** The best case is an odd $S$ or $S = 0$, both answered before the loop in $O(n)$. The worst case is a NO instance with even $S$, which executes all masks. The running time does **not** depend on the magnitude of the numbers, only on $n$.
 
@@ -130,7 +127,7 @@ The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it ta
 
 Brute force is **never** the algorithm of choice for the final program; its role is the reference. Its value lies in being obviously correct: it contains no cleverness that could hide a bug, uses $O(n)$ memory, and does not depend on the magnitude of the numbers. We therefore use it in Stages 3 and 4 as follows:
 
-- **Oracle in the tests.** On random multisets with $n \le 20$ (including duplicates, zeros and odd sums) the answers of B, C (when $S$ is small) and E are compared with A, and every returned partition is checked to have two sums equal to $T$.
+- **Oracle in the tests.** On random multisets with $n \le 20$ (including duplicates, zeros and odd sums) the answers of B, C (when $S$ is small) and E are compared with A.
 - **Baseline in the time experiments.** The time of A against $n$ shows the $2^n$ growth that motivates B (about $2^{n/2}$) and C (about $n \cdot T / 64$), see Sections 3.5 and 4.8.
 
 ---
