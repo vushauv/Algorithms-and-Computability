@@ -198,9 +198,28 @@ Brute force is **never** the algorithm of choice for the final program; its role
 
 ### 3.1 Idea
 
-Split the indices into halves $L = \{1..\lfloor n/2 \rfloor\}$ and $R$ = the rest. Enumerate all $2^{|L|}$ subset sums of $L$ and all $2^{|R|}$ subset sums of $R$. A balanced partition exists iff there are $s_L$ from the first list and $s_R$ from the second with $s_L + s_R = T$. Finding such a pair in two lists is done by sorting and a two-pointer sweep (or a hash set).
+The algorithm reduces the number of combinations that must be considered by splitting the input into two parts. Let
 
-Cost drops from $2^n$ to about $2 \cdot 2^{n/2}$, at the price of storing $2^{n/2}$ sums. Crucially, the running time **does not depend on the magnitude of the numbers**, which is why it is our main exact algorithm for 25-digit inputs.
+$$
+L = \{1,\dots,h\}, \qquad R = \{h+1,\dots,n\}, \qquad h = \lfloor n/2 \rfloor.
+$$
+
+Every subset $A$ of the whole input has exactly one decomposition
+
+$$
+A = (A \cap L) \cup (A \cap R).
+$$
+
+Consequently, its sum is the sum of one subset sum from the left half and one subset sum from the right half. The algorithm therefore works in four stages:
+
+1. Compute the total sum $S$ and reject the instance if $S$ is odd. Otherwise set the target to $T = S/2$.
+2. Enumerate every subset of $L$ and store its sum together with its bit mask in a list `LS`.
+3. Enumerate every subset of $R$ and store its sum together with its bit mask in a list `RS`.
+4. Search the two lists for a pair whose sums add to $T$. When such a pair is found, the two masks identify one side of the partition; the other side is its complement.
+
+There are $2^h$ subsets of $L$ and $2^{n-h}$ subsets of $R$, rather than $2^n$ subsets in one list. The lists are sorted so that a two-pointer sweep can find a pair with sum $T$ without testing every possible pair. The algorithm is exact: it does not discard any subset, and it returns NO only after every possible left/right combination has been ruled out.
+
+The running time depends on $n$, not on the magnitude of the input values. This makes meet in the middle the main exact algorithm for inputs containing 25-digit numbers. Its disadvantage is the memory required for the two lists.
 
 ### 3.2 Pseudocode
 
@@ -231,15 +250,75 @@ SUBSET-SUMS(b[1..m])
     return list of (sums[mask], mask) for all mask
 ```
 
-### 3.3 Correctness
+`SUBSET-SUMS` represents a subset by a bit mask. Bit $k$ is 1 exactly when the corresponding element belongs to the subset. To calculate a new sum, it removes one set bit from `mask`; the remaining mask has already been processed, so the new sum is obtained with one addition. The stored mask is retained because a numerical sum alone is not enough to reconstruct the partition.
 
-Every subset $A$ of $\{1..n\}$ decomposes uniquely as $A \cap L$ + $A \cap R$ = $A$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. So a balanced $A$ exists iff the sum $T$ is attainable as one element of $LS$ plus one of $RS$.
+After both lists have been generated, `LS` is sorted in ascending order and `RS` in descending order. The pointers initially refer to the smallest left sum and the largest right sum. If their total is less than $T$, the right sum cannot be increased while keeping the current left sum, so the left pointer is advanced. If their total is greater than $T$, the left sum cannot be decreased while keeping the current right sum, so the right pointer is advanced. Each pointer only moves forward, and the sweep stops when it finds the target or one list is exhausted.
 
-Two-pointer invariant: initially, the smallest sum from $LS$ and largest sum from $RS$ are summed and compared against $T$. If not equal, depending whether the sum is smaller or larger than $T$, $i$ or $j$ is incremented respectively - advancing the sweep is symmetrical. Without loss of generality, consider the case when the sweep advances incrementing $i$ because $LS[i] + RS[j] < T$. Then, no $RS[j']$ with $j' \ge j$ (all smaller or equal) can complete $LS[i]$ to $T$, and all $RS[j']$ with $j' < j$ were already shown too large for $LS[i'] \le LS[i]$ - a standard argument for a pair with given sum in two sorted arrays. Due to symmetry, the same argument applies for advancing $j$.
+### 3.3 Example
 
-Duplicates: repeated values produce repeated sums in $LS$ or $RS$; the sweep handles equal keys correctly because it compares sums, not identities. Alternatively, note that the enumeration is over masks, so duplicates never need separate treatment.
+Consider the input
 
-### 3.4 Complexity
+$$
+a = (3,1,4,2).
+$$
+
+The total is $S = 10$, so the target is $T = 5$. With $h = 2$, the left half is $(3,1)$ and the right half is $(4,2)$.
+
+The subset lists, including the empty subset, are:
+
+The rightmost mask bit is bit 0 and refers to the first element in that half. Thus, for the left half, `01` means $\{3\}$ and `10` means $\{1\}$; for the right half, `01` means $\{4\}$ and `10` means $\{2\}$.
+
+| mask | left subset | left sum | mask | right subset | right sum |
+| ---- | ----------- | -------- | ---- | ------------ | --------- |
+| 00 | $\emptyset$ | $0$ | 00 | $\emptyset$ | $0$ |
+| 01 | $\{3\}$ | $3$ | 01 | $\{4\}$ | $4$ |
+| 10 | $\{1\}$ | $1$ | 10 | $\{2\}$ | $2$ |
+| 11 | $\{3,1\}$ | $4$ | 11 | $\{4,2\}$ | $6$ |
+
+After sorting, the left sums are $(0,1,3,4)$ and the right sums are $(6,4,2,0)$ in the order used by the sweep. The pointer steps are:
+
+| left sum | right sum | total | action |
+| -------- | --------- | ----- | ------ |
+| $0$ | $6$ | $6$ | too large; advance the right pointer |
+| $0$ | $4$ | $4$ | too small; advance the left pointer |
+| $1$ | $4$ | $5$ | target found |
+
+The corresponding subsets are $\{1\}$ from the left half and $\{4\}$ from the right half. Thus one side is $\{1,4\}$ and the other is $\{3,2\}$; both sums are $5$. The algorithm stops as soon as this pair is found.
+
+If the total sum is odd, for example $a=(2,3,4)$ with $S=9$, the algorithm stops before generating either list and returns NO. If no pair of list entries adds to $T$, the sweep exhausts one list and returns NO.
+
+### 3.4 Correctness
+
+**Lemma 1 (subset-sum enumeration).** `SUBSET-SUMS(b[1..m])` returns exactly one entry for every subset of the $m$ indexed elements, and the stored sum is the sum of that subset.
+
+_Proof._ We use induction on the mask value. The mask 0 represents the empty subset and has sum 0. For a nonzero mask, the algorithm chooses one set bit $k$. The mask with this bit removed is a smaller mask, so by the induction hypothesis its stored sum is correct. Adding $b[k+1]$ gives precisely the sum of the original mask. Every mask has one unique bit pattern, so every subset is represented once. $\square$
+
+**Lemma 2 (reduction to two lists).** A subset $A \subseteq \{1,\dots,n\}$ with sum $T$ exists if and only if there are entries $s_L$ in `LS` and $s_R$ in `RS` such that $s_L+s_R=T$.
+
+_Proof._ If $A$ exists, take $A_L=A\cap L$ and $A_R=A\cap R$. These are represented in the two lists by Lemma 1, and
+
+$$
+\Sigma(A)=\Sigma(A_L)+\Sigma(A_R)=T.
+$$
+
+Conversely, if two list entries have sums adding to $T$, take the union of their represented subsets. The halves are disjoint, so the union is a subset of the whole input with sum $T$. $\square$
+
+**Lemma 3 (two-pointer sweep).** The sweep does not skip any pair of entries that could have sum $T$.
+
+_Proof._ Suppose the current entries have sums $x$ from `LS` and $y$ from `RS`.
+
+- If $x+y<T$, `RS` is descending, so every later right entry is at most $y$. Therefore $x+y' \le x+y<T$ for every right entry $y'$ at or after the current right pointer. No such entry can complete the current $x$ to $T$, so advancing the left pointer is safe.
+- If $x+y>T$, `LS` is ascending, so every later left entry is at least $x$. Therefore $x'+y \ge x+y>T$ for every left entry $x'$ at or after the current left pointer. No such entry can complete the current $y$ to $T$, so advancing the right pointer is safe.
+
+When $x+y=T$, the required pair has been found. Repeating these safe steps cannot remove a possible pair before it is examined. $\square$
+
+**Theorem.** `MEET-IN-THE-MIDDLE` returns YES if and only if a balanced partition exists, and the returned sets form a balanced partition.
+
+_Proof._ If $S$ is odd, a balanced partition is impossible because its two equal sums would add to the odd number $S$, so returning NO is correct. Let $S$ be even. By Lemma 2, a balanced partition exists exactly when some left and right list entries add to $T=S/2$. By Lemma 3, the sweep examines a pair if it could have the required sum, and therefore returns YES exactly when such a pair exists. The masks identify a subset $A$ with sum $T$; its complement has sum $S-T=T$, so the returned partition is balanced. If the sweep ends without finding a pair, no subset with sum $T$ exists, and Lemma 2 proves that NO is correct. $\square$
+
+The proof uses indexed elements rather than distinct values. Therefore duplicate values produce separate masks and repeated sums when appropriate; they are neither merged nor lost. Zero-valued elements are also represented by masks and require no special case.
+
+### 3.5 Complexity
 
 Let $h = \lfloor n/2 \rfloor$.
 
@@ -250,7 +329,20 @@ Let $h = \lfloor n/2 \rfloor$.
 - Independent of the magnitude of $a_i$ (under the 128-bit model). Compare with the DP below.
 - Practical limit: memory. $n = 40$ gives $2^{20} \approx 10^6$ entries per side, trivial. $n = 60$ gives $2^{30}$ entries of 16 bytes plus masks, about 20 GB per side, infeasible. So $n \le 50$ or so on the lab machines.
 
-### 3.5 Possible further improvement
+### 3.6 Constraints and limitations
+
+**Constraints that the program enforces**:
+
+1. **Preconditions.** Each value satisfies $0 \le a_i < 10^{38}$, and the total sum satisfies $S < 2^{128}$. The parser and summation check these conditions and report an error instead of truncating a value.
+2. **Bound on $n$.** The exact algorithm is run only when $n \le 60$, as stated in `task.md`. A larger input is reported as SKIPPED because the subset lists may require too much memory. The threshold is configurable for Stage 4 experiments.
+
+**Limitations.** The algorithm avoids dependence on the numeric magnitude of the values, but its memory and running time still grow exponentially with the number of elements. At $n=60$, each half has about $2^{30}$ subsets, so storing sums and masks requires many gigabytes. Meet in the middle is therefore unsuitable for large $n$, even when the input values are small. For such inputs the program uses dynamic programming when the target is small, or the polynomial-time approximation when neither exact method is feasible.
+
+### 3.7 When to use it
+
+Meet in the middle is the preferred exact algorithm when the input has relatively few elements and the target sum is too large for dynamic programming. It is especially useful for large values such as those in `AaC_example_2.txt`, because its cost depends on $n$ rather than on the number of digits. The final algorithm-selection procedure compares the applicable limits for dynamic programming and meet in the middle before falling back to the approximation algorithm.
+
+### 3.8 Possible further improvement
  Note: A possible further improvement to mention (not to implement unless time allows): Schroeppel-Shamir 1981 reduces memory to $O(2^{n/4})$ with the same time.
 
 ---
@@ -415,58 +507,120 @@ In short, dynamic programming is the right choice for **many elements with small
 
 ## 5. Algorithm D: Karmarkar-Karp differencing (polynomial-time approximation)
 
-**Source.** Karmarkar and Karp 1982 (technical report, UC Berkeley, "The differencing method of set partitioning"). Analysis of its quality: Yakir 1996 (expected discrepancy $n^{-\Theta(\log n)}$ for random inputs); overview in Korf 1998 and in Mertens 2006 (survey, "The easiest hard problem"). Required by the rule that every exponential exact algorithm has a polynomial approximation (task.md 4b, CONSTITUTION 6).
+**Source.** Karmarkar and Karp 1982 (technical report, UC Berkeley, "The differencing method of set partitioning"). Worst-case quality: Fischetti and Martello 1987 (ratio $7/6$). Average-case quality: Yakir 1996 (expected discrepancy $n^{-\Theta(\log n)}$ for random items); overviews in Korf 1998 and Mertens 2006. The algorithm is the polynomial-time approximation required by the rule that every exponential exact algorithm has one next to it (task.md 4b, CONSTITUTION 6), here for Algorithms A and B.
+
+**Role.** It always runs, in time $O(n \log n)$ and without any dependence on the size of the numbers. It answers YES whenever its discrepancy is $0$, and otherwise it provides the partition that the program reports when the exact methods are out of range (Section 6).
 
 ### 5.1 Idea
 
-Repeatedly take the two largest remaining numbers $x \ge y$, and decide that they go to **opposite** sides. The combined effect on the discrepancy is $x - y$, so replace them by $x - y$. Repeat until one number remains; it is the final discrepancy. To recover the actual sets, record each decision as an edge "$x$ and $y$ on opposite sides" and 2-colour the resulting tree at the end.
+Repeatedly take the two largest remaining numbers $x \ge y$ and decide that they go to **opposite** sides. Whatever happens to the other numbers, the pair then contributes only $x - y$ to the difference of the two sides, so the pair is replaced by the single number $x - y$. Repeat until one number is left; it is the discrepancy of the final partition. To recover the two sets, remember each decision as an edge "$u$ and $v$ are on opposite sides" and 2-colour the resulting graph at the end.
 
-Why it is better than the simple greedy (put the next largest number on the lighter side): greedy fixes sides immediately; differencing postpones the decision and only commits to the *relation* between elements, which lets large numbers cancel each other.
+Why it is better than the simple greedy method (put the next largest number on the lighter side): greedy commits an element to a side at once. Differencing postpones the decision and only fixes the *relation* between two elements, which lets large numbers cancel each other.
 
 ### 5.2 Pseudocode
 
 ```
 KARMARKAR-KARP(a[1..n])
-    H ← max-heap of pairs (value, id) built from (a[i], i)
-    G ← graph on vertices 1..n, no edges
+    H ← max-heap of pairs (value, id) built from (a[i], i)      // ties are broken in any way
+    E ← empty list of edges                                      // edges of the graph G on the vertices 1..n
     while |H| > 1 do
         (x, u) ← EXTRACT-MAX(H)
-        (y, v) ← EXTRACT-MAX(H)
-        INSERT(H, (x − y, u))               // x ≥ y, the difference keeps u's identity
-        ADD-EDGE(G, u, v)                   // u and v must be on opposite sides
-    (d, _) ← the single remaining element    // d = final discrepancy
-    colour G with two colours by BFS/DFS (G is a forest, so this always succeeds)
-    A ← vertices coloured 0, B ← vertices coloured 1
+        (y, v) ← EXTRACT-MAX(H)                                  // x ≥ y
+        INSERT(H, (x − y, u))                                    // the difference keeps the id of the larger element u
+        append (u, v) to E                                       // u and v are put on opposite sides
+    (d, _) ← the single entry left in H                          // d = discrepancy of the result
+    colour the vertices of G = ({1..n}, E) with 0 and 1 so that the ends of every edge differ      // BFS or DFS
+    A ← { i : colour(i) = 0 };  B ← { i : colour(i) = 1 }
     return (A, B, d)
 ```
 
-### 5.3 Correctness and quality
+For $n = 1$ the loop does not run, $d = a_1$, $A = \{1\}$ and $B = \emptyset$. The subtraction $x - y$ is always done with $x \ge y$, so unsigned 128-bit numbers never overflow. The pseudocode keeps the id of the **larger** element on purpose: Section 5.3 shows that this is what makes the colouring step correct.
 
-- *It outputs a valid partition:* $G$ has exactly $n - 1$ edges added over $n$ vertices and each edge merges two components (the vertex $v$ leaves the heap for good), so $G$ is a tree, hence bipartite, hence 2-colourable.
-- *The returned $d$ equals the discrepancy of the returned partition:* by induction on the number of differencing steps: replacing $x, y$ on opposite sides by $x - y$ on the side of $x$ leaves $\Sigma(A) - \Sigma(B)$ unchanged.
-- *It is not exact:* counterexample for the report, e.g. $\{4, 5, 6, 7, 8\}$ with $\Sigma = 30$, $T = 15$. KK: $8-7=1$, $6-5=1$, $4-1=3$, $3-1=2$, discrepancy 2. But $\{7, 8\}$ vs $\{4, 5, 6\}$ is balanced. (Verify this trace before the final version.)
-- *Guarantees to cite:* for the decision version there is no approximation ratio in the classic sense (OPT may be 0), so quality is stated either as a bound on $d$ or as a ratio on $\max(\Sigma(A), \Sigma(B))$. Known results: the discrepancy satisfies $d \le \max_i a_i$ (trivial, also holds for greedy); for uniformly random inputs the expected $d$ is $n^{-\Theta(\log n)}$ [Yakir 1996], versus $\Theta(1/n)$ for greedy. For the makespan view, LPT-style greedy is a $7/6$-approximation for two machines [Graham 1969]. We must be honest that KK's worst-case ratio on makespan is also $7/6$ (Fischetti and Martello 1987). Decide how much of this to include; at minimum: the trivial bound, the counterexample, and the random-input result with citation.
+### 5.3 Correctness
 
-### 5.4 Complexity
+Let $G$ be the graph on the vertices $1, \dots, n$ with the edges of $E$ added so far. For a connected component $C$ of $G$, its **colour classes** are the two sides of a 2-colouring of $C$. If $C$ is a tree, the 2-colouring is unique up to swapping the two colours.
 
-- Heap build $O(n)$; $n - 1$ rounds, each with two extractions and one insertion, $O(\log n)$ each.
-- 2-colouring: $O(n)$ on a tree.
-- **Total time: $O(n \log n)$. Memory: $O(n)$.**
-- Duplicates: equal values just produce a difference of 0, which is inserted and later absorbed. No special handling.
+**Lemma 5.1 (invariant).** After every round of the loop (and before the first one) the following holds.
 
-### 5.5 Optional: simple greedy as a second baseline
+1. $G$ is a forest, and every connected component of $G$ has exactly one entry $(z, u)$ in $H$, with $u$ a vertex of that component.
+2. For the entry $(z, u)$ of a component $C$, the sums of the two colour classes of $C$ differ by exactly $z$, and $u$ lies in a class with the larger (or equal) sum.
 
-```
-GREEDY(a[1..n])
-    sort a descending
-    for each a[i]: add it to the side with the smaller current sum
-```
+_Proof._ Induction on the number of rounds. Before the first round, every vertex is a component of its own, with the entry $(a_i, i)$. Its colour classes are $\{i\}$ and $\emptyset$, which differ by $a_i$, and $i$ lies in the larger one.
 
-$O(n \log n)$. Worth one paragraph and a comparison in the Stage 4 experiments; it is what everyone thinks of first, and KK beating it by orders of magnitude is a good result to show.
+Assume the invariant holds before a round. The round extracts $(x, u)$ and $(y, v)$, which belong to two **different** components $P$ and $Q$, because every component has only one entry. The new edge $\{u, v\}$ joins two different components, so $G$ stays a forest, the merged component $P \cup Q$ is a tree, and it gets the single entry $(x - y, u)$. This proves part 1.
 
-### 5.6 Optional: complete Karmarkar-Karp (CKK)
+For part 2, let $P$ have classes $H_P$ (the larger sum, containing $u$) and $L_P$, so $\Sigma(H_P) - \Sigma(L_P) = x$. Let $Q$ have the classes $H_Q \ni v$ and $L_Q$ with $\Sigma(H_Q) - \Sigma(L_Q) = y$. The edge $\{u, v\}$ forces $u$ and $v$ to opposite colours, so the colour classes of the merged tree are $H_P \cup L_Q$ and $L_P \cup H_Q$. Their sums differ by
+$$(\Sigma(H_P) + \Sigma(L_Q)) - (\Sigma(L_P) + \Sigma(H_Q)) = x - y \ge 0,$$
+and the class $H_P \cup L_Q$ is the larger one and contains $u$. $\square$
 
-Korf 1998 turns KK into an anytime exact search: at each step branch on "opposite sides" ($x-y$) vs "same side" ($x+y$), KK first. Exponential worst case, but with pruning it solves many instances fast and returns the KK answer immediately. Only mention if the team wants a third exact method.
+**Theorem 5.1.** `KARMARKAR-KARP` terminates after $n - 1$ rounds, $G$ is a tree on all $n$ vertices, and the returned $d$ is the discrepancy of the returned partition: $d = |\Sigma(A) - \Sigma(B)|$.
+
+_Proof._ Each round removes two entries and inserts one, so $|H|$ drops by $1$ and the loop ends after $n - 1$ rounds, with exactly one entry left. By Lemma 5.1 there is one component, so $G$ is a tree with $n - 1$ edges. A tree is bipartite, so the colouring exists, and $(A, B)$ are its two classes. By part 2 of the lemma, the single entry $d$ is the difference of their sums. $\square$
+
+**What it decides.** If $d = 0$, then $(A, B)$ is a balanced partition, so the answer YES is correct and the sets are a certificate. If $d > 0$, nothing follows: the algorithm is **not exact**, as the example in Section 5.5 shows. Because $d = |S - 2\Sigma(B)|$, the discrepancy always has the same parity as $S$.
+
+**Duplicates and zeros.** Equal values need no special treatment. Replacing the two largest entries by their difference changes the multiset of values in the same way whichever of two equal values is extracted first, so $d$ does not depend on how ties are broken (only the ids, and hence possibly the returned sets, do). An element equal to $0$ is a normal entry.
+
+### 5.4 Quality of the result
+
+The quality measure is the discrepancy $d$ (task.md section 6). Since the optimum can be $0$, a ratio on $d$ is meaningless, so we state the following.
+
+**Proposition 5.2 (bound on $d$).** Let $M = \max a_i$. Then $d \le M$.
+
+_Proof._ Every entry of $H$ is at most $M$ at all times: this holds at the start, and the new entry $x - y \le x \le M$. The last entry is $d$. $\square$
+
+This is the only guarantee on $d$ itself, and it is weak: the scaled instances $k \cdot (5, 6, 7, 8, 10)$ of Section 5.5 have optimum $0$ and give $d = 2k$, so no bound of the form "optimum plus a constant" exists.
+
+**Ratio on the larger side.** If we look at the larger of the two sums, $\max(\Sigma(A), \Sigma(B)) = (S + d)/2$, there is a proper approximation ratio. The optimum is at least $\max(S/2, M)$, so Proposition 5.2 gives
+$$\frac{(S + d)/2}{\mathrm{OPT}} \le \frac{S/2 + M/2}{\mathrm{OPT}} \le \frac{\mathrm{OPT} + \mathrm{OPT}/2}{\mathrm{OPT}} = \frac{3}{2}.$$
+Fischetti and Martello [1987] show that the worst-case ratio of the differencing method is exactly $7/6$.
+
+**Random inputs.** For items drawn independently from a uniform distribution, the expected discrepancy of the differencing method is $n^{-\Theta(\log n)}$ [Yakir 1996], which proves a conjecture of Karmarkar and Karp. We quote this result and do not reprove it. It says that on random inputs with many elements the discrepancy becomes extremely small, far below that of simple greedy methods. For our integer inputs this is only an indication, and we measure it in Stage 4.
+
+### 5.5 Example
+
+Let $a = (3, 1, 4, 2)$, the set of Sections 2.4 and 4.4. Ties are broken in favour of the smaller index.
+
+| round | extracted $(x, u)$, $(y, v)$ | inserted $(x - y, u)$ | edge | heap after the round |
+| ----- | ---------------------------- | --------------------- | ---- | -------------------- |
+| 0     |                              |                       |      | $4_{a_3}, 3_{a_1}, 2_{a_4}, 1_{a_2}$ |
+| 1     | $(4, a_3), (3, a_1)$         | $(1, a_3)$            | $a_3 - a_1$ | $2_{a_4}, 1_{a_2}, 1_{a_3}$ |
+| 2     | $(2, a_4), (1, a_2)$         | $(1, a_4)$            | $a_4 - a_2$ | $1_{a_3}, 1_{a_4}$          |
+| 3     | $(1, a_3), (1, a_4)$         | $(0, a_3)$            | $a_3 - a_4$ | $0_{a_3}$                   |
+
+Here $x_{u}$ means the value $x$ with the id of $u$. The final entry is $d = 0$. The graph has the edges $a_3 a_1$, $a_4 a_2$, $a_3 a_4$, a path $a_1 - a_3 - a_4 - a_2$. Colouring it from $a_1 = 0$ gives $a_1 = 0$, $a_3 = 1$, $a_4 = 0$, $a_2 = 1$. So $A = \{a_1, a_4\} = \{3, 2\}$ and $B = \{a_2, a_3\} = \{1, 4\}$, both with sum $5$, and the answer YES is certified.
+
+**An instance where it fails to find the optimum.** Let $a = (5, 6, 7, 8, 10)$, with $S = 36$ and $T = 18$. The rounds are $10 - 8 = 2$ (edge $a_5 a_4$), $7 - 6 = 1$ (edge $a_3 a_2$), $5 - 2 = 3$ (edge $a_1 a_5$) and $3 - 1 = 2$ (edge $a_1 a_3$), so $d = 2$. The colouring from $a_1 = 0$ gives $A = \{a_1, a_2, a_4\} = \{5, 6, 8\}$ with sum $19$ and $B = \{a_3, a_5\} = \{7, 10\}$ with sum $17$. But $\{8, 10\}$ and $\{5, 6, 7\}$ both have sum $18$, so the optimum is $0$. The same input shows that $d > 0$ does not prove that the answer is NO.
+
+### 5.6 Complexity
+
+We count operations on 128-bit numbers in the unit-cost model of Section 1.3.
+
+- Building the heap with `heapify` costs $O(n)$.
+- The loop has $n - 1$ rounds. Each round has two extractions and one insertion, $O(\log n)$ each, so $O(n \log n)$ in total.
+- Colouring the tree with BFS or DFS over an adjacency list costs $O(n)$, because $G$ has $n$ vertices and $n - 1$ edges.
+- **Total time: $O(n \log n)$. Memory: $O(n)$** for the heap, the edge list and the adjacency list.
+- The running time does not depend on the size of the numbers, only on $n$.
+
+### 5.7 Constraints and limitations
+
+**Constraints that the program enforces** (task.md section 7):
+
+1. **Preconditions.** Each $0 \le a_i < 10^{38}$. The sum $S$ is not needed by the algorithm, and every difference $x - y$ is at most $\max a_i$, so no overflow can occur.
+2. **Bound on $n$.** $1 \le n \le 10^6$. For $n = 10^6$ the heap, the edges and the adjacency list take well under $100$ MB, and about $3 \cdot 10^6$ heap operations of $20$ steps each are expected to run in under a second (to be measured in Stage 4). The algorithm is never skipped.
+
+**Limitations.**
+
+- It is a heuristic. The only guarantees are $d \le \max a_i$ and the ratio $7/6$ on the larger side; there is no bound on how far $d$ is from the optimal discrepancy.
+- It cannot answer NO. A result $d > 0$ can occur on a YES instance (Section 5.5), so the program may say "NO" only when an exact algorithm or the parity test has said so (Section 6).
+
+### 5.8 When to use it
+
+Karmarkar-Karp is the only algorithm that works for every input: it needs $O(n \log n)$ time and $O(n)$ memory for any $n \le 10^6$ and any numbers below $10^{38}$. It is therefore the fallback when dynamic programming (Section 4) and meet in the middle (Section 3) are out of range, for example for $n = 1000$ elements with 25 digits. It is also cheap enough to run **first** on every input, because $d = 0$ already proves YES (Section 6).
+
+**Optional: a simpler baseline.** The greedy method sorts the numbers in descending order and puts each into the side with the smaller sum so far. It also takes $O(n \log n)$ time and satisfies $d \le \max a_i$; as a scheduling algorithm (LPT) its ratio on the larger side is $7/6$ for two machines [Graham 1969]. We include it in the Stage 4 experiments to compare discrepancies, since we expect Karmarkar-Karp to be much better.
+
+**Optional: complete Karmarkar-Karp.** Korf 1998 turns the method into an exact search: at each step it branches on "opposite sides" ($x - y$) and "same side" ($x + y$), trying Karmarkar-Karp's choice first. The worst case is exponential, so it would only be a third exact method. We mention it and do not implement it unless there is time.
 
 ---
 
@@ -553,12 +707,12 @@ Use the first set of `AaC_example_1.txt`: $\{11, 22, 33, 44, 55, 66, 77, 1, 2, 3
 - M. R. Garey, D. S. Johnson, *Computers and Intractability*, 1979. (Weak vs strong NP-hardness, pseudo-polynomial DP, Section 4.2.)
 - E. Horowitz, S. Sahni, "Computing partitions with applications to the knapsack problem", *J. ACM* 21(2), 1974. (Meet in the middle.)
 - R. Schroeppel, A. Shamir, "A $T = O(2^{n/2})$, $S = O(2^{n/4})$ algorithm for certain NP-complete problems", *SIAM J. Comput.* 10(3), 1981. (Memory improvement, optional.)
-- N. Karmarkar, R. M. Karp, "The differencing method of set partitioning", Tech. Rep. UCB/CSD 82/113, UC Berkeley, 1982.
-- B. Yakir, "The differencing algorithm LDM for partitioning: a proof of a conjecture of Karmarkar and Karp", *Math. Oper. Res.* 21(1), 1996.
+- N. Karmarkar, R. M. Karp, "The differencing method of set partitioning", Tech. Rep. UCB/CSD 82/113, UC Berkeley, 1982. (The Berkeley EECS listing gives the number UCB/CSD-83-113 and the year 1983; check the original report before the final PDF.)
+- B. Yakir, "The differencing algorithm LDM for partitioning: a proof of a conjecture of Karmarkar and Karp", *Math. Oper. Res.* 21(1), 85-99, 1996. (Bibliographic data checked Oct 29, 2026. The result n^(-Θ(log n)) for i.i.d. uniform items is quoted from a summary of the paper and not reproved; check the exact statement in the paper.)
 - R. E. Korf, "A complete anytime algorithm for number partitioning", *Artificial Intelligence* 106(2), 1998.
 - S. Mertens, "The easiest hard problem: number partitioning", in *Computational Complexity and Statistical Physics*, 2006. (Survey; good for the introduction.)
 - R. L. Graham, "Bounds on multiprocessing timing anomalies", *SIAM J. Appl. Math.* 17(2), 1969. (LPT bound, if we include the greedy baseline.)
-- M. Fischetti, S. Martello, "Worst-case analysis of the differencing method for the partition problem", *Math. Programming* 37, 1987. (7/6 bound for KK, if we include it.)
+- M. Fischetti, S. Martello, "Worst-case analysis of the differencing method for the partition problem", *Math. Programming* 37, 117-120, 1987. (Worst-case ratio 7/6 of the differencing method; bibliographic data checked Oct 29, 2026.)
 - T. H. Cormen et al., *Introduction to Algorithms*, 3rd or 4th ed. (General reference for DP, heaps, sorting.)
 
 All of these are real and well known, but page numbers, exact titles and the Fischetti-Martello details should be checked against the originals before they go into the PDF.
