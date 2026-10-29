@@ -109,19 +109,9 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4 and
 **Constraints that the program enforces**:
 
 1. **Preconditions.** The input has $n \ge 2$ elements (Section 1.1). The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked while summing. If $S$ is odd or $S = 0$, the program answers without enumerating.
-2. **Bound on $n$.** The exact algorithm is run only for $n \le 30$. For a larger $n$ the program reports SKIPPED together with the violated condition. The threshold can be changed on the command line so that the Stage 4 experiments can go past it on purpose.
+2. **Bound on $n$.** The exact algorithm is run only for $n \le N_{BF}$ (Section 1.4). For a larger $n$ the program reports SKIPPED together with the violated condition. The bound is a parameter of the program.
 
-**Limitations.** The time doubles with every additional element. Assuming $10^{9}$ Gray-code steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4:
-
-| $n$ | masks $2^{n-1}$ | time (Gray code, $10^9$ steps/s) |
-| --- | --------------- | -------------------------------- |
-| 20  | $5.2 \cdot 10^{5}$  | under a millisecond          |
-| 30  | $5.4 \cdot 10^{8}$  | about $0.5$ s                |
-| 40  | $5.5 \cdot 10^{11}$ | about $9$ min                |
-| 50  | $5.6 \cdot 10^{14}$ | about $6.5$ days             |
-| 60  | $5.8 \cdot 10^{17}$ | about $18$ years             |
-
-The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it takes tens of seconds rather than seconds. This is the reason for the limit $n \le 30$. The size of the numbers plays no role: `AaC_example_2.txt` has 25-digit numbers but only $n = 10$ elements, so it needs just $2^{9} = 512$ masks and is solved instantly, while a set with $n = 100$ small numbers is out of reach for this algorithm.
+**Limitations.** The time doubles with every additional element, so each ten additional elements multiply it by about $10^{3}$. If the Gray-code version performs about $10^{9}$ steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4, then a few tens of elements already take seconds to minutes, and about fifty elements take days. The simple version needs about $n - 1$ times as many steps. This growth is the reason for bounding $n$ by $N_{BF}$, a few tens. The size of the numbers plays no role: `AaC_example_2.txt` has 25-digit numbers but only $n = 10$ elements, so it needs just $2^{9} = 512$ masks and is solved instantly, while a set with $n = 100$ small numbers is out of reach for this algorithm.
 
 ### 2.8 When to use it
 
