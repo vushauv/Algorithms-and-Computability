@@ -188,7 +188,7 @@ The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it ta
 Brute force is **never** the algorithm of choice for the final program; its role is the reference. Its value lies in being obviously correct: it contains no cleverness that could hide a bug, uses $O(n)$ memory, and does not depend on the magnitude of the numbers. We therefore use it in Stages 3 and 4 as follows:
 
 - **Oracle in the tests.** On random multisets with $n \le 20$ (including duplicates, zeros and odd sums) the answers of B, C (when $S$ is small) and E are compared with A, and every returned partition is checked to have two sums equal to $T$.
-- **Baseline in the time experiments.** The time of A against $n$ shows the $2^n$ growth that motivates B (about $2^{n/2}$) and C (about $n \cdot T / 64$), see Sections 3.4 and 4.8.
+- **Baseline in the time experiments.** The time of A against $n$ shows the $2^n$ growth that motivates B (about $2^{n/2}$) and C (about $n \cdot T / 64$), see Sections 3.5 and 4.8.
 
 ---
 
