@@ -100,7 +100,7 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4.
 **Constraints that the program enforces**:
 
 1. **Preconditions.** Each $0 \le a_i < 10^{38}$. The sum $S$ is not needed by the algorithm, and every difference $x - y$ is at most $\max a_i$, so no overflow can occur.
-2. **Bound on $n$.** $1 \le n \le 10^6$. For $n = 10^6$ the heap, the edges and the adjacency list take well under $100$ MB, and about $3 \cdot 10^6$ heap operations of $20$ steps each are expected to run in under a second (to be measured in Stage 4). The algorithm is never skipped.
+2. **Bound on $n$.** None beyond $n \ge 2$. The time $O(n \log n)$ and the memory $O(n)$ are small enough for any input that fits in memory, so the algorithm is never skipped. The actual running times are measured in Stage 4.
 
 **Limitations.**
 
@@ -109,7 +109,7 @@ We count operations on 128-bit numbers in the unit-cost model of Section 1.4.
 
 ### 5.8 When to use it
 
-Karmarkar-Karp is the only algorithm that works for every input: it needs $O(n \log n)$ time and $O(n)$ memory for any $n \le 10^6$ and any numbers below $10^{38}$. It is therefore the fallback when dynamic programming (Section 4) and meet in the middle (Section 3) are out of range, for example for $n = 1000$ elements with 25 digits. It is also cheap enough to run **first** on every input, because $d = 0$ already proves YES (Section 6).
+Karmarkar-Karp is the only algorithm that works for every input: it needs $O(n \log n)$ time and $O(n)$ memory for any $n \ge 2$ and any numbers within the assumptions of Section 1.1. It is therefore the fallback when dynamic programming (Section 4) and meet in the middle (Section 3) are out of range, for example for $n = 1000$ elements with 25 digits. It is also cheap enough to run **first** on every input, because $d = 0$ already proves YES (Section 6).
 
 **Optional: a simpler baseline.** The greedy method sorts the numbers in descending order and puts each into the side with the smaller sum so far. It also takes $O(n \log n)$ time and satisfies $d \le \max a_i$; as a scheduling algorithm (LPT) its ratio on the larger side is $7/6$ for two machines [Graham 1969]. We include it in the Stage 4 experiments to compare discrepancies, since we expect Karmarkar-Karp to be much better.
 
