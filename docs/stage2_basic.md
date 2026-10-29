@@ -32,8 +32,8 @@ The remainder of this section is organised as follows: the constraints and assum
 
 | Assumption | Reason |
 | --- | --- |
-| $0 \le a_i < 10^{38}$ | Numbers are unsigned 128-bit integers (Section 1.4); numbers of $25$ digits are covered. |
-| $\Sigma(M) < 2^{128}$ | Sums must fit in 128 bits. Arithmetic modulo $2^{128}$ is not used, because it would lose the target $\Sigma(M)/2$. |
+| $0 \le a_i < 10^{38}$ | The numbers of interest have about $25$ digits, which exceed $64$ bits, so we use unsigned 128-bit integers (Section 1.4). A wider integer type would lift the bound without changing the algorithms. We do not need it: dynamic programming is already infeasible for numbers of this size, and the cost of the other algorithms does not depend on the magnitude of the numbers. |
+| $\Sigma(M) < 2^{128}$ | Sums must fit in 128 bits. |
 | Each exponential algorithm is applied only within a stated range of $n$ or of the target sum. | Outside its range it may not finish or fit in memory; Section 6 then uses the approximation. |
 
 ### 1.2 Definitions (report item a)
