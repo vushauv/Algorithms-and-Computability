@@ -12,6 +12,8 @@ Every subset $A \subseteq \{1, \dots, n\}$ corresponds to a bit vector $x \in \{
 
 ### 2.2 Algorithm
 
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1).
+
 ```
 BRUTE-FORCE(a[1..n])
     S ← Σ a[i]
