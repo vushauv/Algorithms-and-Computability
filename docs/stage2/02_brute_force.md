@@ -26,7 +26,7 @@ BRUTE-FORCE(a[1..n])
     return NO
 ```
 
-After the two trivial cases of Section 1.2 we have $T > 0$. Hence $\mathrm{mask} = 0$, which stands for $A = \emptyset$, never succeeds, and every set $A$ that succeeds is non-empty together with its complement.
+After the two trivial cases of Section 1.2 we have $T > 0$. Hence $\mathrm{mask} = 0$, which stands for $A = \emptyset$, never succeeds, and every set $A$ that succeeds is non-empty together with its complement. We keep $\mathrm{mask} = 0$ in the loop so that the masks are exactly all the subsets. Skipping it would save one of the $2^{n-1}$ iterations.
 
 **Gray-code variant.** The inner loop recomputes the sum of $A$ from scratch. If the masks are visited in the order of the binary reflected Gray code, two consecutive masks differ in exactly one bit, and the sum is updated with a single addition or subtraction. Let $m = n - 1$. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$, where $\oplus$ is the bitwise exclusive or and $\gg$ the right shift. We use two facts.
 
