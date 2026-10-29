@@ -6,15 +6,14 @@
 
 **Cost model.** We use the unit-cost RAM model: an arithmetic operation or a comparison on a 128-bit number costs $O(1)$, and so does an operation on a machine word of $w = 64$ bits, which dynamic programming uses for its bitset (Section 4). Time bounds count such operations and are expressed in $n$ and, for dynamic programming, in $\Sigma(M)$. Memory is counted in 128-bit numbers, except for the bitset of Section 4, which is counted in bits.
 
-**Ranges of the algorithms.** Each algorithm is applied only within the following range. Outside it the algorithm may not finish or may not fit in memory (Section 1.1).
+**Ranges of the algorithms.** Each exponential algorithm is applied only within a range of inputs, because outside it the algorithm may not finish or may not fit in memory (Section 1.1). The ranges are parameters:
 
-| Algorithm | Range | Reason |
+| Algorithm | Range | Limiting resource |
 | --- | --- | --- |
-| Brute force (Section 2) | $n \le 30$ | time $O(2^n)$ |
-| Meet in the middle (Section 3) | $n \le N_{MITM} = 44$ | memory $O(2^{n/2})$, about $100$ MB per half at the limit |
-| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP} = 10^{10}$ | memory $O(\Sigma(M))$ bits, $1.25$ GB at the limit |
-| Karmarkar-Karp (Section 5) | $n \le 10^6$ | limit on the size of the input |
+| Brute force (Section 2) | $n \le N_{BF}$ | time $O(2^n)$ |
+| Meet in the middle (Section 3) | $n \le N_{MITM}$ | memory $O(2^{n/2})$ |
+| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ | memory $O(\Sigma(M))$ bits and time $O(n \cdot \Sigma(M))$ |
 
-The parameters $N_{MITM}$ and $T_{DP}$ are used by the final algorithm (Section 6). Their values can be changed.
+The values of $N_{BF}$, $N_{MITM}$ and $T_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
 
 ---
