@@ -28,6 +28,8 @@ Equal values need no special treatment: two equal elements are two indices and g
 
 ### 4.3 Algorithm
 
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1).
+
 ```
 DP-PARTITION(a[1..n])
     S ← Σ a[i]
@@ -69,7 +71,7 @@ After step $3$ the target $5$ is obtainable and the algorithm answers YES. Indee
 
 **Theorem 4.2.** `DP-PARTITION` returns YES if and only if a balanced partition exists.
 
-*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4, and the case $\max a_i > T$ is Section 4.1. Otherwise $T > 0$, and by Section 1.2 a balanced partition exists if and only if $R_n(T)$ holds. By Lemma 4.1 the value of `reach[T]` after the last step is $R_n(T)$. If the loop stops earlier, at a step $i < n$ with `reach[T]` $= R_i(T)$ TRUE, then a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_n(T)$ holds as well. $\square$
+*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4 (the latter uses $n \ge 2$), and the case $\max a_i > T$ is Section 4.1. Otherwise $T > 0$, and by Section 1.2 a balanced partition exists if and only if $R_n(T)$ holds. By Lemma 4.1 the value of `reach[T]` after the last step is $R_n(T)$. If the loop stops earlier, at a step $i < n$ with `reach[T]` $= R_i(T)$ TRUE, then a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_n(T)$ holds as well. $\square$
 
 ### 4.6 Complexity
 
