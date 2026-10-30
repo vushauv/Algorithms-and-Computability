@@ -5,7 +5,9 @@
 SECTIONS := $(sort $(wildcard [0-9]*.md))
 PANDOC_FLAGS := --from markdown-yaml_metadata_block-simple_tables-multiline_tables --shift-heading-level-by=-1 \
 	--lua-filter=tex/filters.lua --include-in-header=tex/preamble.tex \
-	--pdf-engine=xelatex --metadata=date:"October 30, 2026"
+	--pdf-engine=xelatex --metadata=date:"October 30, 2026" \
+	--metadata=author:"Oleh Shuptar" --metadata=author:"Rafsan Rubayet" \
+	--metadata=author:"Vasili Vushau" --metadata=author:"Zuzanna Wszołek"
 
 all: stage2_report.pdf
 

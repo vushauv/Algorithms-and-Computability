@@ -36,16 +36,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\usepackage{longtable,booktabs,array}
-\usepackage{calc} % for calculating minipage widths
-% Correct order of tables after \paragraph or \subparagraph
-\usepackage{etoolbox}
-\makeatletter
-\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
-\makeatother
-% Allow footnotes in longtable head/foot
-\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
-\makesavenoteenv{longtable}
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
@@ -80,6 +70,7 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
+\usepackage{calc}
 \renewcommand{\arraystretch}{1.15}
 
 % --- Lists -----------------------------------------------------------------
@@ -96,11 +87,13 @@
 \urlstyle{same}
 \hypersetup{
   pdftitle={Stage 2: Documentation of Algorithms (basic version)},
+  pdfauthor={Oleh Shuptar; Rafsan Rubayet; Vasili Vushau; Zuzanna Wszołek},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
 \title{Stage 2: Documentation of Algorithms (basic version)}
-\author{}
+\author{Oleh Shuptar \and Rafsan Rubayet \and Vasili Vushau \and Zuzanna
+Wszołek}
 \date{October 30, 2026}
 
 \begin{document}
@@ -200,30 +193,25 @@ partition.
 assumptions. An input that violates one of them is rejected with an
 error message and is never truncated.
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Assumption
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Reason
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}@{}}
+\toprule
+Assumption & Reason \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-\(0 \le a_i < 10^{38}\) & The numbers of interest have about \(25\)
-digits, which exceed \(64\) bits, so we use unsigned 128-bit integers
-(Section 1.4). A wider integer type would lift the bound without
-changing the algorithms. We do not need it: dynamic programming is
-already infeasible for numbers of this size, and the cost of the other
-algorithms does not depend on the magnitude of the numbers. \\
-\(\Sigma(M) < 2^{128}\) & The same reason as for the bound above: the
-total is also an unsigned 128-bit integer. \\
+\(0 \le a_i < 10^{38}\) & The numbers of interest have about \(25\) digits, which exceed \(64\)
+bits, so we use unsigned 128-bit integers (Section 1.4). A wider integer
+type would lift the bound without changing the algorithms. We do not
+need it: dynamic programming is already infeasible for numbers of this
+size, and the cost of the other algorithms does not depend on the
+magnitude of the numbers. \\
+\midrule
+\(\Sigma(M) < 2^{128}\) & The same reason as for the bound above: the total is also an unsigned
+128-bit integer. \\
+\midrule
 Each exponential algorithm is applied only within a stated range of
-\(n\) or of the target sum. & Outside its range it may not finish or fit
-in memory; Section 6 then uses the approximation. \\
+\(n\) or of the target sum. & Outside its range it may not finish or fit in memory; Section 6 then
+uses the approximation. \\
+\bottomrule
 \end{longtable}
 
 \hypertarget{definitions}{%
@@ -361,26 +349,15 @@ only within a range of inputs, because outside it the algorithm may not
 finish or may not fit in memory (Section 1.1). The ranges are
 parameters:
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Algorithm
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Range
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Limiting resource
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+\toprule
+Algorithm & Range & Limiting resource \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-Meet in the middle (Section 3) & \(n \le N_{MITM}\) & memory
-\(O(2^{n/2})\) \\
-Dynamic programming (Section 4) & \(\Sigma(M)/2 \le T_{DP}\) & memory
-\(O(\Sigma(M))\) bits and time \(O(n \cdot \Sigma(M))\) \\
+Meet in the middle (Section 3) & \(n \le N_{MITM}\) & memory \(O(2^{n/2})\) \\
+\midrule
+Dynamic programming (Section 4) & \(\Sigma(M)/2 \le T_{DP}\) & memory \(O(\Sigma(M))\) bits and time \(O(n \cdot \Sigma(M))\) \\
+\bottomrule
 \end{longtable}
 
 Brute force (Section 2) is the baseline for the other two and is not
@@ -482,20 +459,26 @@ amortised time (Theorem 2.5). We use two facts.
 For \(m = 3\) free bits (\(n = 4\)) the words are
 
 \begin{longtable}[]{@{}lllll@{}}
-\toprule\noalign{}
+\toprule
 \(k\) & binary & \(\mathrm{ctz}(k)\) & \(g_k\) & bit flipped \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-0 & 000 & & 000 & \\
+0 & 000 &  & 000 &  \\
+\midrule
 1 & 001 & 0 & 001 & 0 \\
+\midrule
 2 & 010 & 1 & 011 & 1 \\
+\midrule
 3 & 011 & 0 & 010 & 0 \\
+\midrule
 4 & 100 & 2 & 110 & 2 \\
+\midrule
 5 & 101 & 0 & 111 & 0 \\
+\midrule
 6 & 110 & 1 & 101 & 1 \\
+\midrule
 7 & 111 & 0 & 100 & 0 \\
+\bottomrule
 \end{longtable}
 
 Consecutive words differ in one bit, namely bit \(\mathrm{ctz}(k)\), and
@@ -539,36 +522,21 @@ complement \(\{3, 2\}\) has the same sum \(5\).
 The Gray-code variant visits the masks in the order
 \(000, 001, 011, 010, 110, \dots\)
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1250}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2656}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2344}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.0469}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2344}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.0938}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-step \(k\)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\(\mathrm{ctz}(k)\)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-flipped element
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\(g\)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\(\mathrm{sumA}\)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\(= T\)?
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1250}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2656}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2344}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0469}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2344}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0938}}@{}}
+\toprule
+step \(k\) & \(\mathrm{ctz}(k)\) & flipped element & \(g\) & \(\mathrm{sumA}\) & \(= T\)? \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-0 & & & 000 & \(0\) & no \\
+0 &  &  & 000 & \(0\) & no \\
+\midrule
 1 & 0 & \(a_1 = 3\) enters & 001 & \(0 + 3 = 3\) & no \\
+\midrule
 2 & 1 & \(a_2 = 1\) enters & 011 & \(3 + 1 = 4\) & no \\
+\midrule
 3 & 0 & \(a_1 = 3\) leaves & 010 & \(4 - 3 = 1\) & no \\
+\midrule
 4 & 2 & \(a_3 = 4\) enters & 110 & \(1 + 4 = 5\) & yes \\
+\bottomrule
 \end{longtable}
 
 It stops after \(5\) masks at the same set \(A = \{1, 4\}\) and answers
@@ -786,48 +754,35 @@ In the tables, subsets are written by the values of their elements.
 \((4, 2)\). The subset sums, indexed by masks whose bit \(0\) refers to
 the first element of the half, are
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0909}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1818}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2727}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2045}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-mask
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-left subset
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-left sum
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-right subset
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-right sum
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0909}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2500}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2727}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2045}}@{}}
+\toprule
+mask & left subset & left sum & right subset & right sum \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
 00 & \(\emptyset\) & \(0\) & \(\emptyset\) & \(0\) \\
+\midrule
 01 & \(\lbrace 3 \rbrace\) & \(3\) & \(\lbrace 4 \rbrace\) & \(4\) \\
+\midrule
 10 & \(\lbrace 1 \rbrace\) & \(1\) & \(\lbrace 2 \rbrace\) & \(2\) \\
-11 & \(\lbrace 3, 1 \rbrace\) & \(4\) & \(\lbrace 4, 2 \rbrace\) &
-\(6\) \\
+\midrule
+11 & \(\lbrace 3, 1 \rbrace\) & \(4\) & \(\lbrace 4, 2 \rbrace\) & \(6\) \\
+\bottomrule
 \end{longtable}
 
 After sorting, \texttt{LS} \(= (0, 1, 3, 4)\) and \texttt{RS}
 \(= (6, 4, 2, 0)\). The sweep proceeds as follows.
 
 \begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
+\toprule
 left sum & right sum & total & action \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
 \(0\) & \(6\) & \(6\) & too large, advance right \\
+\midrule
 \(0\) & \(4\) & \(4\) & too small, advance left \\
+\midrule
 \(1\) & \(4\) & \(5\) & equal to \(T\), answer YES \\
+\bottomrule
 \end{longtable}
 
 The sums \(1\) and \(4\) come from the subsets \(\lbrace 1 \rbrace\) and
@@ -842,16 +797,18 @@ is \((3, 7)\), with a different size because \(n\) is odd. Then
 \texttt{LS} \(= (0, 2)\) and \texttt{RS} \(= (10, 7, 3, 0)\).
 
 \begin{longtable}[]{@{}llll@{}}
-\toprule\noalign{}
+\toprule
 left sum & right sum & total & action \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
 \(0\) & \(10\) & \(10\) & too large, advance right \\
+\midrule
 \(0\) & \(7\) & \(7\) & too large, advance right \\
+\midrule
 \(0\) & \(3\) & \(3\) & too small, advance left \\
+\midrule
 \(2\) & \(3\) & \(5\) & too small, advance left \\
+\bottomrule
 \end{longtable}
 
 The left pointer is now past the end of \texttt{LS}, the loop ends and
@@ -1094,16 +1051,18 @@ Let \(a = (3, 1, 4, 2)\). Then \(S = 10\), \(T = 5\) and
 \(\max a_i = 4 \le T\). The obtainable sums not exceeding \(T\) are
 
 \begin{longtable}[]{@{}lll@{}}
-\toprule\noalign{}
+\toprule
 step \(i\) & element \(a_i\) & obtainable sums \\
-\midrule\noalign{}
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-0 & & \(\lbrace 0 \rbrace\) \\
+0 &  & \(\lbrace 0 \rbrace\) \\
+\midrule
 1 & \(3\) & \(\lbrace 0, 3 \rbrace\) \\
+\midrule
 2 & \(1\) & \(\lbrace 0, 1, 3, 4 \rbrace\) \\
+\midrule
 3 & \(4\) & \(\lbrace 0, 1, 3, 4, 5 \rbrace\) \\
+\bottomrule
 \end{longtable}
 
 After step \(3\) the target \(5\) is obtainable and the algorithm
@@ -1224,29 +1183,20 @@ of order \(10^{10}\). Moreover, meet in the middle is applied only for
 \(n \le N_{MITM}\), whereas dynamic programming has no bound on \(n\).
 Two examples illustrate the choice.
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-many small numbers
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-few large numbers
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
+\toprule
+ & many small numbers & few large numbers \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-Input & \(n = 1000\) elements below \(10^4\) & \(n = 30\) elements of
-\(25\) digits \\
+Input & \(n = 1000\) elements below \(10^4\) & \(n = 30\) elements of \(25\) digits \\
+\midrule
 Target & \(T \le 5 \cdot 10^6\) & \(T\) at least of order \(10^{24}\) \\
-Dynamic programming & \(n \cdot T/64 \approx 8 \cdot 10^7\) operations,
-\(T/8 \le 0.7\) MB & not applicable, since \(T > T_{DP}\) \\
-Meet in the middle & not applicable, since \(n > N_{MITM}\) &
-\(n \cdot 2^{n/2} \approx 10^6\) operations,
+\midrule
+Dynamic programming & \(n \cdot T/64 \approx 8 \cdot 10^7\) operations, \(T/8 \le 0.7\) MB & not applicable, since \(T > T_{DP}\) \\
+\midrule
+Meet in the middle & not applicable, since \(n > N_{MITM}\) & \(n \cdot 2^{n/2} \approx 10^6\) operations,
 \(32 \cdot 2^{n/2} \approx 1\) MB \\
+\bottomrule
 \end{longtable}
 
 Dynamic programming is thus the method for many elements with small
@@ -1321,35 +1271,19 @@ colouring step correct (Lemma 5.1).
 \textbf{The method finds the optimum.} Let \(a = (3, 1, 4, 2)\), and
 break ties in favour of the smaller index.
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0769}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.4308}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1231}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.0615}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.3077}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-round
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-extracted \((x, u)\), \((y, v)\)
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-inserted
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-edge
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-heap after the round
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0769}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.4308}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1231}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0615}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.3077}}@{}}
+\toprule
+round & extracted \((x, u)\), \((y, v)\) & inserted & edge & heap after the round \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-0 & & & & \(4_{3}, 3_{1}, 2_{4}, 1_{2}\) \\
-1 & \((4, 3), (3, 1)\) & \((1, 3)\) & \(\lbrace 3, 1 \rbrace\) &
-\(2_{4}, 1_{2}, 1_{3}\) \\
-2 & \((2, 4), (1, 2)\) & \((1, 4)\) & \(\lbrace 4, 2 \rbrace\) &
-\(1_{3}, 1_{4}\) \\
-3 & \((1, 3), (1, 4)\) & \((0, 3)\) & \(\lbrace 3, 4 \rbrace\) &
-\(0_{3}\) \\
+0 &  &  &  & \(4_{3}, 3_{1}, 2_{4}, 1_{2}\) \\
+\midrule
+1 & \((4, 3), (3, 1)\) & \((1, 3)\) & \(\lbrace 3, 1 \rbrace\) & \(2_{4}, 1_{2}, 1_{3}\) \\
+\midrule
+2 & \((2, 4), (1, 2)\) & \((1, 4)\) & \(\lbrace 4, 2 \rbrace\) & \(1_{3}, 1_{4}\) \\
+\midrule
+3 & \((1, 3), (1, 4)\) & \((0, 3)\) & \(\lbrace 3, 4 \rbrace\) & \(0_{3}\) \\
+\bottomrule
 \end{longtable}
 
 In the heap column a subscript marks the index, so \(4_{3}\) is the
@@ -1614,32 +1548,19 @@ dynamic programming is in range.
 \hypertarget{examples-3}{%
 \subsection{6.3 Examples}\label{examples-3}}
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-input
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Karmarkar-Karp
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-decision
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-result
-\end{minipage} \\
-\midrule\noalign{}
+\begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}>{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2500}}@{}}
+\toprule
+input & Karmarkar-Karp & decision & result \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-\((3, 1, 4, 2)\) & \(d = 0\) & step 1 & YES with the balanced partition
-\(\lbrace 3, 2 \rbrace\), \(\lbrace 1, 4 \rbrace\) \\
-\((2, 3, 4)\) & \(d = 1\) & \(S = 9\) is odd & NO, with the partition of
-discrepancy \(1\) \\
-\((5, 6, 7, 8, 10)\) & \(d = 2\) & \(S = 36\), \(T = 18\),
-\(T^2 = 324 < 2^{17}\), so dynamic programming is used and answers YES &
-YES, but the partition returned has \(d = 2\) \\
+\((3, 1, 4, 2)\) & \(d = 0\) & step 1 & YES with the balanced partition \(\lbrace 3, 2 \rbrace\),
+\(\lbrace 1, 4 \rbrace\) \\
+\midrule
+\((2, 3, 4)\) & \(d = 1\) & \(S = 9\) is odd & NO, with the partition of discrepancy \(1\) \\
+\midrule
+\((5, 6, 7, 8, 10)\) & \(d = 2\) & \(S = 36\), \(T = 18\), \(T^2 = 324 < 2^{17}\), so dynamic programming
+is used and answers YES & YES, but the partition returned has \(d = 2\) \\
+\bottomrule
 \end{longtable}
 
 The third row shows what the final algorithm does and does not give. A

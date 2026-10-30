@@ -48,3 +48,51 @@ function CodeBlock(el)
   el.text = table.concat(out, "\n")
   return el
 end
+
+-- Tables: pandoc's longtable has rules only at the top, under the header and
+-- at the bottom. The report wants a rule between the rows as well, so the
+-- table is written here. Columns with a width from the pipe table get a
+-- paragraph column of that share of the line width, the others are left
+-- aligned and as wide as their content.
+local function cell_latex(cell)
+  return (pandoc.write(pandoc.Pandoc(cell.contents), "latex"):gsub("%s+$", ""))
+end
+
+local function row_latex(row)
+  local cells = {}
+  for _, cell in ipairs(row.cells) do
+    table.insert(cells, cell_latex(cell))
+  end
+  return table.concat(cells, " & ")
+end
+
+function Table(el)
+  local ncols = #el.colspecs
+  local spec = {}
+  for _, cs in ipairs(el.colspecs) do
+    local width = cs[2]
+    if width == nil or width == "ColWidthDefault" then
+      table.insert(spec, "l")
+    else
+      table.insert(spec, string.format(
+        ">{\\raggedright\\arraybackslash}p{(\\linewidth - %d\\tabcolsep) * \\real{%.4f}}",
+        2 * ncols, width))
+    end
+  end
+  local out = { "\\begin{longtable}[]{@{}" .. table.concat(spec) .. "@{}}", "\\toprule" }
+  for _, row in ipairs(el.head.rows) do
+    table.insert(out, row_latex(row) .. " \\\\")
+  end
+  table.insert(out, "\\midrule")
+  table.insert(out, "\\endhead")
+  local rows = {}
+  for _, body in ipairs(el.bodies) do
+    for _, row in ipairs(body.body) do table.insert(rows, row) end
+  end
+  for i, row in ipairs(rows) do
+    table.insert(out, row_latex(row) .. " \\\\")
+    table.insert(out, i < #rows and "\\midrule" or "\\bottomrule")
+  end
+  table.insert(out, "\\end{longtable}")
+  return pandoc.RawBlock("latex", table.concat(out, "\n"))
+end
