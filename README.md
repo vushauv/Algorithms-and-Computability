@@ -15,7 +15,7 @@ converted to PDF with pandoc and XeLaTeX.
 - pandoc (3.x)
 - TeX Live with XeLaTeX and the packages `fontspec`, `unicode-math`,
   `geometry`, `microtype`, `parskip`, `titlesec`, `fancyvrb`, `booktabs`,
-  `longtable`, `enumitem`, `hyperref`
+  `longtable`, `array`, `calc`, `enumitem`, `hyperref`
 - the fonts TeX Gyre Pagella, TeX Gyre Pagella Math and DejaVu Sans Mono
   (all in TeX Live; on Debian/Ubuntu: `texlive-xetex texlive-fonts-extra
   fonts-dejavu`)
@@ -39,7 +39,10 @@ for f in [0-9]*.md; do cat "$f"; echo; done > stage2_report.md
 pandoc --from markdown-yaml_metadata_block-simple_tables-multiline_tables \
   --shift-heading-level-by=-1 --lua-filter=tex/filters.lua \
   --include-in-header=tex/preamble.tex --pdf-engine=xelatex \
-  --metadata=date:"October 30, 2026" -o stage2_report.pdf stage2_report.md
+  --metadata=date:"October 30, 2026" \
+  --metadata=author:"Oleh Shuptar" --metadata=author:"Rafsan Rubayet" \
+  --metadata=author:"Vasili Vushau" --metadata=author:"Zuzanna Wszołek" \
+  -o stage2_report.pdf stage2_report.md
 
 # 3. LaTeX source instead of the PDF: the same command with --standalone
 #    and -o stage2_report.tex.
@@ -49,8 +52,9 @@ What the pieces do:
 
 - `tex/preamble.tex`: page layout, fonts, framed pseudocode, table and list
   spacing, links.
-- `tex/filters.lua`: drops the `---` separators between the section files
-  and wraps pseudocode lines that would not fit in the frame.
+- `tex/filters.lua`: drops the `---` separators between the section files,
+  wraps pseudocode lines that would not fit in the frame, and writes the
+  tables with a rule between the rows.
 - `--from markdown-...`: the `---` separators must not be read as YAML
   metadata or as the rules of a simple table (the report uses pipe tables).
 - `--shift-heading-level-by=-1`: the `#` title of `00_title.md` becomes the
