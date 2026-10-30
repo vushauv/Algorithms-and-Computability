@@ -6,6 +6,8 @@ By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections
 
 Take the two largest remaining numbers $x \ge y$ and decide that they go to *opposite* parts. Whatever happens to the other numbers, the pair then contributes only $x - y$ to the difference of the two parts, so the pair is replaced by the single number $x - y$. Repeating this until one number is left, that number is the discrepancy of the final partition. To recover the parts, every decision is recorded as an edge "$u$ and $v$ are in opposite parts", and the resulting graph is two-coloured at the end.
 
+#### Comparison with the greedy method
+
 The simple greedy method, which puts the next largest number into the lighter part, fixes the part of an element at once. Differencing postpones this decision and fixes only the relation between two elements, which lets large numbers cancel each other.
 
 ### 5.2 Algorithm
@@ -31,7 +33,9 @@ Ties in the heap are broken in any way. The subtraction $x - y$ is done with $x 
 
 ### 5.3 Examples
 
-**The method finds the optimum.** Let $a = (3, 1, 4, 2)$, and break ties in favour of the smaller index.
+#### The method finds the optimum
+
+Let $a = (3, 1, 4, 2)$, and break ties in favour of the smaller index.
 
 | round | extracted $(x, u)$, $(y, v)$ | inserted | edge | heap after the round |
 | ----- | ---------------------------- | -------- | ---- | -------------------- |
@@ -42,7 +46,9 @@ Ties in the heap are broken in any way. The subtraction $x - y$ is done with $x 
 
 In the heap column a subscript marks the index, so $4_{3}$ is the value $4$ with the index $3$. The final entry is $d = 0$. The edges form the path $1 - 3 - 4 - 2$, which is coloured $1 \mapsto 0$, $3 \mapsto 1$, $4 \mapsto 0$, $2 \mapsto 1$. So $A = \lbrace 1, 4 \rbrace$ with values $3, 2$ and $B = \lbrace 2, 3 \rbrace$ with values $1, 4$ have both sum $5$.
 
-**The method misses the optimum.** Let $a = (5, 6, 7, 8, 10)$, so $S = 36$ and $T = 18$. The rounds replace $10, 8$ by $2$ (edge $\lbrace 5, 4 \rbrace$), $7, 6$ by $1$ (edge $\lbrace 3, 2 \rbrace$), $5, 2$ by $3$ (edge $\lbrace 1, 5 \rbrace$) and $3, 1$ by $2$ (edge $\lbrace 1, 3 \rbrace$). Hence $d = 2$, with the parts $A = \lbrace 1, 2, 4 \rbrace$ of sum $5 + 6 + 8 = 19$ and $B = \lbrace 3, 5 \rbrace$ of sum $7 + 10 = 17$. However, the elements $\lbrace 8, 10 \rbrace$ and $\lbrace 5, 6, 7 \rbrace$, that is, the index sets $\lbrace 4, 5 \rbrace$ and $\lbrace 1, 2, 3 \rbrace$, both have sum $18$, so the optimum is $0$. Thus $d > 0$ does not show that the answer is NO.
+#### The method misses the optimum
+
+Let $a = (5, 6, 7, 8, 10)$, so $S = 36$ and $T = 18$. The rounds replace $10, 8$ by $2$ (edge $\lbrace 5, 4 \rbrace$), $7, 6$ by $1$ (edge $\lbrace 3, 2 \rbrace$), $5, 2$ by $3$ (edge $\lbrace 1, 5 \rbrace$) and $3, 1$ by $2$ (edge $\lbrace 1, 3 \rbrace$). Hence $d = 2$, with the parts $A = \lbrace 1, 2, 4 \rbrace$ of sum $5 + 6 + 8 = 19$ and $B = \lbrace 3, 5 \rbrace$ of sum $7 + 10 = 17$. However, the elements $\lbrace 8, 10 \rbrace$ and $\lbrace 5, 6, 7 \rbrace$, that is, the index sets $\lbrace 4, 5 \rbrace$ and $\lbrace 1, 2, 3 \rbrace$, both have sum $18$, so the optimum is $0$. Thus $d > 0$ does not show that the answer is NO.
 
 ### 5.4 Correctness
 
@@ -77,13 +83,17 @@ Equal values and zeros need no special treatment. The multiset of values after a
 
 Since the optimum of the discrepancy can be $0$, a ratio of discrepancies is meaningless. We state what can be guaranteed.
 
+#### An absolute bound
+
 **Proposition 5.3.** Let $m = \max_i a_i$. Then $d \le m$.
 
 *Proof.* Every entry of $H$ is at most $m$ at the start, and a new entry $x - y \le x \le m$ is again at most $m$. The last entry is $d$. $\square$
 
 This bound is weak: the instances $k \cdot (5, 6, 7, 8, 10)$ have the optimum $0$ and give $d = 2k$, so no bound of the form "optimum plus a constant" exists.
 
-**Ratio on the larger part.** The larger part has the sum $(S + d)/2$. Let $\mathrm{OPT}$ be the smallest possible sum of the larger part over all partitions. It is at least $\max(S/2, m)$, because the larger part has at least the average sum $S/2$, and the part that contains the largest element has at least $m$. So by Proposition 5.3
+#### Ratio on the larger part
+
+The larger part has the sum $(S + d)/2$. Let $\mathrm{OPT}$ be the smallest possible sum of the larger part over all partitions. It is at least $\max(S/2, m)$, because the larger part has at least the average sum $S/2$, and the part that contains the largest element has at least $m$. So by Proposition 5.3
 
 $$
 \frac{(S + d)/2}{\mathrm{OPT}} \le \frac{S/2 + m/2}{\mathrm{OPT}} \le \frac{\mathrm{OPT} + \mathrm{OPT}/2}{\mathrm{OPT}} = \frac{3}{2} .
@@ -91,7 +101,9 @@ $$
 
 The bound $3/2$ is what this elementary argument gives. Fischetti and Martello [1987] show a sharper result, that the worst-case ratio of the differencing method is exactly $7/6$. We quote it without proof.
 
-**Random inputs.** For items drawn independently from a uniform distribution on $[0, 1]$, the expected discrepancy of the differencing method is $n^{-\Theta(\log n)}$ [Yakir 1996], which proves a conjecture of Karmarkar and Karp. We quote this result without proof. It says that for many random items the discrepancy becomes extremely small. For integers it is only an indication.
+#### Random inputs
+
+For items drawn independently from a uniform distribution on $[0, 1]$, the expected discrepancy of the differencing method is $n^{-\Theta(\log n)}$ [Yakir 1996], which proves a conjecture of Karmarkar and Karp. We quote this result without proof. It says that for many random items the discrepancy becomes extremely small. For integers it is only an indication.
 
 ### 5.6 Complexity
 
@@ -103,6 +115,8 @@ The bound $3/2$ is what this elementary argument gives. Fischetti and Martello [
 
 The algorithm needs no bound on $n$ beyond $n \ge 2$ and no bound on the numbers beyond the assumptions of Section 1.1; all differences are at most $\max_i a_i$, so the sum $S$ is not needed (Section 1.4). It works for every input, in particular when neither dynamic programming nor meet in the middle is in range, for example for $1000$ elements of $25$ digits. A result with $d = 0$ proves YES, but $d > 0$ gives no answer, so a NO can come only from the parity test or from an exact algorithm.
 
-**Remarks.** The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$: when a number $a$ is added to the lighter part, the difference $d$ of the two parts becomes $|d - a| \le \max(d, a)$, and the claim follows by induction. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
+#### Related methods
+
+The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$: when a number $a$ is added to the lighter part, the difference $d$ of the two parts becomes $|d - a| \le \max(d, a)$, and the claim follows by induction. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
 
 ---
