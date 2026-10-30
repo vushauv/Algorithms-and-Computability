@@ -17,10 +17,10 @@ The decision problem is NP-complete [Karp 1972]. Hence no polynomial-time algori
 
 We present four algorithms.
 
-- **Section 2, brute force.** It enumerates all $2^n$ subsets. Time $O(2^n)$, memory $O(n)$.
+- **Section 2, brute force.** It enumerates all $2^n$ subsets. Time $\Theta(2^n)$ with a Gray-code enumeration, memory $O(1)$ beyond the input. It serves as the baseline and is not part of the final algorithm.
 - **Section 3, meet in the middle.** It splits $M$ into two halves and combines their subset sums [Horowitz and Sahni 1974]. Time $O(n \cdot 2^{n/2})$, memory $O(2^{n/2})$, independent of the magnitude of the elements.
 - **Section 4, dynamic programming.** It computes the set of reachable subset sums. Time $O(n \cdot \Sigma(M))$, which is pseudo-polynomial.
-- **Section 5, Karmarkar-Karp differencing.** This is a polynomial-time approximation algorithm, with time $O(n \log n)$ [Karmarkar and Karp 1982]. It is the only algorithm below that constructs a partition. It always returns one, and its discrepancy is bounded (Section 5.4). We also quote its expected behaviour on random inputs [Yakir 1996].
+- **Section 5, Karmarkar-Karp differencing.** This is a polynomial-time approximation algorithm, with time $O(n \log n)$ [Karmarkar and Karp 1982]. It is the only algorithm below that constructs a partition. It always returns one, and its discrepancy is bounded (Section 5.5). We also quote its expected behaviour on random inputs [Yakir 1996].
 
 None of the four algorithms is efficient for every input. Section 6 defines a final algorithm that selects, for each input, the algorithm that best matches it. For each algorithm we give pseudocode, a description, a correctness proof and a complexity analysis.
 
