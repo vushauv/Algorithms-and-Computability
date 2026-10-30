@@ -1,0 +1,38 @@
+% Preamble for the Stage 2 report. Included by pandoc via --include-in-header.
+% Compiled with XeLaTeX (fontspec needs it; the pseudocode uses Unicode arrows).
+
+% --- Page and fonts -------------------------------------------------------
+\usepackage[a4paper, margin=2.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{TeX Gyre Pagella}
+\setmathfont{TeX Gyre Pagella Math}
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+\usepackage{microtype}
+
+% --- Paragraphs and headings --------------------------------------------
+\usepackage{parskip}
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{2.2ex plus .5ex}{1ex}
+\titlespacing*{\subsection}{0pt}{1.8ex plus .4ex}{.6ex}
+
+% --- Pseudocode: framed, small, keeps the Unicode glyphs ------------------
+\usepackage{fancyvrb}
+\RecustomVerbatimEnvironment{verbatim}{Verbatim}{%
+  fontsize=\small, frame=lines, framesep=2mm, rulecolor=\color{gray},
+  xleftmargin=1em}
+
+% --- Tables ----------------------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\renewcommand{\arraystretch}{1.15}
+
+% --- Lists -----------------------------------------------------------------
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=4pt}
+
+% --- Links -----------------------------------------------------------------
+\usepackage[colorlinks=true, linkcolor=black, urlcolor=blue!50!black]{hyperref}

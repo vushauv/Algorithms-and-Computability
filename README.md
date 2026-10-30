@@ -1,1 +1,67 @@
 # Algorithms and Computability
+
+Laboratory assignment, fall 2026: the partition problem (basic version, two
+subsets with equal sums). See `task.md` for the assignment and
+`CONSTITUTION.md` for the project rules.
+
+## Stage 2 report
+
+The report is written in Markdown, one file per section in `docs/stage2/`
+(`00_title.md`, `01_1_introduction.md`, ..., `07_references.md`), and
+converted to PDF with pandoc and XeLaTeX.
+
+### Requirements
+
+- pandoc (3.x)
+- TeX Live with XeLaTeX and the packages `fontspec`, `unicode-math`,
+  `geometry`, `microtype`, `parskip`, `titlesec`, `fancyvrb`, `booktabs`,
+  `longtable`, `enumitem`, `hyperref`
+- the fonts TeX Gyre Pagella, TeX Gyre Pagella Math and DejaVu Sans Mono
+  (all in TeX Live; on Debian/Ubuntu: `texlive-xetex texlive-fonts-extra
+  fonts-dejavu`)
+
+### Build
+
+```sh
+cd docs/stage2
+make                     # builds stage2_report.pdf
+make stage2_report.tex   # the LaTeX source only
+make clean
+```
+
+The same without `make`, from `docs/stage2/`:
+
+```sh
+# 1. One Markdown file, sections in order, a blank line between files.
+for f in [0-9]*.md; do cat "$f"; echo; done > stage2_report.md
+
+# 2. PDF (pandoc runs XeLaTeX itself).
+pandoc --from markdown-yaml_metadata_block-simple_tables-multiline_tables \
+  --shift-heading-level-by=-1 --lua-filter=tex/filters.lua \
+  --include-in-header=tex/preamble.tex --pdf-engine=xelatex \
+  --metadata=date:"October 30, 2026" -o stage2_report.pdf stage2_report.md
+
+# 3. LaTeX source instead of the PDF: the same command with --standalone
+#    and -o stage2_report.tex.
+```
+
+What the pieces do:
+
+- `tex/preamble.tex`: page layout, fonts, framed pseudocode, table and list
+  spacing, links.
+- `tex/filters.lua`: drops the `---` separators between the section files
+  and wraps pseudocode lines that would not fit in the frame.
+- `--from markdown-...`: the `---` separators must not be read as YAML
+  metadata or as the rules of a simple table (the report uses pipe tables).
+- `--shift-heading-level-by=-1`: the `#` title of `00_title.md` becomes the
+  document title, `##` becomes `\section`, `###` becomes `\subsection`. The
+  sections are numbered in the text, so LaTeX does not number them.
+
+### Check the result
+
+```sh
+pdfinfo stage2_report.pdf | grep Pages
+pdftoppm -r 70 -png stage2_report.pdf /tmp/page    # one PNG per page
+xelatex -interaction=nonstopmode stage2_report.tex >/dev/null; \
+  grep -E 'Overfull|Missing character' stage2_report.log   # should print nothing
+```
