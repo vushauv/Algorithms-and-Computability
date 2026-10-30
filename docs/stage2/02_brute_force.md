@@ -1,137 +1,129 @@
-## 2. Algorithm A: Brute force (exhaustive search)
+## 2. Brute force
 
-**Role.** Reference solution for correctness testing of everything else. It also serves as the baseline in the Stage 4 time measurements. It is an exact algorithm with exponential time; the polynomial-time approximation that goes with it (task.md 4b, CONSTITUTION 6) is Algorithm D in Section 5.
+The most direct way to decide PARTITION is to examine every candidate. By Section 1.2 it suffices to find an index set $A$ with $\Sigma(A) = T$, and there are only finitely many index sets. This section analyses the resulting algorithm and a variant that is faster by a factor $n$. Both run in time exponential in $n$ and use little memory, so they set the baseline against which the algorithms of Sections 3 and 4 are measured.
 
 ### 2.1 Idea
 
-Every partition $(A, B)$ of the indices $\{1, \dots, n\}$ corresponds to a bit vector $x \in \{0,1\}^n$ with $x_i = 1$ if and only if $i \in A$. The algorithm enumerates these vectors one after another, computes $\Sigma(A)$ for each, and stops as soon as $\Sigma(A) = T$. If the enumeration ends without a hit, no balanced partition exists.
+Every subset $A \subseteq \{1, \dots, n\}$ corresponds to a bit vector $x \in \{0,1\}^n$ with $x_i = 1$ if and only if $i \in A$. The algorithm enumerates these vectors, computes $\Sigma(A)$ for each, and stops as soon as $\Sigma(A) = T$. If the enumeration ends without a hit, no balanced partition exists.
 
-**Halving trick.** Swapping $A$ and $B$ gives the same two parts in the opposite order, with the same discrepancy, and a balanced pair stays balanced. So we may assume that index $n$ lies in $B$. Only the first $n-1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. The vector is stored as an integer `mask` in $\{0, \dots, 2^{n-1} - 1\}$, where bit $i-1$ of `mask` is $x_i$.
+**Halving.** The partitions $(A, B)$ and $(B, A)$ have the same sums, so we may assume that the index $n$ lies in $B$. Only the first $n - 1$ bits are then free, and $2^{n-1}$ vectors suffice instead of $2^n$. A vector is stored as an integer $\mathrm{mask} \in \{0, 1, 2, \dots, 2^{n-1} - 1\}$ whose binary digits are the bits $x_i$: the lowest digit (bit $0$) is $x_1$, the next one (bit $1$) is $x_2$, and in general bit $i - 1$ is $x_i$. For $n = 4$ the masks are $0, 1, \dots, 7$. For example, $\mathrm{mask} = 5 = 101_2$ has bits $0$ and $2$ set, so it stands for $A = \{1, 3\}$, and $\mathrm{mask} = 0$ stands for $A = \emptyset$.
 
-**Why indices and not values.** The input may contain repeated values (course email of 16.10.26). The enumeration runs over index sets, so equal values at different positions are different elements and no special treatment of duplicates is needed. Elements equal to $0$ are handled in the same way.
+**Indices instead of values.** The enumeration runs over index sets, so equal values at different positions are different elements, and no special treatment of duplicates or of zeros is needed.
 
-### 2.2 Pseudocode
+### 2.2 Algorithm
+
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1).
 
 ```
 BRUTE-FORCE(a[1..n])
-    S ← Σ a[i]                              // with overflow check, see Section 2.7
+    S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
+    if S = 0 then return YES                       // Section 1.2
     T ← S / 2
-    for mask ← 0 to 2^(n−1) − 1 do          // bit i−1 of mask puts a[i] in A; a[n] is always in B
+    for mask ← 0 to 2^(n−1) − 1 do                 // bit i−1 of mask puts a[i] in A; a[n] is in B
         sumA ← 0
         for i ← 1 to n − 1 do
             if bit (i−1) of mask = 1 then sumA ← sumA + a[i]
-        if sumA = T then
-            return YES, A = { i : bit (i−1) of mask = 1 }, B = the other indices
+        if sumA = T then return YES
     return NO
 ```
 
-The two trivial cases of Section 1.2 are answered before the loop. After them $T > 0$, so `mask` $= 0$ (which is $A = \emptyset$) never succeeds, and every returned $A$ and its complement are non-empty. The input has $n \ge 2$ (Section 1.1), so the loop runs over at least two masks.
+After the two trivial cases of Section 1.2 we have $T > 0$. Hence $\mathrm{mask} = 0$, which stands for $A = \emptyset$, never succeeds, and every set $A$ that succeeds is non-empty together with its complement. We keep $\mathrm{mask} = 0$ in the loop so that the masks are exactly all the subsets. Skipping it would save one of the $2^{n-1}$ iterations.
 
-### 2.3 Gray-code variant
+**Gray-code variant.** The inner loop recomputes the sum of $A$ from scratch. If the masks are visited in the order of the binary reflected Gray code, two consecutive masks differ in exactly one bit, and the sum is updated with a single addition or subtraction. Let $m = n - 1$. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$, where $\oplus$ is the bitwise exclusive or and $\gg$ the right shift. The function $\mathrm{ctz}(k)$, "count trailing zeros", is the number of zeros at the right end of the binary notation of $k$. For example, $12 = 1100_2$ has $\mathrm{ctz} = 2$ and $5 = 101_2$ has $\mathrm{ctz} = 0$. It is computed by a single processor instruction, or by a loop of $O(1)$ amortised time (Theorem 2.5). We use two facts.
 
-In the simple version every mask recomputes its sum from scratch in $n - 1$ steps. If the masks are visited in the order of the **binary reflected Gray code**, two consecutive masks differ in exactly one bit, so the sum can be updated with one addition or one subtraction.
+1. The map $k \mapsto g_k$ is a bijection of $\{0, \dots, 2^m - 1\}$ onto itself, so every mask is visited exactly once.
+2. $g_k \oplus g_{k-1} = 2^{j}$, where $j = \mathrm{ctz}(k)$. Hence going from $g_{k-1}$ to $g_k$ flips only bit $j$.
 
-Let $m = n - 1$ be the number of free bits. The $k$-th Gray code word is $g_k = k \oplus (k \gg 1)$ ($\oplus$ is bit-wise exclusive or, $\gg$ is a right shift). Two facts are used:
+For $m = 3$ free bits ($n = 4$) the words are
 
-1. $k \mapsto g_k$ is a bijection of $\{0, \dots, 2^{m} - 1\}$ onto itself, so every mask is visited exactly once.
-2. $g_k \oplus g_{k-1} = 2^{j}$ where $j$ is the position of the lowest set bit of $k$ (`ctz(k)`, count of trailing zeros). So going from $g_{k-1}$ to $g_k$ flips only bit $j$.
+| $k$ | binary | $\mathrm{ctz}(k)$ | $g_k$ | bit flipped |
+| --- | ------ | ----------------- | ----- | ----------- |
+| 0   | 000    |                   | 000   |             |
+| 1   | 001    | 0                 | 001   | 0           |
+| 2   | 010    | 1                 | 011   | 1           |
+| 3   | 011    | 0                 | 010   | 0           |
+| 4   | 100    | 2                 | 110   | 2           |
+| 5   | 101    | 0                 | 111   | 0           |
+| 6   | 110    | 1                 | 101   | 1           |
+| 7   | 111    | 0                 | 100   | 0           |
 
+Consecutive words differ in one bit, namely bit $\mathrm{ctz}(k)$, and every value from $0$ to $7$ occurs once. The algorithm does not compute $g_k$ by the formula: it keeps the current mask and flips bit $\mathrm{ctz}(k)$ of it.
 ```
 BRUTE-FORCE-GRAY(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES, A = {1}, B = {2, ..., n}      // trivial case, Section 1.2
+    if S = 0 then return YES                       // Section 1.2
     T ← S / 2
     m ← n − 1
-    g ← 0;  sumA ← 0                        // g is the current mask, A = ∅, and sumA = 0 < T
+    g ← 0;  sumA ← 0                               // A = ∅
     for k ← 1 to 2^m − 1 do
-        j ← ctz(k)                          // the one bit that changes
+        j ← ctz(k)                                 // the bit that changes
         g ← g XOR 2^j
-        if bit j of g = 1 then sumA ← sumA + a[j+1]     // a[j+1] entered A
-        else                   sumA ← sumA − a[j+1]     // a[j+1] left A
-        if sumA = T then
-            return YES, A = { i : bit (i−1) of g = 1 }
+        if bit j of g = 1 then sumA ← sumA + a[j+1]     // a[j+1] enters A
+        else                   sumA ← sumA − a[j+1]     // a[j+1] leaves A
+        if sumA = T then return YES
     return NO
 ```
 
-The subtraction never underflows: a value is subtracted only if it was added before and not yet removed, so it is part of `sumA`. The invariant is that `sumA` $= \sum_{i:\,\text{bit}(i-1)\text{ of }g = 1} a_i$ after every step. The simple version of Section 2.2 is the documented reference and the test oracle, because it is the one that is obviously correct. We propose to implement the Gray-code version as well, for speed in the Stage 4 measurements, and to check it against the simple version in the tests (the two must give the same YES/NO answer). Whether the Gray-code version is implemented is a team decision.
+The subtraction never underflows, because a value is subtracted only after it has been added and not yet removed, so it is a part of `sumA`.
 
-### 2.4 Example
+### 2.3 Examples
 
-**A YES instance.** Let $a = (3, 1, 4, 2)$, the same set as in Section 4.4. Then $S = 10$ is even, $T = 5$, $n = 4$, so $a_4 = 2$ stays in $B$ and the mask has $3$ bits: bit 0 is $a_1 = 3$, bit 1 is $a_2 = 1$, bit 2 is $a_3 = 4$.
+**A YES instance.** Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$ and $n = 4$, so $a_4 = 2$ stays in $B$ and the mask has three bits: bit $0$ is $a_1 = 3$, bit $1$ is $a_2 = 1$ and bit $2$ is $a_3 = 4$. The masks $0, 1, \dots, 6$ give the sums $\Sigma(A) = 0, 3, 1, 4, 4, 7, 5$, and only the last equals $T$. The algorithm stops at $\mathrm{mask} = 6$, after $7$ of the $8$ masks, and answers YES. This mask stands for $A = \{1, 4\}$, whose complement $\{3, 2\}$ has the same sum $5$.
 
-The masks $0, 1, \dots, 6$ give the sums $\Sigma(A) = 0, 3, 1, 4, 4, 7, 5$, and only the last one equals $T$.
+The Gray-code variant visits the masks in the order $000, 001, 011, 010, 110, \dots$
 
-At `mask` $= 6$ the algorithm stops after $7$ of the $8$ masks and answers YES with $A = \{a_2, a_3\} = \{1, 4\}$ and $B = \{a_1, a_4\} = \{3, 2\}$, both with sum $5$.
+| step $k$ | $\mathrm{ctz}(k)$ | flipped element | $g$ | $\mathrm{sumA}$ | $= T$? |
+| -------- | ----------------- | --------------- | --- | --------------- | ------ |
+| 0        |                   |                 | 000 | $0$             | no     |
+| 1        | 0                 | $a_1 = 3$ enters | 001 | $0 + 3 = 3$    | no     |
+| 2        | 1                 | $a_2 = 1$ enters | 011 | $3 + 1 = 4$    | no     |
+| 3        | 0                 | $a_1 = 3$ leaves | 010 | $4 - 3 = 1$    | no     |
+| 4        | 2                 | $a_3 = 4$ enters | 110 | $1 + 4 = 5$    | yes    |
 
-**The Gray-code variant on the same input.** The masks come in the order $000, 001, 011, 010, 110, \dots$
+It stops after $5$ masks at the same set $A = \{1, 4\}$ and answers YES.
 
-| step $k$ | $\text{ctz}(k)$ | flipped element | $g$ | $\text{sumA}$ | $= T$? |
-| -------- | --------------- | --------------- | --- | ------------- | ------ |
-| 0        |                 |                 | 000 | 0             | no     |
-| 1        | 0               | $a_1 = 3$ enters | 001 | $0 + 3 = 3$  | no     |
-| 2        | 1               | $a_2 = 1$ enters | 011 | $3 + 1 = 4$  | no     |
-| 3        | 0               | $a_1 = 3$ leaves | 010 | $4 - 3 = 1$  | no     |
-| 4        | 2               | $a_3 = 4$ enters | 110 | $1 + 4 = 5$  | **yes** |
+**A NO instance.** Let $a = (2, 3, 7)$. Then $S = 12$ and $T = 6$, and the mask has two bits, for $a_1 = 2$ and $a_2 = 3$. The four masks give $\Sigma(A) \in \{0, 2, 3, 5\}$, none of which equals $6$, so all masks are examined and the answer is NO.
 
-It stops after $5$ masks with the same partition $A = \{a_2, a_3\}$. Each step costs one addition or subtraction instead of up to $3$.
+### 2.4 Correctness
 
-**A NO instance.** Let $a = (2, 3, 7)$. Then $S = 12$, $T = 6$, and the mask has $2$ bits for $a_1 = 2$ and $a_2 = 3$. The four masks give $\Sigma(A) \in \{0, 2, 3, 5\}$ and none equals $6$, so all masks are examined and the answer is NO. Indeed, $7$ alone already exceeds $T$.
+**Lemma 2.1** (enumeration). The values $\mathrm{mask} \in \{0, \dots, 2^{n-1} - 1\}$ correspond one to one to the subsets $A \subseteq \{1, \dots, n-1\}$. The same holds for the Gray-code order.
 
-### 2.5 Correctness
+*Proof.* The bits of a mask form the indicator vector of $A$, and this correspondence is a bijection. By fact 1 of Section 2.2, the Gray-code order is a permutation of the masks. $\square$
 
-**Lemma 0 (what is enumerated).** The values `mask` $\in \{0, \dots, 2^{n-1} - 1\}$ correspond one to one to the subsets $A \subseteq \{1, \dots, n-1\}$. The same holds for the Gray-code order, because $k \mapsto g_k$ is a bijection of this range onto itself.
+**Lemma 2.2** (reduction to $n \in B$). Let $S$ be even and $T = S/2$. A balanced partition of $\{1, \dots, n\}$ exists if and only if there is a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$.
 
-_Proof._ The bits of the mask are the indicator vector of $A$. A bijection of the range permutes the masks and so visits each once. $\square$
+*Proof.* ($\Leftarrow$) Put $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) = S - T = T = \Sigma(A)$. ($\Rightarrow$) Let $(A, B)$ be balanced, so $\Sigma(A) = T$. If $n \in B$, then $A \subseteq \{1, \dots, n-1\}$. Otherwise $n \in A$, and then $(B, A)$ is balanced with $B \subseteq \{1, \dots, n-1\}$ and $\Sigma(B) = T$. $\square$
 
-**Lemma 1 (reduction to $n \in B$).** Let $S$ be even and $T = S/2$. A balanced partition of $\{1, \dots, n\}$ exists if and only if there is a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$.
+**Lemma 2.3** (invariant of the Gray-code variant). After step $k$, $\mathrm{sumA} = \sum_{i \,:\, \text{bit } i-1 \text{ of } g = 1} a_i$.
 
-_Proof._ ($\Leftarrow$) Take $B = \{1, \dots, n\} \setminus A$. Then $\Sigma(B) = S - T = T = \Sigma(A)$. ($\Rightarrow$) Let $(A, B)$ be balanced. If $n \in B$, then $A \subseteq \{1, \dots, n-1\}$ and $\Sigma(A) = T$ because a balanced partition has $\Sigma(A) = S/2$. Otherwise $n \in A$, and then $(B, A)$ is also balanced, has $n$ in its second part, and its first part $B \subseteq \{1, \dots, n-1\}$ has $\Sigma(B) = T$. $\square$
+*Proof.* Induction on $k$. For $k = 0$ both sides are $0$. Step $k$ flips bit $j$ of $g$ and adds or subtracts $a_{j+1}$ according to the new value of the bit, which is exactly the change of the right-hand side. $\square$
 
-**Theorem.** `BRUTE-FORCE` and `BRUTE-FORCE-GRAY` return YES if and only if a balanced partition exists, and the sets they return form a balanced partition.
+**Theorem 2.4.** `BRUTE-FORCE` and `BRUTE-FORCE-GRAY` return YES if and only if a balanced partition exists.
 
-_Proof._ If $S$ is odd, no balanced partition exists, because $\Sigma(A) = \Sigma(B)$ would give $S = 2\Sigma(A)$, and NO is correct. If $S = 0$, the returned partition $\{1\}$, $\{2, \dots, n\}$ has two zero sums and two non-empty sides since $n \ge 2$, so YES is correct. Let $S$ be even and positive, so $T > 0$. _Soundness:_ the algorithm answers YES only when `sumA` $= T$, and `sumA` is the sum of the returned set $A$ (in the simple version by construction of the inner loop, in the Gray version by the invariant of Section 2.3, which follows by induction on $k$ since every step adds or subtracts the one element whose bit was flipped). Then $B$ is the complement and $\Sigma(B) = S - T = T$, so the partition is balanced, and both sides are non-empty because both sums are $T > 0$. _Completeness:_ if a balanced partition exists, Lemma 1 gives a subset $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 0 its mask is visited unless the algorithm stops earlier. It stops earlier only with a YES, which is correct by soundness. If the loop ends without a hit, no such subset exists, hence by Lemma 1 no balanced partition exists, and NO is correct. The algorithm terminates because the loop runs over a finite range. $\square$
+*Proof.* If $S$ is odd, a balanced partition would give $S = 2\Sigma(A)$, which is impossible, so NO is correct. If $S = 0$, the partition $\{1\}$, $\{2, \dots, n\}$ is balanced and has two non-empty parts since $n \ge 2$, so YES is correct. Let $S$ be even and positive, so $T > 0$.
 
-Duplicates and zeros need no case analysis, since the proof works on index sets and never uses that the values are distinct or positive.
+*Soundness.* The algorithm answers YES only when $\mathrm{sumA} = T$, where $\mathrm{sumA}$ is the sum of the set $A$ of the current mask, by construction in the first version and by Lemma 2.3 in the second. Its complement has the sum $S - T = T$, so $(A, B)$ is a balanced partition, and both parts are non-empty because both sums are positive.
 
-### 2.6 Complexity
+*Completeness.* If a balanced partition exists, Lemma 2.2 gives $A \subseteq \{1, \dots, n-1\}$ with $\Sigma(A) = T$, and by Lemma 2.1 its mask is visited unless the algorithm has stopped earlier, which is only possible with the answer YES. If the loop ends without a hit, no such $A$ exists, and by Lemma 2.2 no balanced partition exists. The loops are finite, so the algorithm terminates. $\square$
 
-We count operations on 128-bit numbers in the unit-cost model of Section 1.4 and use $m = n - 1$.
+The proof works on index sets and uses neither that the values are distinct nor that they are positive.
 
-- **Preliminaries.** The sum and the parity test cost $O(n)$.
-- **Simple version.** The outer loop has $2^{n-1}$ masks (in the worst case all of them, when the answer is NO or the hit is the last mask) and the inner loop has $n - 1$ iterations with one test and at most one addition. The worst-case time is therefore $\Theta(n \cdot 2^{n-1}) = \Theta(n \cdot 2^n)$, that is $O(n \cdot 2^n)$.
-- **Gray-code version.** Each step does one bit-flip, one `ctz`, one addition or subtraction and one comparison, which is $O(1)$ ($\text{ctz}$ is a single instruction on current processors, and even when computed by a loop it takes $O(1)$ amortised, because it inspects $j + 1$ bits and half of all $k$ have $j = 0$, a quarter have $j = 1$, and so on). The worst-case time is $\Theta(2^{n-1}) = O(2^n)$, which is smaller by a factor $n$.
-- **Recovering the partition.** On YES, building $A$ and $B$ from the mask costs $O(n)$ once.
-- **Memory.** The input of $n$ numbers, `sumA`, `S`, `T` and one mask: $O(n)$ words in total, and $O(1)$ beyond the input. The mask fits in a `uint64_t` while $n \le 64$, which is far above the limit of Section 2.7.
-- **Best and worst case.** The best case is an odd $S$ or $S = 0$, both answered before the loop in $O(n)$. The worst case is a NO instance with even $S$, which executes all masks. The running time does **not** depend on the magnitude of the numbers, only on $n$.
+### 2.5 Complexity
 
-### 2.7 Constraints and limitations
+We count operations on 128-bit numbers in the model of Section 1.4.
 
-**Constraints that the program enforces**:
+**Theorem 2.5.** In the worst case `BRUTE-FORCE` takes time $\Theta(n \cdot 2^n)$ and `BRUTE-FORCE-GRAY` takes time $\Theta(2^n)$. Both use $O(1)$ memory beyond the input, and neither depends on the magnitude of the numbers.
 
-1. **Preconditions.** The input has $n \ge 2$ elements (Section 1.1). The bound $0 \le a_i < 10^{38}$ is checked when the input is parsed, and $S < 2^{128}$ is checked while summing. If $S$ is odd or $S = 0$, the program answers without enumerating.
-2. **Bound on $n$.** The exact algorithm is run only for $n \le 30$. For a larger $n$ the program reports SKIPPED together with the violated condition. The threshold can be changed on the command line so that the Stage 4 experiments can go past it on purpose.
+*Proof.* The sum and the parity test take $O(n)$. In the first version the outer loop has $2^{n-1}$ iterations, each with an inner loop of $n - 1$ steps, which gives $\Theta(n \cdot 2^{n-1}) = \Theta(n \cdot 2^n)$ when all masks are examined. In the second version each of the $2^{n-1} - 1$ steps consists of one bit flip, one $\mathrm{ctz}$, one addition or subtraction and one comparison. This is $O(1)$, since $\mathrm{ctz}$ is a single processor instruction and even a loop for it takes $O(1)$ amortised time: half of all $k$ have $j = 0$, a quarter have $j = 1$, and so on. The worst case is a NO instance with even $S$, which examines all masks. The variables $\mathrm{sumA}$, $S$, $T$ and the mask need $O(1)$ numbers, and the mask fits in a 64-bit word as long as $n \le 64$. $\square$
 
-**Limitations.** The time doubles with every additional element. Assuming $10^{9}$ Gray-code steps per second, which is optimistic for 128-bit arithmetic and has to be measured in Stage 4:
+In the best case, $S$ is odd or $S = 0$, and the answer is found in $O(n)$.
 
-| $n$ | masks $2^{n-1}$ | time (Gray code, $10^9$ steps/s) |
-| --- | --------------- | -------------------------------- |
-| 20  | $5.2 \cdot 10^{5}$  | under a millisecond          |
-| 30  | $5.4 \cdot 10^{8}$  | about $0.5$ s                |
-| 40  | $5.5 \cdot 10^{11}$ | about $9$ min                |
-| 50  | $5.6 \cdot 10^{14}$ | about $6.5$ days             |
-| 60  | $5.8 \cdot 10^{17}$ | about $18$ years             |
+### 2.6 Range of application
 
-The simple version needs about $n - 1$ times as many steps, so at $n = 30$ it takes tens of seconds rather than seconds. This is the reason for the limit $n \le 30$. The size of the numbers plays no role: `AaC_example_2.txt` has 25-digit numbers but only $n = 10$ elements, so it needs just $2^{9} = 512$ masks and is solved instantly, while a set with $n = 100$ small numbers is out of reach for this algorithm.
+The time doubles with every additional element, so each ten additional elements multiply it by about $10^3$. If the Gray-code variant performs about $10^9$ steps per second, which is optimistic for 128-bit arithmetic, a few tens of elements already take seconds to minutes and about fifty elements take days. The algorithm is therefore applied only for $n \le N_{BF}$ (Section 1.4), where $N_{BF}$ is of the order of a few tens. Beyond that range it is replaced by meet in the middle (Section 3) or dynamic programming (Section 4).
 
-### 2.8 When to use it
-
-Brute force is **never** the algorithm of choice for the final program; its role is the reference. Its value lies in being obviously correct: it contains no cleverness that could hide a bug, uses $O(n)$ memory, and does not depend on the magnitude of the numbers. We therefore use it in Stages 3 and 4 as follows:
-
-- **Oracle in the tests.** On random multisets with $n \le 20$ (including duplicates, zeros and odd sums) the answers of B, C (when $S$ is small) and E are compared with A, and every returned partition is checked to have two sums equal to $T$.
-- **Baseline in the time experiments.** The time of A against $n$ shows the $2^n$ growth that motivates B (about $2^{n/2}$) and C (about $n \cdot T / 64$), see Sections 3.5 and 4.8.
+The size of the numbers plays no role. A set with $n = 10$ elements of $25$ digits needs only $2^{9} = 512$ masks, whereas a set with $n = 100$ elements of one digit is out of reach. Dynamic programming has the opposite behaviour, and Section 3 shows how the dependence on $n$ can be reduced from $2^n$ to about $2^{n/2}$.
 
 ---
-
