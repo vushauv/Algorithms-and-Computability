@@ -1,6 +1,6 @@
 ## 5. Karmarkar-Karp differencing
 
-By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections 2 to 4 are exponential in $n$ or in the magnitude of the numbers. This section gives a polynomial-time approximation of the optimisation problem of Section 1.1, which minimises the discrepancy $d$. The differencing method of Karmarkar and Karp [1982] runs in time $O(n \log n)$ whatever the numbers are (in the model of Section 1.4), and it is the only algorithm of this report that constructs a partition. It cannot decide PARTITION, since it may return $d > 0$ for an instance that has a balanced partition (Section 5.3), but $d = 0$ proves that the answer is YES.
+By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections 2 to 4 are exponential in $n$ or in the magnitude of the numbers. This section gives a polynomial-time approximation of the optimisation problem of Section 1.1, which minimises the discrepancy $d$. The differencing method of Karmarkar and Karp [1983] runs in time $O(n \log n)$ whatever the numbers are (in the model of Section 1.4), and it is the only algorithm of this report that constructs a partition. It cannot decide PARTITION, since it may return $d > 0$ for an instance that has a balanced partition (Section 5.3), but $d = 0$ proves that the answer is YES.
 
 ### 5.1 Idea
 
