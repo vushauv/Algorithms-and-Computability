@@ -16,7 +16,7 @@ The algorithm proceeds as follows.
 3. Otherwise $d > 0$, $\Sigma(M)$ is even and positive, and the question is open. An exact algorithm is applied if one of them is in range, that is, dynamic programming if $T \le T_{DP}$ and meet in the middle if $n \le N_{MITM}$ (Section 1.4). If both are in range, we take the one with the smaller cost estimate according to Proposition 4.4: dynamic programming if $T/64 < 2^{n/2}$, and meet in the middle otherwise. Their answer is the answer of the final algorithm.
 4. If neither exact algorithm is in range, the answer is UNKNOWN.
 
-Brute force is not used. Its time is $\Theta(2^n)$, whereas the time of meet in the middle is $O(n \cdot 2^{n/2})$, which is smaller already for $n \ge 5$. The only advantage of brute force is its constant memory, and this does not matter for $n \le N_{BF}$, where the lists of meet in the middle are small (Section 3.6).
+Brute force is not used. Its time is $\Theta(2^n)$, whereas the time of meet in the middle is $O(n \cdot 2^{n/2})$, which is smaller already for $n \ge 5$. The only advantage of brute force is its constant memory, and this does not matter for the few tens of elements it can handle, where the lists of meet in the middle are small (Section 3.6).
 
 ### 6.2 Algorithm
 
@@ -71,9 +71,11 @@ If the answer is YES and $d > 0$, the decision is correct but the returned parti
 ### 6.5 Complexity
 
 **Theorem 6.2.** `SOLVE` takes time $O(n \log n)$ if the answer is found by Karmarkar-Karp, by the parity test, or if neither exact algorithm is in range. Otherwise it takes time $O(n \log n)$ plus the time of the exact algorithm that is run. Hence the time is always
+
 $$
-O\!\left(n \log n + n \cdot \min\!\left(\frac{T_{DP}}{64},\ 2^{N_{MITM}/2}\right)\right),
+O\left(n \log n + n \cdot \min\left(\frac{T_{DP}}{64}, 2^{N_{MITM}/2}\right)\right),
 $$
+
 if both algorithms are in range for the input, and otherwise it is bounded by the corresponding term alone. The memory is $O(n)$ numbers, or $O(T_{DP})$ bits for dynamic programming, or $O(2^{N_{MITM}/2})$ numbers for meet in the middle, according to the branch taken.
 
 *Proof.* The sum, the parity test and the test for `useDP` take $O(n)$, and Karmarkar-Karp takes $O(n \log n)$ and $O(n)$ memory (Theorem 5.4). Dynamic programming takes time $O(n + n \cdot T/w)$ with $w = 64$ and $T + 1$ bits (Theorem 4.3), and with $T \le T_{DP}$ this is at most $O(n \cdot T_{DP}/64)$. Meet in the middle takes time $O(n \cdot 2^{n/2})$ and $O(2^{n/2})$ numbers (Theorem 3.5), at most $O(n \cdot 2^{N_{MITM}/2})$ for $n \le N_{MITM}$. If both are in range, the algorithm takes the one with the smaller estimate $n \cdot T/64$ or $n \cdot 2^{n/2}$ (Proposition 4.4). $\square$

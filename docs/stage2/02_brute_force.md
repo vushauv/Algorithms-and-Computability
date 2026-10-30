@@ -122,7 +122,7 @@ In the best case, $S$ is odd or $S = 0$, and the answer is found in $O(n)$.
 
 ### 2.6 Range of application
 
-The time doubles with every additional element, so each ten additional elements multiply it by about $10^3$. If the Gray-code variant performs about $10^9$ steps per second, which is optimistic for 128-bit arithmetic, a few tens of elements already take seconds to minutes and about fifty elements take days. The algorithm is therefore applied only for $n \le N_{BF}$ (Section 1.4), where $N_{BF}$ is of the order of a few tens. Beyond that range it is replaced by meet in the middle (Section 3) or dynamic programming (Section 4).
+The time doubles with every additional element, so each ten additional elements multiply it by about $10^3$. If the Gray-code variant performs about $10^9$ steps per second, which is optimistic for 128-bit arithmetic, a few tens of elements already take seconds to minutes and about fifty elements take days. The algorithm is therefore usable only for a few tens of elements. The final algorithm (Section 6) does not use it: meet in the middle (Section 3) is faster for every $n \ge 5$ and dynamic programming (Section 4) covers the small numbers, so brute force serves as the baseline against which both are measured and as the reference for testing them.
 
 The size of the numbers plays no role. A set with $n = 10$ elements of $25$ digits needs only $2^{9} = 512$ masks, whereas a set with $n = 100$ elements of one digit is out of reach. Dynamic programming has the opposite behaviour, and Section 3 shows how the dependence on $n$ can be reduced from $2^n$ to about $2^{n/2}$.
 
