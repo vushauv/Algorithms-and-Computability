@@ -8,6 +8,8 @@ Let $S = \Sigma(M)$ and $T = S/2$ as in Section 1.2. If $S$ is odd, no balanced 
 
 ### 4.2 Idea
 
+#### The recurrence
+
 For $0 \le i \le n$ and $0 \le s \le T$ let
 
 $$
@@ -28,9 +30,13 @@ $$
 
 Equal values need no special treatment: two equal elements are two indices and give two steps of the recurrence.
 
-**One row.** Row $i$ depends only on row $i - 1$, so a single array `reach[0..T]` suffices, which after step $i$ holds $R_i$. The step reads `reach[s − a[i]]`, which must still hold the value of row $i - 1$. Since $s - a_i < s$ whenever $a_i > 0$, this is guaranteed if the cells are updated from the largest index to the smallest. For $a_i = 0$ the step reads the cell it is about to write, and the update `reach[s] ← reach[s] OR reach[s]` changes nothing, which is also correct.
+#### One row
 
-**Bitset.** Every cell is a single bit, so the array is stored as a bitset of $T + 1$ bits packed into words of $w = 64$ bits. The update of the whole row is then `reach ← reach OR (reach << a[i])`, truncated at bit $T$. It is carried out word by word, in the order from the highest word to the lowest when it is done in place, and needs about $T/w$ word operations instead of $T$ cell updates.
+Row $i$ depends only on row $i - 1$, so a single array `reach[0..T]` suffices, which after step $i$ holds $R_i$. The step reads `reach[s − a[i]]`, which must still hold the value of row $i - 1$. Since $s - a_i < s$ whenever $a_i > 0$, this is guaranteed if the cells are updated from the largest index to the smallest. For $a_i = 0$ the step reads the cell it is about to write, and the update `reach[s] ← reach[s] OR reach[s]` changes nothing, which is also correct.
+
+#### Bitset
+
+Every cell is a single bit, so the array is stored as a bitset of $T + 1$ bits packed into words of $w = 64$ bits. The update of the whole row is then `reach ← reach OR (reach << a[i])`, truncated at bit $T$. It is carried out word by word, in the order from the highest word to the lowest when it is done in place, and needs about $T/w$ word operations instead of $T$ cell updates.
 
 ### 4.3 Algorithm
 
@@ -58,6 +64,8 @@ The variable `top` bounds the obtainable sums after step $i$ by $a_1 + \dots + a
 
 ### 4.4 Example
 
+#### A YES instance
+
 Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$ and $\max a_i = 4 \le T$. The obtainable sums not exceeding $T$ are
 
 | step $i$ | element $a_i$ | obtainable sums |
@@ -71,7 +79,9 @@ After step $3$ the target $5$ is obtainable and the algorithm answers YES. Indee
 
 In the bitset form the sums are the bits that are set. Step $2$ computes $\lbrace 0, 3 \rbrace \cup (\lbrace 0, 3 \rbrace + 1) = \lbrace 0, 1, 3, 4 \rbrace$, the shift by $a_2 = 1$ moving every bit one place up, and step $3$ shifts by $4$ and cuts the result at $T = 5$.
 
-**A NO instance.** Let $a = (2, 2, 3, 5)$. Then $S = 12$, $T = 6$ and $\max a_i = 5 \le T$. The obtainable sums not exceeding $T$ are $\lbrace 0 \rbrace$, $\lbrace 0, 2 \rbrace$, $\lbrace 0, 2, 4 \rbrace$, $\lbrace 0, 2, 3, 4, 5 \rbrace$ and, after the last element, again $\lbrace 0, 2, 3, 4, 5 \rbrace$. The target $6$ is never reached, so all $4$ steps are executed and the answer is NO.
+#### A NO instance
+
+Let $a = (2, 2, 3, 5)$. Then $S = 12$, $T = 6$ and $\max a_i = 5 \le T$. The obtainable sums not exceeding $T$ are $\lbrace 0 \rbrace$, $\lbrace 0, 2 \rbrace$, $\lbrace 0, 2, 4 \rbrace$, $\lbrace 0, 2, 3, 4, 5 \rbrace$ and, after the last element, again $\lbrace 0, 2, 3, 4, 5 \rbrace$. The target $6$ is never reached, so all $4$ steps are executed and the answer is NO.
 
 ### 4.5 Correctness
 
@@ -91,11 +101,15 @@ In the bitset form the sums are the bits that are set. Step $2$ computes $\lbrac
 
 Since $T = S/2$, the time is $O(n \cdot \Sigma(M))$, as stated in Section 1.1. The bound `top` makes the early steps cheaper but does not change the worst case, and the early exit helps only for YES instances: for a NO instance with even $S$ and $\max a_i \le T$ all $n$ steps are executed.
 
-**Pseudo-polynomial time.** The length of the input is $\sum_i \log_2 (a_i + 1) = O(n \log S)$ bits, whereas the running time contains the factor $T$, which grows tenfold with every additional decimal digit of the numbers. The algorithm is thus exponential in the length of the input, in agreement with the NP-completeness of PARTITION (Section 1.3).
+#### Pseudo-polynomial time
+
+The length of the input is $\sum_i \log_2 (a_i + 1) = O(n \log S)$ bits, whereas the running time contains the factor $T$, which grows tenfold with every additional decimal digit of the numbers. The algorithm is thus exponential in the length of the input, in agreement with the NP-completeness of PARTITION (Section 1.3).
 
 ### 4.7 Range of application and comparison with meet in the middle
 
 The table has $T + 1$ bits, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). A target of order $10^{10}$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$ at least, since a single such number is at least $10^{24}$, which is far out of range.
+
+#### Comparison with meet in the middle
 
 Section 3 gives the alternative whose cost depends on $n$ only. We compare two rough estimates with constant factors dropped: the bitset version of dynamic programming costs about $n \cdot T/w$ operations and meet in the middle about $n \cdot 2^{n/2}$ (the factor $n$ of meet in the middle comes from sorting). The common factor $n$ cancels. For the memory we take $T/8$ bytes for the bitset and, for meet in the middle, the two lists of $2^{n/2}$ sums of $16$ bytes each, that is $32 \cdot 2^{n/2}$ bytes for even $n$.
 

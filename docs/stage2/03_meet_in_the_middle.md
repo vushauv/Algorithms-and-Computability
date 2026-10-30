@@ -41,22 +41,30 @@ SUBSET-SUMS(b[1..m])
     sums[0..2^m − 1]
     sums[0] ← 0
     for mask ← 1 to 2^m − 1 do
-        k ← ctz(mask)                              // lowest set bit, Section 2.2
+        k ← ctz(mask)                              // lowest set bit, Section 2.1
         sums[mask] ← sums[mask XOR 2^k] + b[k+1]
     return sums
 ```
 
+#### Generating the subset sums
+
 A subset of $b_1, \dots, b_m$ is represented by a mask as in Section 2.1: bit $k$ of the mask is $1$ if and only if $b_{k+1}$ belongs to the subset. The array `sums` is indexed by masks, so a mask must fit in a machine word. This is no restriction, since the array of $2^m$ numbers must fit in memory. The mask `mask XOR 2^k` is the mask without its lowest set bit $k$. It is smaller than `mask`, so its sum has been computed earlier, and one addition gives the sum of `mask`.
+
+#### The sweep
 
 The sweep starts at the smallest left sum and the largest right sum. If their total is smaller than $T$, no entry of `RS` at or after the current position can reach $T$ together with the current left sum, because those entries are not larger than the current one. So the left pointer advances. If the total is larger than $T$, the right pointer advances for the symmetric reason. Each iteration either returns or moves one pointer forward.
 
-**No overflow.** Every sum $x + y$ with $x \in$ `LS` and $y \in$ `RS` is the sum of a subset of $M$, namely the union of two subsets of the disjoint index sets $L$ and $R$ (Lemma 3.2). Hence it is at most $S < 2^{128}$, and the argument of Section 1.4 applies: the sweep never overflows.
+#### No overflow
+
+Every sum $x + y$ with $x \in$ `LS` and $y \in$ `RS` is the sum of a subset of $M$, namely the union of two subsets of the disjoint index sets $L$ and $R$ (Lemma 3.2). Hence it is at most $S < 2^{128}$, and the argument of Section 1.4 applies: the sweep never overflows.
 
 ### 3.3 Examples
 
 In the tables, subsets are written by the values of their elements.
 
-**A YES instance.** Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$, $h = 2$, the left half is $(3, 1)$ and the right half is $(4, 2)$. The subset sums, indexed by masks whose bit $0$ refers to the first element of the half, are
+#### A YES instance
+
+Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$, $h = 2$, the left half is $(3, 1)$ and the right half is $(4, 2)$. The subset sums, indexed by masks whose bit $0$ refers to the first element of the half, are
 
 | mask | left subset | left sum | right subset | right sum |
 | ---- | ----------- | -------- | ------------ | --------- |
@@ -75,7 +83,9 @@ After sorting, `LS` $= (0, 1, 3, 4)$ and `RS` $= (6, 4, 2, 0)$. The sweep procee
 
 The sums $1$ and $4$ come from the subsets $\lbrace 1 \rbrace$ and $\lbrace 4 \rbrace$, so $\lbrace 1, 4 \rbrace$ and its complement $\lbrace 3, 2 \rbrace$ both have sum $5$. The algorithm itself does not record these subsets, since the masks are lost by sorting; it only answers YES.
 
-**A NO instance.** Let $a = (2, 3, 7)$. Then $S = 12$, $T = 6$ and $h = 1$, so the left half is $(2)$ and the right half is $(3, 7)$, with a different size because $n$ is odd. Then `LS` $= (0, 2)$ and `RS` $= (10, 7, 3, 0)$.
+#### A NO instance
+
+Let $a = (2, 3, 7)$. Then $S = 12$, $T = 6$ and $h = 1$, so the left half is $(2)$ and the right half is $(3, 7)$, with a different size because $n$ is odd. Then `LS` $= (0, 2)$ and `RS` $= (10, 7, 3, 0)$.
 
 | left sum | right sum | total | action                       |
 | -------- | --------- | ----- | ---------------------------- |
