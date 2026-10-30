@@ -57,8 +57,10 @@
 \usepackage{titlesec}
 \titleformat{\section}{\Large\bfseries}{}{0pt}{}
 \titleformat{\subsection}{\large\bfseries}{}{0pt}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{}{0pt}{}
 \titlespacing*{\section}{0pt}{2.2ex plus .5ex}{1ex}
 \titlespacing*{\subsection}{0pt}{1.8ex plus .4ex}{.6ex}
+\titlespacing*{\subsubsection}{0pt}{1.4ex plus .3ex}{.4ex}
 
 % --- Pseudocode: framed, small, keeps the Unicode glyphs ------------------
 \usepackage{fancyvrb}
@@ -98,6 +100,31 @@ Wszołek}
 
 \begin{document}
 \maketitle
+\begin{abstract}
+This report documents the algorithms for the partition problem: given a
+multiset \(M\) of non-negative integers, decide whether it can be split
+into two non-empty parts with equal sums, and find a partition whose two
+sums are as close as possible. The decision problem is NP-complete, but
+only in the weak sense, so its cost is governed by two parameters, the
+number \(n\) of elements and the magnitude of their sum \(\Sigma(M)\).
+We describe four algorithms, each with pseudocode, a correctness proof
+and a complexity analysis: brute force with a Gray-code enumeration, in
+time \(\Theta(2^n)\); meet in the middle, in time \(O(n \cdot 2^{n/2})\)
+and memory \(O(2^{n/2})\); dynamic programming over the subset sums, in
+pseudo-polynomial time \(O(n \cdot \Sigma(M))\); and the Karmarkar-Karp
+differencing method, a polynomial-time approximation in time
+\(O(n \log n)\) that constructs a partition. The final algorithm always
+runs the approximation and, whenever the input allows it, one exact
+algorithm chosen by the size and the magnitude of the input, so that the
+decision is exact and the quality of the approximation can be compared
+with it.
+\end{abstract}
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\clearpage
 
 \hypertarget{problem-statement}{%
 \section{1. Problem statement}\label{problem-statement}}
@@ -118,6 +145,9 @@ For example, \(\{3, 1, 4, 2\}\) has the balanced partition
 The multiset \(\{1, 1, 4\}\) has no balanced partition: it would require
 \(\Sigma(A) = \Sigma(M)/2 = 3\), but no subset of \(\{1, 1, 4\}\) has
 sum \(3\).
+
+\hypertarget{the-two-problems}{%
+\subsubsection{The two problems}\label{the-two-problems}}
 
 We consider two problems. Section 1.2 gives their formal definitions.
 
@@ -143,6 +173,10 @@ whose running time is polynomial in \(n\) and \(\Sigma(M)\), a
 parameters therefore govern the cost: the number of elements \(n\) and
 the magnitude of \(\Sigma(M)\). The algorithms below differ in which of
 them their cost depends on.
+
+\hypertarget{the-algorithms-of-this-report}{%
+\subsubsection{The algorithms of this
+report}\label{the-algorithms-of-this-report}}
 
 We present four algorithms.
 
@@ -181,17 +215,23 @@ and assumptions on the input (below), the formal definitions (Section
 1.2), the hardness results (Section 1.3) and the computational model
 (Section 1.4).
 
-\textbf{Constraints on the input.} The input is a multiset
-\(M = \{a_1, \dots, a_n\}\) of non-negative integers. Equal values are
-different elements and are distinguished by their position
-\(1, \dots, n\). Both parts of a partition must be non-empty, because we
-do not assign a sum to the empty part, in particular we do not set it to
-\(0\). Consequently \(n \ge 2\), and a multiset with one element has no
-partition.
+\hypertarget{constraints-on-the-input}{%
+\subsubsection{Constraints on the
+input}\label{constraints-on-the-input}}
 
-\textbf{Assumptions.} The analysis also rests on the following
-assumptions. An input that violates one of them is rejected with an
-error message and is never truncated.
+The input is a multiset \(M = \{a_1, \dots, a_n\}\) of non-negative
+integers. Equal values are different elements and are distinguished by
+their position \(1, \dots, n\). Both parts of a partition must be
+non-empty, because we do not assign a sum to the empty part, in
+particular we do not set it to \(0\). Consequently \(n \ge 2\), and a
+multiset with one element has no partition.
+
+\hypertarget{assumptions}{%
+\subsubsection{Assumptions}\label{assumptions}}
+
+The analysis also rests on the following assumptions. An input that
+violates one of them is rejected with an error message and is never
+truncated.
 
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}>{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.5000}}@{}}
 \toprule
@@ -249,9 +289,12 @@ yes-instance, so an exact optimiser also decides PARTITION.
 \textbf{Target sum.} \(T = \Sigma(M)/2\). If \(\Sigma(M)\) is odd there
 is no balanced partition.
 
-\textbf{Trivial cases.} Every exact algorithm below (Sections 2 to 4)
-starts with two checks. The approximation of Section 5 needs neither,
-and the final algorithm of Section 6 obtains them from its result.
+\hypertarget{trivial-cases}{%
+\subsubsection{Trivial cases}\label{trivial-cases}}
+
+Every exact algorithm below (Sections 2 to 4) starts with two checks.
+The approximation of Section 5 needs neither, and the final algorithm of
+Section 6 obtains them from its result.
 
 \begin{itemize}
 \tightlist
@@ -292,16 +335,21 @@ checking it takes \(O(n)\) additions. NP-hardness was shown by Karp, who
 lists PARTITION among his 21 NP-complete problems. We quote this result
 and do not reprove it.
 
-\textbf{Weak hardness.} PARTITION is NP-complete only in the weak sense.
-It is solved in time \(O(n \cdot \Sigma(M))\) by dynamic programming
-(Section 4). This bound is polynomial in \(n\) and in the
-\emph{magnitude} \(\Sigma(M)\), but exponential in the \emph{length} of
-the input, which is proportional to \(n\) times the number of digits of
-the elements. Such an algorithm is called pseudo-polynomial. Unless P =
-NP, a problem with a pseudo-polynomial algorithm is not NP-complete in
-the strong sense {[}Garey and Johnson 1979, Section 4.2{]}.
+\hypertarget{weak-hardness}{%
+\subsubsection{Weak hardness}\label{weak-hardness}}
 
-\textbf{Consequences for the algorithms.}
+PARTITION is NP-complete only in the weak sense. It is solved in time
+\(O(n \cdot \Sigma(M))\) by dynamic programming (Section 4). This bound
+is polynomial in \(n\) and in the \emph{magnitude} \(\Sigma(M)\), but
+exponential in the \emph{length} of the input, which is proportional to
+\(n\) times the number of digits of the elements. Such an algorithm is
+called pseudo-polynomial. Unless P = NP, a problem with a
+pseudo-polynomial algorithm is not NP-complete in the strong sense
+{[}Garey and Johnson 1979, Section 4.2{]}.
+
+\hypertarget{consequences-for-the-algorithms}{%
+\subsubsection{Consequences for the
+algorithms}\label{consequences-for-the-algorithms}}
 
 \begin{itemize}
 \tightlist
@@ -321,33 +369,44 @@ the strong sense {[}Garey and Johnson 1979, Section 4.2{]}.
 \subsection{1.4 Computational model and number
 representation}\label{computational-model-and-number-representation}}
 
-\textbf{Representation.} All numbers, that is the elements, their sums
-and their differences, are unsigned 128-bit integers. The largest such
-integer is \(2^{128} - 1 \approx 3.4 \cdot 10^{38}\), which has \(39\)
-decimal digits. The elements are non-negative, so no sign bit is needed.
+\hypertarget{representation}{%
+\subsubsection{Representation}\label{representation}}
 
-\textbf{No overflow.} Every value computed by an algorithm below is a
-subset sum or the non-negative difference of two subset sums, hence it
-lies between \(0\) and \(\Sigma(M)\). Together with the assumption
-\(\Sigma(M) < 2^{128}\) of Section 1.1 this means that no overflow
-occurs. Two algorithms need even less: Karmarkar-Karp (Section 5)
-computes only differences, each at most \(\max_i a_i\), and dynamic
-programming (Section 4) computes only sums up to \(\Sigma(M)\), since
-its target \(\Sigma(M)/2\) is at most \(T_{DP}\), where \(T_{DP}\) is
-defined below.
+All numbers, that is the elements, their sums and their differences, are
+unsigned 128-bit integers. The largest such integer is
+\(2^{128} - 1 \approx 3.4 \cdot 10^{38}\), which has \(39\) decimal
+digits. The elements are non-negative, so no sign bit is needed.
 
-\textbf{Cost model.} We use the unit-cost RAM model: an arithmetic
-operation or a comparison on a 128-bit number costs \(O(1)\), and so
-does an operation on a machine word of \(w = 64\) bits, which dynamic
-programming uses for its bitset (Section 4). Time bounds count such
-operations and are expressed in \(n\) and, for dynamic programming, in
-\(\Sigma(M)\). Memory is counted in 128-bit numbers, except for the
-bitset of Section 4, which is counted in bits.
+\hypertarget{no-overflow}{%
+\subsubsection{No overflow}\label{no-overflow}}
 
-\textbf{Ranges of the algorithms.} Each exponential algorithm is applied
-only within a range of inputs, because outside it the algorithm may not
-finish or may not fit in memory (Section 1.1). The ranges are
-parameters:
+Every value computed by an algorithm below is a subset sum or the
+non-negative difference of two subset sums, hence it lies between \(0\)
+and \(\Sigma(M)\). Together with the assumption \(\Sigma(M) < 2^{128}\)
+of Section 1.1 this means that no overflow occurs. Two algorithms need
+even less: Karmarkar-Karp (Section 5) computes only differences, each at
+most \(\max_i a_i\), and dynamic programming (Section 4) computes only
+sums up to \(\Sigma(M)\), since its target \(\Sigma(M)/2\) is at most
+\(T_{DP}\), where \(T_{DP}\) is defined below.
+
+\hypertarget{cost-model}{%
+\subsubsection{Cost model}\label{cost-model}}
+
+We use the unit-cost RAM model: an arithmetic operation or a comparison
+on a 128-bit number costs \(O(1)\), and so does an operation on a
+machine word of \(w = 64\) bits, which dynamic programming uses for its
+bitset (Section 4). Time bounds count such operations and are expressed
+in \(n\) and, for dynamic programming, in \(\Sigma(M)\). Memory is
+counted in 128-bit numbers, except for the bitset of Section 4, which is
+counted in bits.
+
+\hypertarget{ranges-of-the-algorithms}{%
+\subsubsection{Ranges of the
+algorithms}\label{ranges-of-the-algorithms}}
+
+Each exponential algorithm is applied only within a range of inputs,
+because outside it the algorithm may not finish or may not fit in memory
+(Section 1.1). The ranges are parameters:
 
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}>{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}@{}}
 \toprule
@@ -374,24 +433,31 @@ algorithm (Section 6) takes them as input.
 The most direct way to decide PARTITION is to examine every candidate.
 By Section 1.2 it suffices to find an index set \(A\) with
 \(\Sigma(A) = T\), and there are only finitely many index sets. This
-section analyses the resulting algorithm and a variant that is faster by
-a factor \(n\). Both run in time exponential in \(n\) and use little
-memory, so they set the baseline against which the algorithms of
-Sections 3 and 4 are measured.
+section analyses the resulting algorithm in the form that visits the
+index sets in Gray-code order and updates the sum with one operation per
+set. It runs in time exponential in \(n\) and uses almost no memory, so
+it sets the baseline against which the algorithms of Sections 3 and 4
+are measured, and it is the reference against which they are tested.
 
 \hypertarget{idea}{%
 \subsection{2.1 Idea}\label{idea}}
 
+\hypertarget{subsets-as-bit-vectors}{%
+\subsubsection{Subsets as bit vectors}\label{subsets-as-bit-vectors}}
+
 Every subset \(A \subseteq \{1, \dots, n\}\) corresponds to a bit vector
 \(x \in \{0,1\}^n\) with \(x_i = 1\) if and only if \(i \in A\). The
-algorithm enumerates these vectors, computes \(\Sigma(A)\) for each, and
-stops as soon as \(\Sigma(A) = T\). If the enumeration ends without a
-hit, no balanced partition exists.
+algorithm enumerates these vectors, maintains \(\Sigma(A)\) along the
+way, and stops as soon as \(\Sigma(A) = T\). If the enumeration ends
+without a hit, no balanced partition exists.
 
-\textbf{Halving.} The partitions \((A, B)\) and \((B, A)\) have the same
-sums, so we may assume that the index \(n\) lies in \(B\). Only the
-first \(n - 1\) bits are then free, and \(2^{n-1}\) vectors suffice
-instead of \(2^n\). A vector is stored as an integer
+\hypertarget{halving}{%
+\subsubsection{Halving}\label{halving}}
+
+The partitions \((A, B)\) and \((B, A)\) have the same sums, so we may
+assume that the index \(n\) lies in \(B\). Only the first \(n - 1\) bits
+are then free, and \(2^{n-1}\) vectors suffice instead of \(2^n\). A
+vector is stored as an integer
 \(\mathrm{mask} \in \{0, 1, 2, \dots, 2^{n-1} - 1\}\) whose binary
 digits are the bits \(x_i\): the lowest digit (bit \(0\)) is \(x_1\),
 the next one (bit \(1\)) is \(x_2\), and in general bit \(i - 1\) is
@@ -400,43 +466,16 @@ the next one (bit \(1\)) is \(x_2\), and in general bit \(i - 1\) is
 for \(A = \{1, 3\}\), and \(\mathrm{mask} = 0\) stands for
 \(A = \emptyset\).
 
-\textbf{Indices instead of values.} The enumeration runs over index
-sets, so equal values at different positions are different elements, and
-no special treatment of duplicates or of zeros is needed.
+\hypertarget{gray-code-enumeration}{%
+\subsubsection{Gray-code enumeration}\label{gray-code-enumeration}}
 
-\hypertarget{algorithm}{%
-\subsection{2.2 Algorithm}\label{algorithm}}
-
-The input is a multiset \(a_1, \dots, a_n\) with \(n \ge 2\) (Section
-1.1).
-
-\begin{verbatim}
-BRUTE-FORCE(a[1..n])
-    S ← Σ a[i]
-    if S is odd then return NO
-    if S = 0 then return YES                       // Section 1.2
-    T ← S / 2
-    // bit i−1 of mask puts a[i] in A; a[n] is in B
-    for mask ← 0 to 2^(n−1) − 1 do
-        sumA ← 0
-        for i ← 1 to n − 1 do
-            if bit (i−1) of mask = 1 then sumA ← sumA + a[i]
-        if sumA = T then return YES
-    return NO
-\end{verbatim}
-
-After the two trivial cases of Section 1.2 we have \(T > 0\). Hence
-\(\mathrm{mask} = 0\), which stands for \(A = \emptyset\), never
-succeeds, and every set \(A\) that succeeds is non-empty together with
-its complement. We keep \(\mathrm{mask} = 0\) in the loop so that the
-masks are exactly all the subsets. Skipping it would save one of the
-\(2^{n-1}\) iterations.
-
-\textbf{Gray-code variant.} The inner loop recomputes the sum of \(A\)
-from scratch. If the masks are visited in the order of the binary
-reflected Gray code, two consecutive masks differ in exactly one bit,
-and the sum is updated with a single addition or subtraction. Let
-\(m = n - 1\). The \(k\)-th Gray code word is
+The simplest enumeration visits the masks in the order
+\(0, 1, 2, \dots\) and computes the sum of each from scratch, with
+\(n - 1\) additions per mask and \(\Theta(n \cdot 2^n)\) operations in
+total. We do not pursue this version. If the masks are visited instead
+in the order of the binary reflected Gray code, two consecutive masks
+differ in exactly one bit, and the sum is updated with a single addition
+or subtraction. Let \(m = n - 1\). The \(k\)-th Gray code word is
 \(g_k = k \oplus (k \gg 1)\), where \(\oplus\) is the bitwise exclusive
 or and \(\gg\) the right shift. The function \(\mathrm{ctz}(k)\),
 ``count trailing zeros'', is the number of zeros at the right end of the
@@ -486,12 +525,27 @@ every value from \(0\) to \(7\) occurs once. The algorithm does not
 compute \(g_k\) by the formula: it keeps the current mask and flips bit
 \(\mathrm{ctz}(k)\) of it.
 
+\hypertarget{indices-instead-of-values}{%
+\subsubsection{Indices instead of
+values}\label{indices-instead-of-values}}
+
+The enumeration runs over index sets, so equal values at different
+positions are different elements, and no special treatment of duplicates
+or of zeros is needed.
+
+\hypertarget{algorithm}{%
+\subsection{2.2 Algorithm}\label{algorithm}}
+
+The input is a multiset \(a_1, \dots, a_n\) with \(n \ge 2\) (Section
+1.1).
+
 \begin{verbatim}
-BRUTE-FORCE-GRAY(a[1..n])
+BRUTE-FORCE(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
     if S = 0 then return YES                       // Section 1.2
     T ← S / 2
+    // bit i−1 of the mask puts a[i] in A; a[n] is in B
     m ← n − 1
     g ← 0;  sumA ← 0                               // A = ∅
     for k ← 1 to 2^m − 1 do
@@ -503,23 +557,23 @@ BRUTE-FORCE-GRAY(a[1..n])
     return NO
 \end{verbatim}
 
-The subtraction never underflows, because a value is subtracted only
-after it has been added and not yet removed, so it is a part of
-\texttt{sumA}.
+After the two trivial cases of Section 1.2 we have \(T > 0\). Hence the
+initial mask \(g = 0\), which stands for \(A = \emptyset\), can never
+succeed, and it is not tested; every set \(A\) that succeeds is
+non-empty together with its complement. The subtraction never
+underflows, because a value is subtracted only after it has been added
+and not yet removed, so it is a part of \texttt{sumA}.
 
 \hypertarget{examples}{%
 \subsection{2.3 Examples}\label{examples}}
 
-\textbf{A YES instance.} Let \(a = (3, 1, 4, 2)\). Then \(S = 10\),
-\(T = 5\) and \(n = 4\), so \(a_4 = 2\) stays in \(B\) and the mask has
-three bits: bit \(0\) is \(a_1 = 3\), bit \(1\) is \(a_2 = 1\) and bit
-\(2\) is \(a_3 = 4\). The masks \(0, 1, \dots, 6\) give the sums
-\(\Sigma(A) = 0, 3, 1, 4, 4, 7, 5\), and only the last equals \(T\). The
-algorithm stops at \(\mathrm{mask} = 6\), after \(7\) of the \(8\)
-masks, and answers YES. This mask stands for \(A = \{1, 4\}\), whose
-complement \(\{3, 2\}\) has the same sum \(5\).
+\hypertarget{a-yes-instance}{%
+\subsubsection{A YES instance}\label{a-yes-instance}}
 
-The Gray-code variant visits the masks in the order
+Let \(a = (3, 1, 4, 2)\). Then \(S = 10\), \(T = 5\) and \(n = 4\), so
+\(a_4 = 2\) stays in \(B\) and the mask has three bits: bit \(0\) is
+\(a_1 = 3\), bit \(1\) is \(a_2 = 1\) and bit \(2\) is \(a_3 = 4\). The
+algorithm visits the masks in the order
 \(000, 001, 011, 010, 110, \dots\)
 
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1250}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2656}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2344}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0469}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2344}}>{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0938}}@{}}
@@ -539,24 +593,30 @@ step \(k\) & \(\mathrm{ctz}(k)\) & flipped element & \(g\) & \(\mathrm{sumA}\) &
 \bottomrule
 \end{longtable}
 
-It stops after \(5\) masks at the same set \(A = \{1, 4\}\) and answers
-YES.
+It stops after \(5\) of the \(8\) masks and answers YES. The mask
+\(110\) stands for \(A = \{2, 3\}\), with the values \(1\) and \(4\),
+whose complement \(\{1, 4\}\) with the values \(3\) and \(2\) has the
+same sum \(5\).
 
-\textbf{A NO instance.} Let \(a = (2, 3, 7)\). Then \(S = 12\) and
-\(T = 6\), and the mask has two bits, for \(a_1 = 2\) and \(a_2 = 3\).
-The four masks give \(\Sigma(A) \in \{0, 2, 3, 5\}\), none of which
-equals \(6\), so all masks are examined and the answer is NO.
+\hypertarget{a-no-instance}{%
+\subsubsection{A NO instance}\label{a-no-instance}}
+
+Let \(a = (2, 3, 7)\). Then \(S = 12\) and \(T = 6\), and the mask has
+two bits, for \(a_1 = 2\) and \(a_2 = 3\). The three steps visit the
+masks \(01\), \(11\) and \(10\) with the sums \(2\), \(5\) and \(3\),
+none of which equals \(6\), so all masks are examined and the answer is
+NO.
 
 \hypertarget{correctness}{%
 \subsection{2.4 Correctness}\label{correctness}}
 
-\textbf{Lemma 2.1} (enumeration). The values
-\(\mathrm{mask} \in \{0, \dots, 2^{n-1} - 1\}\) correspond one to one to
-the subsets \(A \subseteq \{1, \dots, n-1\}\). The same holds for the
-Gray-code order.
+\textbf{Lemma 2.1} (enumeration). The masks
+\(\{0, \dots, 2^{n-1} - 1\}\) correspond one to one to the subsets
+\(A \subseteq \{1, \dots, n-1\}\), and the Gray-code order visits every
+mask exactly once.
 
 \emph{Proof.} The bits of a mask form the indicator vector of \(A\), and
-this correspondence is a bijection. By fact 1 of Section 2.2, the
+this correspondence is a bijection. By fact 1 of Section 2.1, the
 Gray-code order is a permutation of the masks. \(\square\)
 
 \textbf{Lemma 2.2} (reduction to \(n \in B\)). Let \(S\) be even and
@@ -571,17 +631,16 @@ Then \(\Sigma(B) = S - T = T = \Sigma(A)\). (\(\Rightarrow\)) Let
 \((B, A)\) is balanced with \(B \subseteq \{1, \dots, n-1\}\) and
 \(\Sigma(B) = T\). \(\square\)
 
-\textbf{Lemma 2.3} (invariant of the Gray-code variant). After step
-\(k\),
+\textbf{Lemma 2.3} (invariant). After step \(k\),
 \(\mathrm{sumA} = \sum_{i \,:\, \text{bit } i-1 \text{ of } g = 1} a_i\).
 
-\emph{Proof.} Induction on \(k\). For \(k = 0\) both sides are \(0\).
-Step \(k\) flips bit \(j\) of \(g\) and adds or subtracts \(a_{j+1}\)
-according to the new value of the bit, which is exactly the change of
-the right-hand side. \(\square\)
+\emph{Proof.} Induction on \(k\). For \(k = 0\) both sides are \(0\). By
+fact 2 of Section 2.1, step \(k\) flips bit \(j\) of \(g\) and adds or
+subtracts \(a_{j+1}\) according to the new value of the bit, which is
+exactly the change of the right-hand side. \(\square\)
 
-\textbf{Theorem 2.4.} \texttt{BRUTE-FORCE} and \texttt{BRUTE-FORCE-GRAY}
-return YES if and only if a balanced partition exists.
+\textbf{Theorem 2.4.} \texttt{BRUTE-FORCE} returns YES if and only if a
+balanced partition exists.
 
 \emph{Proof.} If \(S\) is odd, a balanced partition would give
 \(S = 2\Sigma(A)\), which is impossible, so NO is correct. If \(S = 0\),
@@ -591,17 +650,18 @@ and positive, so \(T > 0\).
 
 \emph{Soundness.} The algorithm answers YES only when
 \(\mathrm{sumA} = T\), where \(\mathrm{sumA}\) is the sum of the set
-\(A\) of the current mask, by construction in the first version and by
-Lemma 2.3 in the second. Its complement has the sum \(S - T = T\), so
-\((A, B)\) is a balanced partition, and both parts are non-empty because
-both sums are positive.
+\(A\) of the current mask by Lemma 2.3. Its complement has the sum
+\(S - T = T\), so \((A, B)\) is a balanced partition, and both parts are
+non-empty because both sums are positive.
 
 \emph{Completeness.} If a balanced partition exists, Lemma 2.2 gives
 \(A \subseteq \{1, \dots, n-1\}\) with \(\Sigma(A) = T\), and by Lemma
 2.1 its mask is visited unless the algorithm has stopped earlier, which
-is only possible with the answer YES. If the loop ends without a hit, no
-such \(A\) exists, and by Lemma 2.2 no balanced partition exists. The
-loops are finite, so the algorithm terminates. \(\square\)
+is only possible with the answer YES. The mask of \(A\) is not the
+initial mask \(0\), because \(T > 0\), so its sum is tested when it is
+visited. If the loop ends without a hit, no such \(A\) exists, and by
+Lemma 2.2 no balanced partition exists. The loop is finite, so the
+algorithm terminates. \(\square\)
 
 The proof works on index sets and uses neither that the values are
 distinct nor that they are positive.
@@ -612,40 +672,38 @@ distinct nor that they are positive.
 We count operations on 128-bit numbers in the model of Section 1.4.
 
 \textbf{Theorem 2.5.} In the worst case \texttt{BRUTE-FORCE} takes time
-\(\Theta(n \cdot 2^n)\) and \texttt{BRUTE-FORCE-GRAY} takes time
-\(\Theta(2^n)\). Both use \(O(1)\) memory beyond the input, and neither
-depends on the magnitude of the numbers.
+\(\Theta(2^n)\). It uses \(O(1)\) memory beyond the input, and neither
+bound depends on the magnitude of the numbers.
 
-\emph{Proof.} The sum and the parity test take \(O(n)\). In the first
-version the outer loop has \(2^{n-1}\) iterations, each with an inner
-loop of \(n - 1\) steps, which gives
-\(\Theta(n \cdot 2^{n-1}) = \Theta(n \cdot 2^n)\) when all masks are
-examined. In the second version each of the \(2^{n-1} - 1\) steps
-consists of one bit flip, one \(\mathrm{ctz}\), one addition or
-subtraction and one comparison. This is \(O(1)\), since \(\mathrm{ctz}\)
-is a single processor instruction and even a loop for it takes \(O(1)\)
-amortised time: half of all \(k\) have \(j = 0\), a quarter have
-\(j = 1\), and so on. The worst case is a NO instance with even \(S\),
-which examines all masks. The variables \(\mathrm{sumA}\), \(S\), \(T\)
-and the mask need \(O(1)\) numbers, and the mask fits in a 64-bit word
-as long as \(n \le 64\). \(\square\)
+\emph{Proof.} The sum and the parity test take \(O(n)\). Each of the
+\(2^{n-1} - 1\) steps consists of one bit flip, one \(\mathrm{ctz}\),
+one addition or subtraction and one comparison. This is \(O(1)\), since
+\(\mathrm{ctz}\) is a single processor instruction and even a loop for
+it takes \(O(1)\) amortised time: half of all \(k\) have \(j = 0\), a
+quarter have \(j = 1\), and so on. The worst case is a NO instance with
+even \(S\), which examines all masks, so the time is
+\(\Theta(2^{n-1}) = \Theta(2^n)\). The variables \(\mathrm{sumA}\),
+\(S\), \(T\) and the mask need \(O(1)\) numbers, and the mask fits in a
+64-bit word as long as \(n \le 64\). \(\square\)
 
 In the best case, \(S\) is odd or \(S = 0\), and the answer is found in
-\(O(n)\).
+\(O(n)\). The direct enumeration of Section 2.1, which recomputes the
+sum for every mask, takes \(\Theta(n \cdot 2^n)\) in the worst case; the
+Gray code saves the factor \(n\).
 
 \hypertarget{range-of-application}{%
 \subsection{2.6 Range of application}\label{range-of-application}}
 
 The time doubles with every additional element, so each ten additional
-elements multiply it by about \(10^3\). If the Gray-code variant
-performs about \(10^9\) steps per second, which is optimistic for
-128-bit arithmetic, a few tens of elements already take seconds to
-minutes and about fifty elements take days. The algorithm is therefore
-usable only for a few tens of elements. The final algorithm (Section 6)
-does not use it: meet in the middle (Section 3) is faster for every
-\(n \ge 5\) and dynamic programming (Section 4) covers the small
-numbers, so brute force serves as the baseline against which both are
-measured and as the reference for testing them.
+elements multiply it by about \(10^3\). If the algorithm performs about
+\(10^9\) steps per second, which is optimistic for 128-bit arithmetic, a
+few tens of elements already take seconds to minutes and about fifty
+elements take days. The algorithm is therefore usable only for a few
+tens of elements. The final algorithm (Section 6) does not use it: meet
+in the middle (Section 3) is faster for every \(n \ge 5\) and dynamic
+programming (Section 4) covers the small numbers, so brute force serves
+as the baseline against which both are measured and as the reference for
+testing them.
 
 The size of the numbers plays no role. A set with \(n = 10\) elements of
 \(25\) digits needs only \(2^{9} = 512\) masks, whereas a set with
@@ -716,10 +774,14 @@ SUBSET-SUMS(b[1..m])
     sums[0..2^m − 1]
     sums[0] ← 0
     for mask ← 1 to 2^m − 1 do
-        k ← ctz(mask)                              // lowest set bit, Section 2.2
+        k ← ctz(mask)                              // lowest set bit, Section 2.1
         sums[mask] ← sums[mask XOR 2^k] + b[k+1]
     return sums
 \end{verbatim}
+
+\hypertarget{generating-the-subset-sums}{%
+\subsubsection{Generating the subset
+sums}\label{generating-the-subset-sums}}
 
 A subset of \(b_1, \dots, b_m\) is represented by a mask as in Section
 2.1: bit \(k\) of the mask is \(1\) if and only if \(b_{k+1}\) belongs
@@ -730,6 +792,9 @@ is the mask without its lowest set bit \(k\). It is smaller than
 \texttt{mask}, so its sum has been computed earlier, and one addition
 gives the sum of \texttt{mask}.
 
+\hypertarget{the-sweep}{%
+\subsubsection{The sweep}\label{the-sweep}}
+
 The sweep starts at the smallest left sum and the largest right sum. If
 their total is smaller than \(T\), no entry of \texttt{RS} at or after
 the current position can reach \(T\) together with the current left sum,
@@ -738,21 +803,27 @@ pointer advances. If the total is larger than \(T\), the right pointer
 advances for the symmetric reason. Each iteration either returns or
 moves one pointer forward.
 
-\textbf{No overflow.} Every sum \(x + y\) with \(x \in\) \texttt{LS} and
-\(y \in\) \texttt{RS} is the sum of a subset of \(M\), namely the union
-of two subsets of the disjoint index sets \(L\) and \(R\) (Lemma 3.2).
-Hence it is at most \(S < 2^{128}\), and the argument of Section 1.4
-applies: the sweep never overflows.
+\hypertarget{no-overflow-1}{%
+\subsubsection{No overflow}\label{no-overflow-1}}
+
+Every sum \(x + y\) with \(x \in\) \texttt{LS} and \(y \in\) \texttt{RS}
+is the sum of a subset of \(M\), namely the union of two subsets of the
+disjoint index sets \(L\) and \(R\) (Lemma 3.2). Hence it is at most
+\(S < 2^{128}\), and the argument of Section 1.4 applies: the sweep
+never overflows.
 
 \hypertarget{examples-1}{%
 \subsection{3.3 Examples}\label{examples-1}}
 
 In the tables, subsets are written by the values of their elements.
 
-\textbf{A YES instance.} Let \(a = (3, 1, 4, 2)\). Then \(S = 10\),
-\(T = 5\), \(h = 2\), the left half is \((3, 1)\) and the right half is
-\((4, 2)\). The subset sums, indexed by masks whose bit \(0\) refers to
-the first element of the half, are
+\hypertarget{a-yes-instance-1}{%
+\subsubsection{A YES instance}\label{a-yes-instance-1}}
+
+Let \(a = (3, 1, 4, 2)\). Then \(S = 10\), \(T = 5\), \(h = 2\), the
+left half is \((3, 1)\) and the right half is \((4, 2)\). The subset
+sums, indexed by masks whose bit \(0\) refers to the first element of
+the half, are
 
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0909}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2500}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2727}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2045}}@{}}
 \toprule
@@ -791,10 +862,13 @@ The sums \(1\) and \(4\) come from the subsets \(\lbrace 1 \rbrace\) and
 not record these subsets, since the masks are lost by sorting; it only
 answers YES.
 
-\textbf{A NO instance.} Let \(a = (2, 3, 7)\). Then \(S = 12\),
-\(T = 6\) and \(h = 1\), so the left half is \((2)\) and the right half
-is \((3, 7)\), with a different size because \(n\) is odd. Then
-\texttt{LS} \(= (0, 2)\) and \texttt{RS} \(= (10, 7, 3, 0)\).
+\hypertarget{a-no-instance-1}{%
+\subsubsection{A NO instance}\label{a-no-instance-1}}
+
+Let \(a = (2, 3, 7)\). Then \(S = 12\), \(T = 6\) and \(h = 1\), so the
+left half is \((2)\) and the right half is \((3, 7)\), with a different
+size because \(n\) is odd. Then \texttt{LS} \(= (0, 2)\) and \texttt{RS}
+\(= (10, 7, 3, 0)\).
 
 \begin{longtable}[]{@{}llll@{}}
 \toprule
@@ -969,6 +1043,9 @@ within range, though: the algorithm below computes \(top + a_i\) with
 \hypertarget{idea-2}{%
 \subsection{4.2 Idea}\label{idea-2}}
 
+\hypertarget{the-recurrence}{%
+\subsubsection{The recurrence}\label{the-recurrence}}
+
 For \(0 \le i \le n\) and \(0 \le s \le T\) let
 
 \[
@@ -996,19 +1073,25 @@ R_i(s) = \begin{cases} R_{i-1}(s) & s < a_i, \\ R_{i-1}(s) \lor R_{i-1}(s - a_i)
 Equal values need no special treatment: two equal elements are two
 indices and give two steps of the recurrence.
 
-\textbf{One row.} Row \(i\) depends only on row \(i - 1\), so a single
-array \texttt{reach{[}0..T{]}} suffices, which after step \(i\) holds
-\(R_i\). The step reads \texttt{reach{[}s\ −\ a{[}i{]}{]}}, which must
-still hold the value of row \(i - 1\). Since \(s - a_i < s\) whenever
-\(a_i > 0\), this is guaranteed if the cells are updated from the
-largest index to the smallest. For \(a_i = 0\) the step reads the cell
-it is about to write, and the update
+\hypertarget{one-row}{%
+\subsubsection{One row}\label{one-row}}
+
+Row \(i\) depends only on row \(i - 1\), so a single array
+\texttt{reach{[}0..T{]}} suffices, which after step \(i\) holds \(R_i\).
+The step reads \texttt{reach{[}s\ −\ a{[}i{]}{]}}, which must still hold
+the value of row \(i - 1\). Since \(s - a_i < s\) whenever \(a_i > 0\),
+this is guaranteed if the cells are updated from the largest index to
+the smallest. For \(a_i = 0\) the step reads the cell it is about to
+write, and the update
 \texttt{reach{[}s{]}\ ←\ reach{[}s{]}\ OR\ reach{[}s{]}} changes
 nothing, which is also correct.
 
-\textbf{Bitset.} Every cell is a single bit, so the array is stored as a
-bitset of \(T + 1\) bits packed into words of \(w = 64\) bits. The
-update of the whole row is then
+\hypertarget{bitset}{%
+\subsubsection{Bitset}\label{bitset}}
+
+Every cell is a single bit, so the array is stored as a bitset of
+\(T + 1\) bits packed into words of \(w = 64\) bits. The update of the
+whole row is then
 \texttt{reach\ ←\ reach\ OR\ (reach\ \textless{}\textless{}\ a{[}i{]})},
 truncated at bit \(T\). It is carried out word by word, in the order
 from the highest word to the lowest when it is done in place, and needs
@@ -1047,6 +1130,9 @@ form.
 \hypertarget{example}{%
 \subsection{4.4 Example}\label{example}}
 
+\hypertarget{a-yes-instance-2}{%
+\subsubsection{A YES instance}\label{a-yes-instance-2}}
+
 Let \(a = (3, 1, 4, 2)\). Then \(S = 10\), \(T = 5\) and
 \(\max a_i = 4 \le T\). The obtainable sums not exceeding \(T\) are
 
@@ -1074,9 +1160,12 @@ computes
 the shift by \(a_2 = 1\) moving every bit one place up, and step \(3\)
 shifts by \(4\) and cuts the result at \(T = 5\).
 
-\textbf{A NO instance.} Let \(a = (2, 2, 3, 5)\). Then \(S = 12\),
-\(T = 6\) and \(\max a_i = 5 \le T\). The obtainable sums not exceeding
-\(T\) are \(\lbrace 0 \rbrace\), \(\lbrace 0, 2 \rbrace\),
+\hypertarget{a-no-instance-2}{%
+\subsubsection{A NO instance}\label{a-no-instance-2}}
+
+Let \(a = (2, 2, 3, 5)\). Then \(S = 12\), \(T = 6\) and
+\(\max a_i = 5 \le T\). The obtainable sums not exceeding \(T\) are
+\(\lbrace 0 \rbrace\), \(\lbrace 0, 2 \rbrace\),
 \(\lbrace 0, 2, 4 \rbrace\), \(\lbrace 0, 2, 3, 4, 5 \rbrace\) and,
 after the last element, again \(\lbrace 0, 2, 3, 4, 5 \rbrace\). The
 target \(6\) is never reached, so all \(4\) steps are executed and the
@@ -1137,12 +1226,14 @@ does not change the worst case, and the early exit helps only for YES
 instances: for a NO instance with even \(S\) and \(\max a_i \le T\) all
 \(n\) steps are executed.
 
-\textbf{Pseudo-polynomial time.} The length of the input is
-\(\sum_i \log_2 (a_i + 1) = O(n \log S)\) bits, whereas the running time
-contains the factor \(T\), which grows tenfold with every additional
-decimal digit of the numbers. The algorithm is thus exponential in the
-length of the input, in agreement with the NP-completeness of PARTITION
-(Section 1.3).
+\hypertarget{pseudo-polynomial-time}{%
+\subsubsection{Pseudo-polynomial time}\label{pseudo-polynomial-time}}
+
+The length of the input is \(\sum_i \log_2 (a_i + 1) = O(n \log S)\)
+bits, whereas the running time contains the factor \(T\), which grows
+tenfold with every additional decimal digit of the numbers. The
+algorithm is thus exponential in the length of the input, in agreement
+with the NP-completeness of PARTITION (Section 1.3).
 
 \hypertarget{range-of-application-and-comparison-with-meet-in-the-middle}{%
 \subsection{4.7 Range of application and comparison with meet in the
@@ -1153,6 +1244,10 @@ The table has \(T + 1\) bits, so the memory limits the algorithm to
 needs about a gigabyte, and the numbers of \(25\) digits of interest
 have \(T\) of order \(10^{24}\) at least, since a single such number is
 at least \(10^{24}\), which is far out of range.
+
+\hypertarget{comparison-with-meet-in-the-middle}{%
+\subsubsection{Comparison with meet in the
+middle}\label{comparison-with-meet-in-the-middle}}
 
 Section 3 gives the alternative whose cost depends on \(n\) only. We
 compare two rough estimates with constant factors dropped: the bitset
@@ -1230,6 +1325,10 @@ partition. To recover the parts, every decision is recorded as an edge
 ``\(u\) and \(v\) are in opposite parts'', and the resulting graph is
 two-coloured at the end.
 
+\hypertarget{comparison-with-the-greedy-method}{%
+\subsubsection{Comparison with the greedy
+method}\label{comparison-with-the-greedy-method}}
+
 The simple greedy method, which puts the next largest number into the
 lighter part, fixes the part of an element at once. Differencing
 postpones this decision and fixes only the relation between two
@@ -1268,8 +1367,11 @@ colouring step correct (Lemma 5.1).
 \hypertarget{examples-2}{%
 \subsection{5.3 Examples}\label{examples-2}}
 
-\textbf{The method finds the optimum.} Let \(a = (3, 1, 4, 2)\), and
-break ties in favour of the smaller index.
+\hypertarget{the-method-finds-the-optimum}{%
+\subsubsection{The method finds the
+optimum}\label{the-method-finds-the-optimum}}
+
+Let \(a = (3, 1, 4, 2)\), and break ties in favour of the smaller index.
 
 \begin{longtable}[]{@{}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0769}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.4308}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1231}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0615}}>{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.3077}}@{}}
 \toprule
@@ -1293,10 +1395,13 @@ edges form the path \(1 - 3 - 4 - 2\), which is coloured
 \(A = \lbrace 1, 4 \rbrace\) with values \(3, 2\) and
 \(B = \lbrace 2, 3 \rbrace\) with values \(1, 4\) have both sum \(5\).
 
-\textbf{The method misses the optimum.} Let \(a = (5, 6, 7, 8, 10)\), so
-\(S = 36\) and \(T = 18\). The rounds replace \(10, 8\) by \(2\) (edge
-\(\lbrace 5, 4 \rbrace\)), \(7, 6\) by \(1\) (edge
-\(\lbrace 3, 2 \rbrace\)), \(5, 2\) by \(3\) (edge
+\hypertarget{the-method-misses-the-optimum}{%
+\subsubsection{The method misses the
+optimum}\label{the-method-misses-the-optimum}}
+
+Let \(a = (5, 6, 7, 8, 10)\), so \(S = 36\) and \(T = 18\). The rounds
+replace \(10, 8\) by \(2\) (edge \(\lbrace 5, 4 \rbrace\)), \(7, 6\) by
+\(1\) (edge \(\lbrace 3, 2 \rbrace\)), \(5, 2\) by \(3\) (edge
 \(\lbrace 1, 5 \rbrace\)) and \(3, 1\) by \(2\) (edge
 \(\lbrace 1, 3 \rbrace\)). Hence \(d = 2\), with the parts
 \(A = \lbrace 1, 2, 4 \rbrace\) of sum \(5 + 6 + 8 = 19\) and
@@ -1381,6 +1486,9 @@ and hence the returned parts, may differ.
 Since the optimum of the discrepancy can be \(0\), a ratio of
 discrepancies is meaningless. We state what can be guaranteed.
 
+\hypertarget{an-absolute-bound}{%
+\subsubsection{An absolute bound}\label{an-absolute-bound}}
+
 \textbf{Proposition 5.3.} Let \(m = \max_i a_i\). Then \(d \le m\).
 
 \emph{Proof.} Every entry of \(H\) is at most \(m\) at the start, and a
@@ -1391,12 +1499,15 @@ This bound is weak: the instances \(k \cdot (5, 6, 7, 8, 10)\) have the
 optimum \(0\) and give \(d = 2k\), so no bound of the form ``optimum
 plus a constant'' exists.
 
-\textbf{Ratio on the larger part.} The larger part has the sum
-\((S + d)/2\). Let \(\mathrm{OPT}\) be the smallest possible sum of the
-larger part over all partitions. It is at least \(\max(S/2, m)\),
-because the larger part has at least the average sum \(S/2\), and the
-part that contains the largest element has at least \(m\). So by
-Proposition 5.3
+\hypertarget{ratio-on-the-larger-part}{%
+\subsubsection{Ratio on the larger
+part}\label{ratio-on-the-larger-part}}
+
+The larger part has the sum \((S + d)/2\). Let \(\mathrm{OPT}\) be the
+smallest possible sum of the larger part over all partitions. It is at
+least \(\max(S/2, m)\), because the larger part has at least the average
+sum \(S/2\), and the part that contains the largest element has at least
+\(m\). So by Proposition 5.3
 
 \[
 \frac{(S + d)/2}{\mathrm{OPT}} \le \frac{S/2 + m/2}{\mathrm{OPT}} \le \frac{\mathrm{OPT} + \mathrm{OPT}/2}{\mathrm{OPT}} = \frac{3}{2} .
@@ -1406,12 +1517,15 @@ The bound \(3/2\) is what this elementary argument gives. Fischetti and
 Martello {[}1987{]} show a sharper result, that the worst-case ratio of
 the differencing method is exactly \(7/6\). We quote it without proof.
 
-\textbf{Random inputs.} For items drawn independently from a uniform
-distribution on \([0, 1]\), the expected discrepancy of the differencing
-method is \(n^{-\Theta(\log n)}\) {[}Yakir 1996{]}, which proves a
-conjecture of Karmarkar and Karp. We quote this result without proof. It
-says that for many random items the discrepancy becomes extremely small.
-For integers it is only an indication.
+\hypertarget{random-inputs}{%
+\subsubsection{Random inputs}\label{random-inputs}}
+
+For items drawn independently from a uniform distribution on \([0, 1]\),
+the expected discrepancy of the differencing method is
+\(n^{-\Theta(\log n)}\) {[}Yakir 1996{]}, which proves a conjecture of
+Karmarkar and Karp. We quote this result without proof. It says that for
+many random items the discrepancy becomes extremely small. For integers
+it is only an indication.
 
 \hypertarget{complexity-3}{%
 \subsection{5.6 Complexity}\label{complexity-3}}
@@ -1440,17 +1554,20 @@ nor meet in the middle is in range, for example for \(1000\) elements of
 no answer, so a NO can come only from the parity test or from an exact
 algorithm.
 
-\textbf{Remarks.} The greedy method, which processes the numbers in
-descending order and puts each into the part with the smaller sum so
-far, also takes time \(O(n \log n)\) and satisfies \(d \le \max_i a_i\):
-when a number \(a\) is added to the lighter part, the difference \(d\)
-of the two parts becomes \(|d - a| \le \max(d, a)\), and the claim
-follows by induction. As a scheduling algorithm (longest processing time
-first) its ratio on the larger part is \(7/6\) for two machines
-{[}Graham 1969{]}. Korf {[}1998{]} turns the differencing method into an
-exact search that at each step also tries to put the two largest numbers
-into the \emph{same} part, replacing them by \(x + y\). Its worst case
-is exponential, and we do not use it.
+\hypertarget{related-methods}{%
+\subsubsection{Related methods}\label{related-methods}}
+
+The greedy method, which processes the numbers in descending order and
+puts each into the part with the smaller sum so far, also takes time
+\(O(n \log n)\) and satisfies \(d \le \max_i a_i\): when a number \(a\)
+is added to the lighter part, the difference \(d\) of the two parts
+becomes \(|d - a| \le \max(d, a)\), and the claim follows by induction.
+As a scheduling algorithm (longest processing time first) its ratio on
+the larger part is \(7/6\) for two machines {[}Graham 1969{]}. Korf
+{[}1998{]} turns the differencing method into an exact search that at
+each step also tries to put the two largest numbers into the \emph{same}
+part, replacing them by \(x + y\). Its worst case is exponential, and we
+do not use it.
 
 \hypertarget{the-final-algorithm}{%
 \section{6. The final algorithm}\label{the-final-algorithm}}
@@ -1462,13 +1579,16 @@ however large. When both fail, only the approximation of Section 5
 remains, and it cannot decide PARTITION. This section combines the
 algorithms into one that adapts to the input: it always computes the
 Karmarkar-Karp partition, which costs only \(O(n \log n)\), and it adds
-the cheapest exact algorithm that is within its range. The exact
+an exact algorithm whenever one is in range for the input. The exact
 algorithms decide the problem and do not construct a partition (Section
 1.1), so the result consists of a decision and the partition of Section
-5.
+5, and the decision also tells how good that partition is.
 
 \hypertarget{idea-4}{%
 \subsection{6.1 Idea}\label{idea-4}}
+
+\hypertarget{the-result}{%
+\subsubsection{The result}\label{the-result}}
 
 The result of the final algorithm is a triple (answer, \((A, B)\),
 \(d\)), where
@@ -1483,7 +1603,8 @@ The result of the final algorithm is a triple (answer, \((A, B)\),
   UNKNOWN otherwise.
 \end{itemize}
 
-The algorithm proceeds as follows.
+\hypertarget{the-steps}{%
+\subsubsection{The steps}\label{the-steps}}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1499,20 +1620,42 @@ The algorithm proceeds as follows.
   question is open. An exact algorithm is applied if one of them is in
   range, that is, dynamic programming if \(T \le T_{DP}\) and meet in
   the middle if \(n \le N_{MITM}\) (Section 1.4). If both are in range,
-  we take the one with the smaller cost estimate according to
-  Proposition 4.4: dynamic programming if \(T/64 < 2^{n/2}\), and meet
-  in the middle otherwise. Their answer is the answer of the final
-  algorithm.
+  the choice depends on the input: by Section 4.7, dynamic programming
+  is the cheaper one for many small numbers and meet in the middle for
+  few large ones. The rule that decides between them is fixed together
+  with the parameters \(N_{MITM}\) and \(T_{DP}\), after the algorithms
+  have been implemented and measured. Both algorithms give the same
+  answer (Theorems 3.4 and 4.2), so the choice affects the cost and not
+  the result, which becomes the answer of the final algorithm.
 \item
   If neither exact algorithm is in range, the answer is UNKNOWN.
 \end{enumerate}
+
+\hypertarget{comparison-of-the-approximation-with-the-exact-answer}{%
+\subsubsection{Comparison of the approximation with the exact
+answer}\label{comparison-of-the-approximation-with-the-exact-answer}}
+
+When an exact algorithm has run, its answer measures the approximation
+on the same input. If the answer is YES and \(d = 0\), the differencing
+method has found a balanced partition. If the answer is YES and
+\(d > 0\), a balanced partition exists but the method has missed it, as
+in the second example of Section 5.3. If the answer is NO, no balanced
+partition exists, and \(d\) is the discrepancy of a partition that
+cannot be improved to \(0\); whether it is the smallest possible
+discrepancy is not decided. The final algorithm thus delivers, for every
+input within the ranges, the exact decision together with the quality of
+the approximation.
+
+\hypertarget{brute-force-1}{%
+\subsubsection{Brute force}\label{brute-force-1}}
 
 Brute force is not used. Its time is \(\Theta(2^n)\), whereas the time
 of meet in the middle is \(O(n \cdot 2^{n/2})\), which is smaller
 already for \(n \ge 5\). The only advantage of brute force is its
 constant memory, and this does not matter for the few tens of elements
 it can handle, where the lists of meet in the middle are small (Section
-3.6).
+3.6). It remains the reference against which the other algorithms are
+tested.
 
 \hypertarget{algorithm-4}{%
 \subsection{6.2 Algorithm}\label{algorithm-4}}
@@ -1528,22 +1671,19 @@ SOLVE(a[1..n]; N_MITM, T_DP)
     if d = 0 then return (YES, A, B, d)             // balanced; includes S = 0
     if S is odd then return (NO, A, B, d)           // Section 1.2
     T ← S / 2
-    // T/64 < 2^(n/2), Proposition 4.4
-    useDP ← (T ≤ T_DP) and (n > N_MITM or T^2 < 2^(n+12))
-    if useDP then
-        answer ← DP-PARTITION(a)
-    else if n ≤ N_MITM then
-        answer ← MEET-IN-THE-MIDDLE(a)
-    else
-        answer ← UNKNOWN
-    return (answer, A, B, d)
+    if T ≤ T_DP and n ≤ N_MITM then
+        // Section 4.7
+        EXACT ← DP-PARTITION or MEET-IN-THE-MIDDLE, whichever is cheaper for (n, T)
+    else if T ≤ T_DP then EXACT ← DP-PARTITION
+    else if n ≤ N_MITM then EXACT ← MEET-IN-THE-MIDDLE
+    else return (UNKNOWN, A, B, d)
+    return (EXACT(a), A, B, d)
 \end{verbatim}
 
-The test \(T/64 < 2^{n/2}\) is written as \(T^2 < 2^{n+12}\) to stay in
-integer arithmetic. It is evaluated only when \(T \le T_{DP}\) and
-\(n \le N_{MITM}\), so both sides are small numbers and the evaluation
-does not overflow. When \(n > N_{MITM}\) and \(T \le T_{DP}\), only
-dynamic programming is in range.
+When only one exact algorithm is in range, it is run. When both are in
+range, the one with the smaller cost for the given \(n\) and \(T\) is
+run, and the two cost estimates of Section 4.7 are the starting point
+for this rule.
 
 \hypertarget{examples-3}{%
 \subsection{6.3 Examples}\label{examples-3}}
@@ -1558,8 +1698,8 @@ input & Karmarkar-Karp & decision & result \\
 \midrule
 \((2, 3, 4)\) & \(d = 1\) & \(S = 9\) is odd & NO, with the partition of discrepancy \(1\) \\
 \midrule
-\((5, 6, 7, 8, 10)\) & \(d = 2\) & \(S = 36\), \(T = 18\), \(T^2 = 324 < 2^{17}\), so dynamic programming
-is used and answers YES & YES, but the partition returned has \(d = 2\) \\
+\((5, 6, 7, 8, 10)\) & \(d = 2\) & \(S = 36\), \(T = 18\), both exact algorithms are in range and answer
+YES & YES, but the partition returned has \(d = 2\) \\
 \bottomrule
 \end{longtable}
 
@@ -1567,9 +1707,10 @@ The third row shows what the final algorithm does and does not give. A
 balanced partition exists, namely \(\lbrace 8, 10 \rbrace\) and
 \(\lbrace 5, 6, 7 \rbrace\), and the exact algorithm detects it, but it
 does not construct it, so the partition returned is the one of
-Karmarkar-Karp. The answer UNKNOWN occurs only for inputs with an even
-sum, \(d > 0\), \(T > T_{DP}\) and \(n > N_{MITM}\), for example for
-\(1000\) numbers of \(25\) digits.
+Karmarkar-Karp, and the comparison of Section 6.1 records that the
+approximation has missed the optimum. The answer UNKNOWN occurs only for
+inputs with an even sum, \(d > 0\), \(T > T_{DP}\) and \(n > N_{MITM}\),
+for example for \(1000\) numbers of \(25\) digits.
 
 \hypertarget{correctness-4}{%
 \subsection{6.4 Correctness}\label{correctness-4}}
@@ -1608,14 +1749,11 @@ algorithm. For parts 2 and 4 consider the possible returns.
 \item
   \emph{The remaining case.} Now \(S\) is even and \(d > 0\). Then
   \(S > 0\), since \(S = 0\) gives \(d = 0\) as above, so \(T > 0\). If
-  \texttt{useDP} holds, then \(T \le T_{DP}\) and the answer of
-  \texttt{DP-PARTITION} is correct by Theorem 4.2. If \texttt{useDP}
-  does not hold and \(n \le N_{MITM}\), the answer of
-  \texttt{MEET-IN-THE-MIDDLE} is correct by Theorem 3.4. Otherwise
-  \texttt{useDP} does not hold and \(n > N_{MITM}\). Since
-  \texttt{useDP} is false and \(n > N_{MITM}\), the test gives
-  \(T > T_{DP}\). The answer is UNKNOWN, as stated in part 4.
-  \(\square\)
+  \texttt{DP-PARTITION} is run, then \(T \le T_{DP}\) and its answer is
+  correct by Theorem 4.2. If \texttt{MEET-IN-THE-MIDDLE} is run, then
+  \(n \le N_{MITM}\) and its answer is correct by Theorem 3.4. Otherwise
+  \(T > T_{DP}\) and \(n > N_{MITM}\), and the answer is UNKNOWN, as
+  stated in part 4. \(\square\)
 \end{itemize}
 
 If the answer is YES and \(d > 0\), the decision is correct but the
@@ -1624,41 +1762,11 @@ is at most \(\max_i a_i\) in any case. If the answer is NO or UNKNOWN,
 the discrepancy \(d\) is the quality of an approximation, and we do not
 claim that it is minimal.
 
-\hypertarget{complexity-4}{%
-\subsection{6.5 Complexity}\label{complexity-4}}
-
-\textbf{Theorem 6.2.} \texttt{SOLVE} takes time \(O(n \log n)\) if the
-answer is found by Karmarkar-Karp, by the parity test, or if neither
-exact algorithm is in range. Otherwise it takes time \(O(n \log n)\)
-plus the time of the exact algorithm that is run. Hence the time is
-always
-
-\[
-O\left(n \log n + n \cdot \min\left(\frac{T_{DP}}{64}, 2^{N_{MITM}/2}\right)\right),
-\]
-
-if both algorithms are in range for the input, and otherwise it is
-bounded by the corresponding term alone. The memory is \(O(n)\) numbers,
-or \(O(T_{DP})\) bits for dynamic programming, or \(O(2^{N_{MITM}/2})\)
-numbers for meet in the middle, according to the branch taken.
-
-\emph{Proof.} The sum, the parity test and the test for \texttt{useDP}
-take \(O(n)\), and Karmarkar-Karp takes \(O(n \log n)\) and \(O(n)\)
-memory (Theorem 5.4). Dynamic programming takes time
-\(O(n + n \cdot T/w)\) with \(w = 64\) and \(T + 1\) bits (Theorem 4.3),
-and with \(T \le T_{DP}\) this is at most \(O(n \cdot T_{DP}/64)\). Meet
-in the middle takes time \(O(n \cdot 2^{n/2})\) and \(O(2^{n/2})\)
-numbers (Theorem 3.5), at most \(O(n \cdot 2^{N_{MITM}/2})\) for
-\(n \le N_{MITM}\). If both are in range, the algorithm takes the one
-with the smaller estimate \(n \cdot T/64\) or \(n \cdot 2^{n/2}\)
-(Proposition 4.4). \(\square\)
-
-For fixed parameters the bound of the theorem is a constant multiple of
-\(n\), plus \(O(n \log n)\). It does not contradict the NP-completeness
-of PARTITION (Section 1.3), because the algorithm solves only the inputs
-within the ranges of the exact algorithms and returns UNKNOWN otherwise.
-For no choice of the parameters is a polynomial bound claimed on the
-whole input set.
+The cost of \texttt{SOLVE} is the cost of Karmarkar-Karp (Theorem 5.4)
+plus the cost of the exact algorithm that is run, if any (Theorems 3.5
+and 4.3). The algorithm does not contradict the NP-completeness of
+PARTITION (Section 1.3): it solves only the inputs within the ranges of
+the exact algorithms and returns UNKNOWN otherwise.
 
 \hypertarget{references}{%
 \section{7. References}\label{references}}
