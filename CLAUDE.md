@@ -9,30 +9,30 @@ University lab project (Algorithms and Computability, fall 2026): the **partitio
 
 ## Where we are
 
-**Stage 2 (documentation of algorithms), due Oct 30, 2026.** No code yet. We are writing the Stage 2 document.
+**Stage 2 (documentation of algorithms), due Oct 30, 2026.** No code yet. The Stage 2 report is **content-complete and reviewed** on `dev`; what remains is the conversion to LaTeX/PDF and the submission email.
 
 Decided (details in `task.md` section 6):
 - **Version: basic.** Partition a multiset into **2 subsets with equal sums**. The advanced version (k subsets) is out of scope; do not mention it in documents.
 - **Numbers: unsigned 128-bit integers** (`unsigned __int128`), with input constraints in `task.md` section 7.
 - **Language: C++**, prebuilt static Windows executable for the demo.
-- **Final algorithm:** the program picks an algorithm depending on the input (small sums: dynamic programming; small n: meet in the middle; otherwise Karmarkar-Karp approximation). The individual algorithms are documented separately, then the selection algorithm on top (`docs/stage2/06_final_algorithm.md`).
+- **Final algorithm:** the program always runs Karmarkar-Karp and adds the cheapest exact algorithm in range (dynamic programming if $T \le T_{DP}$, meet in the middle if $n \le N_{MITM}$, chosen by the cost estimate of Proposition 4.4). **Brute force is not used by the final algorithm**; it is the baseline in the report and the test reference in the code (no $N_{BF}$ parameter, dropped Oct 30, 2026).
+- **Exact algorithms decide only** (YES/NO); Karmarkar-Karp is the only algorithm that constructs a partition.
+- **References** (Section 7): nine entries, each verified against the publisher's record on Oct 30, 2026 and given a DOI/ISBN/URL. Karmarkar-Karp is cited as UCB/CSD-83-113, 1983 (Berkeley's catalogue; much of the literature says 1982).
 
-Still open: mode (formal or individual), which literature to reference.
+Still open: mode (formal or individual).
 
-The Stage 2 draft is split into one file per section in `docs/stage2/`, numbered in reading order (`00_title.md`, `01_1_introduction.md`, ..., `07_references.md`). To get the whole document, run `cat docs/stage2/[0-9]*.md`.
+The report is split into one file per section in `docs/stage2/`, numbered in reading order (`00_title.md`, `01_1_introduction.md`, ..., `07_references.md`). `docs/stage2/stage2_report.md` is the concatenation (`cat docs/stage2/[0-9]*.md > docs/stage2/stage2_report.md`); regenerate it after editing a section, never edit it directly.
 
-**Frozen sections (reviewed by the team, do not edit unless asked):** `01_1_introduction.md`, `02_brute_force.md`, `03_meet_in_the_middle.md`.
+**All sections (1 to 7) are reviewed and frozen. Do not edit them unless asked.**
 
 ### Review workflow (since Oct 29, 2026)
 
-`feature/stage2-all` is the **base branch** of the Stage 2 report. The files in `docs/stage2/` are a complete draft that still has to be fact-checked and made consistent. This happens one section at a time:
-
-- Each section gets its own branch and its own PR into `feature/stage2-all`. Do not open PRs into `dev` or `main` for this.
-- Keep a PR to one section file. Fixes in another file (for example a changed limit) go in that section's own PR, unless the user says otherwise.
-- A section is **reviewed** when the user has checked it. Reviewed sections are listed under *Frozen sections* above. Add the section there when the user says it is done, and do not edit frozen files unless asked.
-- The user marks the state of a reviewed section with a local tag such as `reviewed-1.1`, and then uses `git diff reviewed-1.1 -- docs/stage2/<file>` to see what changed since. Do not move or push these tags yourself.
-- The old PR #11 (A, B and D together) is closed; the per-section PRs replace it.
+- `dev` is the integration branch; `main` holds submitted material. The Stage 2 report lives on `dev`.
+- Each change gets its own branch and PR into `dev`. Keep a PR to one concern; one commit per section file.
+- `dev` has a ruleset requiring an approving review. The owner merges with `gh pr merge --merge --admin` when the user says so; do not use `--admin` unprompted.
+- The user marks the state of a reviewed section with a local tag such as `reviewed-1.1` and uses `git diff reviewed-1.1 -- docs/stage2/<file>` to see what changed since. Do not move or push these tags yourself.
 - Commit and push only when the user asks.
+- Old branches: `feature/algorithm-A`, `-B`, `-D`, `-c-dp` belong to teammates, are merged into `dev`, and PRs #5, #6, #7 on them are stale; leave them to their owners.
 
 ## Documents
 
@@ -45,7 +45,6 @@ The files in `docs/stage2/` form a **mathematical report in the style of a paper
 - Formal mathematical language: definitions, lemmas, theorems and proofs, with algorithms as pseudocode and complexity bounds stated as theorems.
 - A readable, coherent story with a clear order: motivation, problem, hardness, the algorithms, how they compare, and how they combine into the final one. The reader should want to read on; each section says why the next one is needed.
 - The text never refers to project internals: no `CONSTITUTION.md`, `task.md`, `CLAUDE.md`, no "our team decided", no drafting notes, checklists or TODOs. Assumptions and limits are stated as part of the mathematical setting (for example "we assume $n \ge 2$ and $0 \le a_i < 10^{38}$"), with their reasons given in mathematical terms. Cross-references point only to sections of the report itself or to cited literature.
-- The existing draft still contains such references (for example "task.md section 7", "CONSTITUTION.md point 3") and notes for ourselves (sections 9 and 10 headed "not part of the Stage 2 PDF" or "to verify"). Remove or rewrite them when editing.
 
 ## How to work here
 
