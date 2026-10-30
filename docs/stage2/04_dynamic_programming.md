@@ -9,17 +9,23 @@ Let $S = \Sigma(M)$ and $T = S/2$ as in Section 1.2. If $S$ is odd, no balanced 
 ### 4.2 Idea
 
 For $0 \le i \le n$ and $0 \le s \le T$ let
+
 $$
-R_i(s) = \text{TRUE} \iff \text{some subset of } \{a_1, \dots, a_i\} \text{ has sum } s .
+R_i(s) = \text{TRUE} \iff \text{some subset of } \lbrace a_1, \dots, a_i \rbrace \text{ has sum } s .
 $$
+
 We want $R_n(T)$. With no elements the only obtainable sum is the empty sum, so
+
 $$
 R_0(s) = \begin{cases} \text{TRUE} & s = 0, \\ \text{FALSE} & s > 0. \end{cases}
 $$
-A subset of $\{a_1, \dots, a_i\}$ with sum $s$ either does not contain $a_i$, and is then a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s$, or contains $a_i$, and removing it leaves a subset of $\{a_1, \dots, a_{i-1}\}$ with sum $s - a_i$. Hence for $i \ge 1$
+
+A subset of $\lbrace a_1, \dots, a_i \rbrace$ with sum $s$ either does not contain $a_i$, and is then a subset of $\lbrace a_1, \dots, a_{i-1} \rbrace$ with sum $s$, or contains $a_i$, and removing it leaves a subset of $\lbrace a_1, \dots, a_{i-1} \rbrace$ with sum $s - a_i$. Hence for $i \ge 1$
+
 $$
 R_i(s) = \begin{cases} R_{i-1}(s) & s < a_i, \\ R_{i-1}(s) \lor R_{i-1}(s - a_i) & s \ge a_i. \end{cases}
 $$
+
 Equal values need no special treatment: two equal elements are two indices and give two steps of the recurrence.
 
 **One row.** Row $i$ depends only on row $i - 1$, so a single array `reach[0..T]` suffices, which after step $i$ holds $R_i$. The step reads `reach[s − a[i]]`, which must still hold the value of row $i - 1$. Since $s - a_i < s$ whenever $a_i > 0$, this is guaranteed if the cells are updated from the largest index to the smallest.
@@ -56,10 +62,10 @@ Let $a = (3, 1, 4, 2)$. Then $S = 10$, $T = 5$ and $\max a_i = 4 \le T$. The obt
 
 | step $i$ | element $a_i$ | obtainable sums |
 | -------- | ------------- | --------------- |
-| 0        |               | $\{0\}$         |
-| 1        | $3$           | $\{0, 3\}$      |
-| 2        | $1$           | $\{0, 1, 3, 4\}$ |
-| 3        | $4$           | $\{0, 1, 3, 4, 5\}$ |
+| 0        |               | $\lbrace 0 \rbrace$         |
+| 1        | $3$           | $\lbrace 0, 3 \rbrace$      |
+| 2        | $1$           | $\lbrace 0, 1, 3, 4 \rbrace$ |
+| 3        | $4$           | $\lbrace 0, 1, 3, 4, 5 \rbrace$ |
 
 After step $3$ the target $5$ is obtainable and the algorithm answers YES. Indeed, $1 + 4 = 3 + 2 = 5$.
 
@@ -67,11 +73,11 @@ After step $3$ the target $5$ is obtainable and the algorithm answers YES. Indee
 
 **Lemma 4.1** (invariant). After step $i$ of the loop, `reach[s]` $= R_i(s)$ for all $0 \le s \le T$.
 
-*Proof.* Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_0$. Assume that `reach` $= R_{i-1}$ before step $i$. Consider the moment at which the loop handles $s \ge a_i$. The cells with an index larger than $s$ have been rewritten, those with an index at most $s$ have not, and `reach[s − a[i]]` is among the latter. So it holds $R_{i-1}(s - a_i)$, and `reach[s]` receives $R_{i-1}(s) \lor R_{i-1}(s - a_i) = R_i(s)$. For $s < a_i$ the cell is not modified, and $R_i(s) = R_{i-1}(s)$. The bound `top` skips only cells that are FALSE in both rows, because no subset of $\{a_1, \dots, a_i\}$ has a sum larger than $a_1 + \dots + a_i$. $\square$
+*Proof.* Induction on $i$. Before the loop only `reach[0]` is TRUE, which is $R_0$. Assume that `reach` $= R_{i-1}$ before step $i$. Consider the moment at which the loop handles $s \ge a_i$. The cells with an index larger than $s$ have been rewritten, those with an index at most $s$ have not, and `reach[s − a[i]]` is among the latter. So it holds $R_{i-1}(s - a_i)$, and `reach[s]` receives $R_{i-1}(s) \lor R_{i-1}(s - a_i) = R_i(s)$. For $s < a_i$ the cell is not modified, and $R_i(s) = R_{i-1}(s)$. The bound `top` skips only cells that are FALSE in both rows, because no subset of $\lbrace a_1, \dots, a_i \rbrace$ has a sum larger than $a_1 + \dots + a_i$. $\square$
 
 **Theorem 4.2.** `DP-PARTITION` returns YES if and only if a balanced partition exists.
 
-*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4 (the latter uses $n \ge 2$), and the case $\max a_i > T$ is Section 4.1. Otherwise $T > 0$, and by Section 1.2 a balanced partition exists if and only if $R_n(T)$ holds. By Lemma 4.1 the value of `reach[T]` after the last step is $R_n(T)$. If the loop stops earlier, at a step $i < n$ with `reach[T]` $= R_i(T)$ TRUE, then a subset of $\{a_1, \dots, a_i\}$ with sum $T$ is also a subset of $\{a_1, \dots, a_n\}$, so $R_n(T)$ holds as well. $\square$
+*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4 (the latter uses $n \ge 2$), and the case $\max a_i > T$ is Section 4.1. Otherwise $T > 0$, and by Section 1.2 a balanced partition exists if and only if $R_n(T)$ holds. By Lemma 4.1 the value of `reach[T]` after the last step is $R_n(T)$. If the loop stops earlier, at a step $i < n$ with `reach[T]` $= R_i(T)$ TRUE, then a subset of $\lbrace a_1, \dots, a_i \rbrace$ with sum $T$ is also a subset of $\lbrace a_1, \dots, a_n \rbrace$, so $R_n(T)$ holds as well. $\square$
 
 ### 4.6 Complexity
 
@@ -90,9 +96,11 @@ The table has $T + 1$ bits, so the memory limits the algorithm to $T \le T_{DP}$
 Section 3 gives the alternative whose cost depends on $n$ only. Ignoring constant factors, the bitset version of dynamic programming costs $n \cdot T/w$ and meet in the middle costs $n \cdot 2^{n/2}$ operations. The common factor $n$ cancels.
 
 **Proposition 4.4.** Dynamic programming performs fewer operations than meet in the middle if and only if $T/64 < 2^{n/2}$, that is,
+
 $$
 n > 2 \log_2 T - 12 .
 $$
+
 It needs less memory if and only if $T/8 < 16 \cdot 2^{n/2}$ bytes, that is, $n > 2 \log_2 T - 14$.
 
 *Proof.* Take logarithms to base $2$ in the two inequalities. $\square$
