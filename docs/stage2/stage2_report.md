@@ -1,5 +1,6 @@
 # Stage 2: Documentation of Algorithms (basic version)
 
+
 ## 1. Problem statement
 
 ### 1.1 Introduction
@@ -38,6 +39,7 @@ The remainder of this section is organised as follows: the constraints and assum
 | $\Sigma(M) < 2^{128}$ | The same reason as for the bound above: the total is also an unsigned 128-bit integer. |
 | Each exponential algorithm is applied only within a stated range of $n$ or of the target sum. | Outside its range it may not finish or fit in memory; Section 6 then uses the approximation. |
 
+
 ### 1.2 Definitions
 
 **Multiset.** A multiset $M$ over $\mathbb{N} = \{0, 1, 2, \dots\}$ is a pair $(U, m)$ where $U$ is a finite set and $m: U \to \{1, 2, 3, \dots\}$ gives the multiplicity of each element. We write it as a list $M = \{a_1, a_2, \dots, a_n\}$ in which values may repeat, and $n = \sum_{u \in U} m(u)$ is its size.
@@ -65,6 +67,7 @@ After these checks every exact algorithm may assume $\Sigma(M) > 0$, hence $T > 
 
 - **Non-empty parts.** Any index set $A$ with $\Sigma(A) = T$ is non-empty, because $T > 0$. Its complement $B$ satisfies $\Sigma(B) = \Sigma(M) - T = T > 0$, so it is non-empty as well.
 - **Consequence for the algorithms.** To solve the decision problem, an algorithm only has to find an index set $A$ with $\Sigma(A) = T$, or to establish that none exists. Every such $A$ and its complement $B$ form a partition into two non-empty parts, by the previous item. Hence no correctness proof needs an additional argument that the parts are non-empty.
+
 ### 1.3 Hardness
 
 **Theorem 1.1** (Karp [1972]). PARTITION is NP-complete.
@@ -77,6 +80,7 @@ PARTITION belongs to NP: a balanced partition is a certificate, and checking it 
 
 - **Large numbers.** For numbers of about $25$ digits, $\Sigma(M)$ is of order $10^{25}$ and the cost $O(n \cdot \Sigma(M))$ is out of reach. An exact algorithm must then have a cost that depends on $n$ alone. The best ones are exponential in $n$ (Sections 2 and 3).
 - **Approximation.** Since PARTITION is NP-complete, no polynomial-time algorithm for it is known, and none exists unless P = NP.
+
 ### 1.4 Computational model and number representation
 
 **Representation.** All numbers, that is the elements, their sums and their differences, are unsigned 128-bit integers. The largest such integer is $2^{128} - 1 \approx 3.4 \cdot 10^{38}$, which has $39$ decimal digits. The elements are non-negative, so no sign bit is needed.
@@ -95,6 +99,7 @@ PARTITION belongs to NP: a balanced partition is a certificate, and checking it 
 Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. The values of $N_{MITM}$ and $T_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
 
 ---
+
 ## 2. Brute force
 
 The most direct way to decide PARTITION is to examine every candidate. By Section 1.2 it suffices to find an index set $A$ with $\Sigma(A) = T$, and there are only finitely many index sets. This section analyses the resulting algorithm and a variant that is faster by a factor $n$. Both run in time exponential in $n$ and use little memory, so they set the baseline against which the algorithms of Sections 3 and 4 are measured.
@@ -224,6 +229,7 @@ The time doubles with every additional element, so each ten additional elements 
 The size of the numbers plays no role. A set with $n = 10$ elements of $25$ digits needs only $2^{9} = 512$ masks, whereas a set with $n = 100$ elements of one digit is out of reach. Dynamic programming has the opposite behaviour, and Section 3 shows how the dependence on $n$ can be reduced from $2^n$ to about $2^{n/2}$.
 
 ---
+
 ## 3. Meet in the middle
 
 Brute force examines $2^n$ subsets because it chooses all $n$ bits at once. The idea of Horowitz and Sahni [1974] is to choose the bits of the first half of the elements and of the second half separately, and to combine the two results by a search instead of an enumeration. The cost then depends on $n$ through $2^{n/2}$ and, as for brute force, not on the magnitude of the numbers. This section gives the idea, the algorithm with an example, its correctness and complexity, and the range in which it can be applied. Its limit is memory instead of time, which is what makes it complementary to Sections 2 and 4.
@@ -351,6 +357,7 @@ The algorithm stores $2^{n/2}$ sums for each half, each a 128-bit number of $16$
 **Remark.** Schroeppel and Shamir [1981] reduce the memory to $O(2^{n/4})$ at essentially the same time. We do not use their algorithm.
 
 ---
+
 ## 4. Dynamic programming
 
 Brute force and meet in the middle look at subsets, and their cost grows with $n$ whatever the numbers are. Dynamic programming looks at subset *sums* instead. Many different subsets have the same sum, and only the sums between $0$ and $T$ matter, because all elements are non-negative. The cost therefore depends on the magnitude of the target $T$ and not only on $n$. This makes the algorithm pseudo-polynomial in the sense of Section 1.3: it is the best choice for many small numbers and the worst for few large ones, which is the opposite of meet in the middle.
@@ -474,6 +481,7 @@ Since $T \le T_{DP}$, the threshold is at most $2 \log_2 T_{DP} - 12$, which is 
 Dynamic programming is thus the method for many elements with small values, and meet in the middle for few elements with arbitrary values. When both are out of range, only the approximation of Section 5 remains.
 
 ---
+
 ## 5. Karmarkar-Karp differencing
 
 By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections 2 to 4 are exponential in $n$ or in the magnitude of the numbers. This section gives a polynomial-time approximation of the optimisation problem of Section 1.1, which minimises the discrepancy $d$. The differencing method of Karmarkar and Karp [1983] runs in time $O(n \log n)$ whatever the numbers are (in the model of Section 1.4), and it is the only algorithm of this report that constructs a partition. It cannot decide PARTITION, since it may return $d > 0$ for an instance that has a balanced partition (Section 5.3), but $d = 0$ proves that the answer is YES.
@@ -582,6 +590,7 @@ The algorithm needs no bound on $n$ beyond $n \ge 2$ and no bound on the numbers
 **Remarks.** The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$: when a number $a$ is added to the lighter part, the difference $d$ of the two parts becomes $|d - a| \le \max(d, a)$, and the claim follows by induction. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
 
 ---
+
 ## 6. The final algorithm
 
 None of the algorithms of Sections 2 to 5 is satisfactory on its own. Dynamic programming is cheap when the numbers are small, however many there are, and meet in the middle is cheap when there are few numbers, however large. When both fail, only the approximation of Section 5 remains, and it cannot decide PARTITION. This section combines the algorithms into one that adapts to the input: it always computes the Karmarkar-Karp partition, which costs only $O(n \log n)$, and it adds the cheapest exact algorithm that is within its range. The exact algorithms decide the problem and do not construct a partition (Section 1.1), so the result consists of a decision and the partition of Section 5.
@@ -667,6 +676,7 @@ if both algorithms are in range for the input, and otherwise it is bounded by th
 For fixed parameters the bound of the theorem is a constant multiple of $n$, plus $O(n \log n)$. It does not contradict the NP-completeness of PARTITION (Section 1.3), because the algorithm solves only the inputs within the ranges of the exact algorithms and returns UNKNOWN otherwise. For no choice of the parameters is a polynomial bound claimed on the whole input set.
 
 ---
+
 ## 7. References
 
 - M. Fischetti and S. Martello, "Worst-case analysis of the differencing method for the partition problem", *Mathematical Programming* 37(1), 117–120, 1987. doi:10.1007/BF02591687. Cited in Section 5.5 for the worst-case ratio $7/6$ of the differencing method.
@@ -678,3 +688,4 @@ For fixed parameters the bound of the theorem is a constant multiple of $n$, plu
 - R. E. Korf, "A complete anytime algorithm for number partitioning", *Artificial Intelligence* 106(2), 181–203, 1998. doi:10.1016/S0004-3702(98)00086-1. Cited in Section 5.7 for the exact search built on the differencing method.
 - R. Schroeppel and A. Shamir, "A $T = O(2^{n/2})$, $S = O(2^{n/4})$ algorithm for certain NP-complete problems", *SIAM Journal on Computing* 10(3), 456–464, 1981. doi:10.1137/0210033. Cited in Section 3.6 for the reduction of the memory of meet in the middle.
 - B. Yakir, "The differencing algorithm LDM for partitioning: a proof of a conjecture of Karmarkar and Karp", *Mathematics of Operations Research* 21(1), 85–99, 1996. doi:10.1287/moor.21.1.85. Cited in Sections 1.1 and 5.5 for the expected discrepancy $n^{-\Theta(\log n)}$ on i.i.d. uniform items.
+
