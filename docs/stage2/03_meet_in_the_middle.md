@@ -5,10 +5,12 @@ Brute force examines $2^n$ subsets because it chooses all $n$ bits at once. The 
 ### 3.1 Idea
 
 Let
+
 $$
-L = \{1, \dots, h\}, \qquad R = \{h+1, \dots, n\}, \qquad h = \lfloor n/2 \rfloor .
+L = \lbrace 1, \dots, h \rbrace, \qquad R = \lbrace h+1, \dots, n \rbrace, \qquad h = \lfloor n/2 \rfloor .
 $$
-Every subset $A \subseteq \{1, \dots, n\}$ decomposes uniquely as $A = (A \cap L) \cup (A \cap R)$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. Hence a subset with sum $T$ exists if and only if some subset sum of $L$ and some subset sum of $R$ add up to $T$ (Lemma 3.2 below).
+
+Every subset $A \subseteq \lbrace 1, \dots, n \rbrace$ decomposes uniquely as $A = (A \cap L) \cup (A \cap R)$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. Hence a subset with sum $T$ exists if and only if some subset sum of $L$ and some subset sum of $R$ add up to $T$ (Lemma 3.2 below).
 
 The algorithm computes the lists `LS` and `RS` of all $2^h$ subset sums of $L$ and all $2^{n-h}$ subset sums of $R$, sorts them, and looks for a pair of entries with sum $T$ by a two-pointer sweep. This avoids testing all $2^h \cdot 2^{n-h}$ pairs. The price is memory: the two lists must be stored.
 
@@ -59,9 +61,9 @@ In the tables, subsets are written by the values of their elements.
 | mask | left subset | left sum | right subset | right sum |
 | ---- | ----------- | -------- | ------------ | --------- |
 | 00   | $\emptyset$ | $0$      | $\emptyset$  | $0$       |
-| 01   | $\{3\}$     | $3$      | $\{4\}$      | $4$       |
-| 10   | $\{1\}$     | $1$      | $\{2\}$      | $2$       |
-| 11   | $\{3, 1\}$  | $4$      | $\{4, 2\}$   | $6$       |
+| 01   | $\lbrace 3 \rbrace$     | $3$      | $\lbrace 4 \rbrace$      | $4$       |
+| 10   | $\lbrace 1 \rbrace$     | $1$      | $\lbrace 2 \rbrace$      | $2$       |
+| 11   | $\lbrace 3, 1 \rbrace$  | $4$      | $\lbrace 4, 2 \rbrace$   | $6$       |
 
 After sorting, `LS` $= (0, 1, 3, 4)$ and `RS` $= (6, 4, 2, 0)$. The sweep proceeds as follows.
 
@@ -71,7 +73,7 @@ After sorting, `LS` $= (0, 1, 3, 4)$ and `RS` $= (6, 4, 2, 0)$. The sweep procee
 | $0$      | $4$       | $4$   | too small, advance left      |
 | $1$      | $4$       | $5$   | equal to $T$, answer YES     |
 
-The sums $1$ and $4$ come from the subsets $\{1\}$ and $\{4\}$, so $\{1, 4\}$ and its complement $\{3, 2\}$ both have sum $5$. The algorithm itself does not record these subsets, since the masks are lost by sorting; it only answers YES.
+The sums $1$ and $4$ come from the subsets $\lbrace 1 \rbrace$ and $\lbrace 4 \rbrace$, so $\lbrace 1, 4 \rbrace$ and its complement $\lbrace 3, 2 \rbrace$ both have sum $5$. The algorithm itself does not record these subsets, since the masks are lost by sorting; it only answers YES.
 
 **A NO instance.** Let $a = (2, 3, 7)$. Then $S = 12$, $T = 6$ and $h = 1$, so the left half is $(2)$ and the right half is $(3, 7)$, with a different size because $n$ is odd. Then `LS` $= (0, 2)$ and `RS` $= (10, 7, 3, 0)$.
 
@@ -92,7 +94,7 @@ For $a = (2, 3, 4)$ the sum $S = 9$ is odd and the answer NO is given before the
 
 *Proof.* Induction on the mask. The mask $0$ is the empty subset with sum $0$. For a non-zero mask with lowest set bit $k$, the mask without bit $k$ is smaller, so its sum is correct by the induction hypothesis, and adding $b_{k+1}$ gives the sum of the mask. Different masks are different subsets and every subset has a mask. $\square$
 
-**Lemma 3.2** (two lists). A subset $A \subseteq \{1, \dots, n\}$ with $\Sigma(A) = T$ exists if and only if `LS` and `RS` contain entries $x$ and $y$ with $x + y = T$. Sorting only permutes the lists, so this holds before and after the sorting steps.
+**Lemma 3.2** (two lists). A subset $A \subseteq \lbrace 1, \dots, n \rbrace$ with $\Sigma(A) = T$ exists if and only if `LS` and `RS` contain entries $x$ and $y$ with $x + y = T$. Sorting only permutes the lists, so this holds before and after the sorting steps.
 
 *Proof.* If $A$ exists, then $\Sigma(A \cap L)$ is in `LS` and $\Sigma(A \cap R)$ is in `RS` by Lemma 3.1, and they add up to $\Sigma(A) = T$. Conversely, let $x$ and $y$ be sums of a subset $A_L \subseteq L$ and of a subset $A_R \subseteq R$. As $L$ and $R$ are disjoint, $A_L \cup A_R$ has sum $x + y = T$. $\square$
 
