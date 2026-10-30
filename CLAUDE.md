@@ -21,7 +21,7 @@ Still open: mode (formal or individual), which literature to reference.
 
 The Stage 2 draft is split into one file per section in `docs/stage2/`, numbered in reading order (`00_title.md`, `01_1_introduction.md`, ..., `10_references.md`). To get the whole document, run `cat docs/stage2/[0-9]*.md`.
 
-**Frozen sections (reviewed by the team, do not edit unless asked):** `01_1_introduction.md`, `02_brute_force.md`.
+**Frozen sections (reviewed by the team, do not edit unless asked):** `01_1_introduction.md`, `02_brute_force.md`, `03_meet_in_the_middle.md`.
 
 ### Review workflow (since Oct 29, 2026)
 
