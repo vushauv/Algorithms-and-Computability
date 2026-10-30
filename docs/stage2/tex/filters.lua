@@ -96,3 +96,27 @@ function Table(el)
   table.insert(out, "\\end{longtable}")
   return pandoc.RawBlock("latex", table.concat(out, "\n"))
 end
+
+-- The abstract is written in 00_title.md as the section "Abstract", so that
+-- the Markdown stays readable. Here it becomes the abstract metadata, which
+-- the LaTeX template sets on the title page. The table of contents and the
+-- body then each start on a new page.
+function Pandoc(doc)
+  local blocks = doc.blocks
+  local first = blocks[1]
+  if first and first.t == "Header" and first.level == 1
+     and pandoc.utils.stringify(first) == "Abstract" then
+    local abstract = {}
+    local i = 2
+    while blocks[i] and not (blocks[i].t == "Header" and blocks[i].level == 1) do
+      table.insert(abstract, blocks[i])
+      i = i + 1
+    end
+    doc.meta.abstract = pandoc.MetaBlocks(abstract)
+    doc.meta["include-before"] = pandoc.MetaBlocks({ pandoc.RawBlock("latex", "\\clearpage") })
+    local rest = { pandoc.RawBlock("latex", "\\clearpage") }
+    for j = i, #blocks do table.insert(rest, blocks[j]) end
+    doc.blocks = rest
+  end
+  return doc
+end

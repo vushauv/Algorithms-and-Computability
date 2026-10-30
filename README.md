@@ -37,7 +37,7 @@ for f in [0-9]*.md; do cat "$f"; echo; done > stage2_report.md
 
 # 2. PDF (pandoc runs XeLaTeX itself).
 pandoc --from markdown-yaml_metadata_block-simple_tables-multiline_tables \
-  --shift-heading-level-by=-1 --lua-filter=tex/filters.lua \
+  --shift-heading-level-by=-1 --toc --toc-depth=2 --lua-filter=tex/filters.lua \
   --include-in-header=tex/preamble.tex --pdf-engine=xelatex \
   --metadata=date:"October 30, 2026" \
   --metadata=author:"Oleh Shuptar" --metadata=author:"Rafsan Rubayet" \
@@ -53,13 +53,18 @@ What the pieces do:
 - `tex/preamble.tex`: page layout, fonts, framed pseudocode, table and list
   spacing, links.
 - `tex/filters.lua`: drops the `---` separators between the section files,
-  wraps pseudocode lines that would not fit in the frame, and writes the
-  tables with a rule between the rows.
+  turns the `## Abstract` section into the abstract, starts the body on a new
+  page after the table of contents, wraps pseudocode lines that would not fit
+  in the frame, and writes the tables with a rule between the rows.
 - `--from markdown-...`: the `---` separators must not be read as YAML
   metadata or as the rules of a simple table (the report uses pipe tables).
 - `--shift-heading-level-by=-1`: the `#` title of `00_title.md` becomes the
-  document title, `##` becomes `\section`, `###` becomes `\subsection`. The
-  sections are numbered in the text, so LaTeX does not number them.
+  document title, `##` becomes `\section`, `###` becomes `\subsection` and
+  `####` becomes `\subsubsection`. The sections are numbered in the text, so
+  LaTeX does not number them.
+- `--toc --toc-depth=2`: a table of contents down to the subsections. The
+  `## Abstract` section of `00_title.md` is moved by the filter into the
+  abstract of the title page, before the table of contents.
 
 ### Check the result
 
