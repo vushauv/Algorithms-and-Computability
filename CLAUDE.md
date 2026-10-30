@@ -17,7 +17,7 @@ Decided (details in `task.md` section 6):
 - **Language: C++**, prebuilt static Windows executable for the demo.
 - **Final algorithm:** the program always runs Karmarkar-Karp and adds an exact algorithm in range (dynamic programming if $T \le T_{DP}$, meet in the middle if $n \le N_{MITM}$). When both are in range, the report says only that the cheaper one for the input is chosen (Section 4.7 gives the estimates); the exact rule is fixed with the parameters after the experiments. The report has no complexity theorem for the final algorithm (removed Oct 30, 2026). **Brute force is not used by the final algorithm**; it is the baseline in the report and the test reference in the code (no $N_{BF}$ parameter, dropped Oct 30, 2026). The report describes only the Gray-code brute force; the direct enumeration is mentioned in one sentence.
 - **Exact algorithms decide only** (YES/NO); Karmarkar-Karp is the only algorithm that constructs a partition.
-- **References** (Section 7): nine entries, each verified against the publisher's record on Oct 30, 2026 and given a DOI/ISBN/URL. Karmarkar-Karp is cited as UCB/CSD-83-113, 1983 (Berkeley's catalogue; much of the literature says 1982).
+- **References** (Section 7): six entries (Graham, Korf and Schroeppel-Shamir dropped with their remarks on Oct 30, 2026), each verified against the publisher's record on Oct 30, 2026 and given a DOI/ISBN/URL. Karmarkar-Karp is cited as UCB/CSD-83-113, 1983 (Berkeley's catalogue; much of the literature says 1982).
 
 Still open: mode (formal or individual).
 
