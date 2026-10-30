@@ -16,7 +16,9 @@
 
 **Target sum.** $T = \Sigma(M)/2$. If $\Sigma(M)$ is odd there is no balanced partition.
 
-**Trivial cases.** Every exact algorithm below (Sections 2 to 4) starts with two checks. The approximation of Section 5 needs neither, and the final algorithm of Section 6 obtains them from its result.
+#### Trivial cases
+
+Every exact algorithm below (Sections 2 to 4) starts with two checks. The approximation of Section 5 needs neither, and the final algorithm of Section 6 obtains them from its result.
 
 - **Odd total.** If $\Sigma(M)$ is odd, no balanced partition exists, and the answer is NO.
 - **Zero total.** If $\Sigma(M) = 0$, every element is $0$, and the partition $A = \{1\}$, $B = \{2, \dots, n\}$ is balanced. Both parts are non-empty because $n \ge 2$, and the answer is YES.
