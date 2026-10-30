@@ -1,6 +1,6 @@
 ## 5. Karmarkar-Karp differencing
 
-By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections 2 to 4 are exponential in $n$ or in the magnitude of the numbers. This section gives a polynomial-time approximation of the optimisation problem of Section 1.1, which minimises the discrepancy $d$. The differencing method of Karmarkar and Karp [1982] runs in time $O(n \log n)$ whatever the numbers are, and it is the only algorithm of this report that constructs a partition. It cannot decide PARTITION, since it may return $d > 0$ for an instance that has a balanced partition (Section 5.3), but $d = 0$ proves that the answer is YES.
+By Section 1.3 no polynomial-time algorithm for PARTITION is known, and Sections 2 to 4 are exponential in $n$ or in the magnitude of the numbers. This section gives a polynomial-time approximation of the optimisation problem of Section 1.1, which minimises the discrepancy $d$. The differencing method of Karmarkar and Karp [1982] runs in time $O(n \log n)$ whatever the numbers are (in the model of Section 1.4), and it is the only algorithm of this report that constructs a partition. It cannot decide PARTITION, since it may return $d > 0$ for an instance that has a balanced partition (Section 5.3), but $d = 0$ proves that the answer is YES.
 
 ### 5.1 Idea
 
@@ -22,7 +22,7 @@ KARMARKAR-KARP(a[1..n])
         INSERT(H, (x − y, u))                      // the difference keeps the index of the larger element
         append (u, v) to E                         // u and v are in opposite parts
     (d, _) ← the single entry of H
-    colour the vertices of G = ({1..n}, E) with 0 and 1 so that the ends of every edge differ
+    colour the vertices of G = ({1..n}, E) with 0 and 1 so that the ends of every edge differ   // breadth-first search from vertex 1
     A ← { i : colour(i) = 0 };  B ← { i : colour(i) = 1 }
     return (A, B, d)
 ```
@@ -36,13 +36,13 @@ Ties in the heap are broken in any way. The subtraction $x - y$ is done with $x 
 | round | extracted $(x, u)$, $(y, v)$ | inserted | edge | heap after the round |
 | ----- | ---------------------------- | -------- | ---- | -------------------- |
 | 0     |                              |          |      | $4_{3}, 3_{1}, 2_{4}, 1_{2}$ |
-| 1     | $(4, 3), (3, 1)$             | $(1, 3)$ | $\{3, 1\}$ | $2_{4}, 1_{2}, 1_{3}$ |
-| 2     | $(2, 4), (1, 2)$             | $(1, 4)$ | $\{4, 2\}$ | $1_{3}, 1_{4}$        |
-| 3     | $(1, 3), (1, 4)$             | $(0, 3)$ | $\{3, 4\}$ | $0_{3}$               |
+| 1     | $(4, 3), (3, 1)$             | $(1, 3)$ | $\lbrace 3, 1 \rbrace$ | $2_{4}, 1_{2}, 1_{3}$ |
+| 2     | $(2, 4), (1, 2)$             | $(1, 4)$ | $\lbrace 4, 2 \rbrace$ | $1_{3}, 1_{4}$        |
+| 3     | $(1, 3), (1, 4)$             | $(0, 3)$ | $\lbrace 3, 4 \rbrace$ | $0_{3}$               |
 
-Here $x_u$ is the value $x$ with the index $u$. The final entry is $d = 0$. The edges form the path $1 - 3 - 4 - 2$, which is coloured $1 \mapsto 0$, $3 \mapsto 1$, $4 \mapsto 0$, $2 \mapsto 1$. So $A = \{1, 4\}$ with values $3, 2$ and $B = \{2, 3\}$ with values $1, 4$ have both sum $5$.
+In the heap column a subscript marks the index, so $4_{3}$ is the value $4$ with the index $3$. The final entry is $d = 0$. The edges form the path $1 - 3 - 4 - 2$, which is coloured $1 \mapsto 0$, $3 \mapsto 1$, $4 \mapsto 0$, $2 \mapsto 1$. So $A = \lbrace 1, 4 \rbrace$ with values $3, 2$ and $B = \lbrace 2, 3 \rbrace$ with values $1, 4$ have both sum $5$.
 
-**The method misses the optimum.** Let $a = (5, 6, 7, 8, 10)$, so $S = 36$ and $T = 18$. The rounds replace $10, 8$ by $2$ (edge $\{5, 4\}$), $7, 6$ by $1$ (edge $\{3, 2\}$), $5, 2$ by $3$ (edge $\{1, 5\}$) and $3, 1$ by $2$ (edge $\{1, 3\}$). Hence $d = 2$, with the parts $A = \{1, 2, 4\}$ of sum $5 + 6 + 8 = 19$ and $B = \{3, 5\}$ of sum $7 + 10 = 17$. However, $\{8, 10\}$ and $\{5, 6, 7\}$ both have sum $18$, so the optimum is $0$. Thus $d > 0$ does not show that the answer is NO.
+**The method misses the optimum.** Let $a = (5, 6, 7, 8, 10)$, so $S = 36$ and $T = 18$. The rounds replace $10, 8$ by $2$ (edge $\lbrace 5, 4 \rbrace$), $7, 6$ by $1$ (edge $\lbrace 3, 2 \rbrace$), $5, 2$ by $3$ (edge $\lbrace 1, 5 \rbrace$) and $3, 1$ by $2$ (edge $\lbrace 1, 3 \rbrace$). Hence $d = 2$, with the parts $A = \lbrace 1, 2, 4 \rbrace$ of sum $5 + 6 + 8 = 19$ and $B = \lbrace 3, 5 \rbrace$ of sum $7 + 10 = 17$. However, the elements $\lbrace 8, 10 \rbrace$ and $\lbrace 5, 6, 7 \rbrace$, that is, the index sets $\lbrace 4, 5 \rbrace$ and $\lbrace 1, 2, 3 \rbrace$, both have sum $18$, so the optimum is $0$. Thus $d > 0$ does not show that the answer is NO.
 
 ### 5.4 Correctness
 
@@ -53,14 +53,16 @@ Let $G$ be the graph on the vertices $1, \dots, n$ whose edges are those of $E$ 
 1. $G$ is a forest, and every connected component $C$ of $G$ has exactly one entry $(z, u)$ in $H$, where $u$ is a vertex of $C$;
 2. the sums of the two classes of $C$ differ by exactly $z$, and $u$ lies in a class with the larger or equal sum.
 
-*Proof.* Induction on the number of rounds. At the start every vertex is a component with the entry $(a_i, i)$, whose classes $\{i\}$ and $\emptyset$ differ by $a_i$, and $i$ lies in the larger one.
+*Proof.* Induction on the number of rounds. At the start every vertex is a component with the entry $(a_i, i)$, whose classes $\lbrace i \rbrace$ and $\emptyset$ differ by $a_i$, and $i$ lies in the larger one.
 
-Assume the claim before a round. The round extracts $(x, u)$ and $(y, v)$, which belong to two different components $P$ and $Q$, since each component has one entry. The new edge $\{u, v\}$ joins two components, so $G$ remains a forest, and the merged tree has the single entry $(x - y, u)$. This proves part 1.
+Assume the claim before a round. The round extracts $(x, u)$ and $(y, v)$, which belong to two different components $P$ and $Q$, since each component has one entry. The new edge $\lbrace u, v \rbrace$ joins two components, so $G$ remains a forest, and the merged tree has the single entry $(x - y, u)$. This proves part 1.
 
 For part 2, let $H_P \ni u$ and $L_P$ be the classes of $P$ with $\Sigma(H_P) - \Sigma(L_P) = x$, and $H_Q \ni v$ and $L_Q$ those of $Q$ with $\Sigma(H_Q) - \Sigma(L_Q) = y$. The edge forces $u$ and $v$ into opposite colours, so the classes of the merged tree are $H_P \cup L_Q$ and $L_P \cup H_Q$. Their sums differ by
+
 $$
 (\Sigma(H_P) + \Sigma(L_Q)) - (\Sigma(L_P) + \Sigma(H_Q)) = x - y \ge 0 ,
 $$
+
 and the larger class $H_P \cup L_Q$ contains $u$. $\square$
 
 **Theorem 5.2.** `KARMARKAR-KARP` stops after $n - 1$ rounds, $G$ is a tree on all $n$ vertices, both $A$ and $B$ are non-empty, and $d = |\Sigma(A) - \Sigma(B)|$.
@@ -81,24 +83,26 @@ Since the optimum of the discrepancy can be $0$, a ratio of discrepancies is mea
 
 This bound is weak: the instances $k \cdot (5, 6, 7, 8, 10)$ have the optimum $0$ and give $d = 2k$, so no bound of the form "optimum plus a constant" exists.
 
-**Ratio on the larger part.** The larger part has the sum $(S + d)/2$. Its optimum $\mathrm{OPT}$ is at least $\max(S/2, m)$, so by Proposition 5.3
+**Ratio on the larger part.** The larger part has the sum $(S + d)/2$. Let $\mathrm{OPT}$ be the smallest possible sum of the larger part over all partitions. It is at least $\max(S/2, m)$, because the larger part has at least the average sum $S/2$, and the part that contains the largest element has at least $m$. So by Proposition 5.3
+
 $$
 \frac{(S + d)/2}{\mathrm{OPT}} \le \frac{S/2 + m/2}{\mathrm{OPT}} \le \frac{\mathrm{OPT} + \mathrm{OPT}/2}{\mathrm{OPT}} = \frac{3}{2} .
 $$
-Fischetti and Martello [1987] show that the worst-case ratio of the differencing method is exactly $7/6$.
 
-**Random inputs.** For items drawn independently from a uniform distribution, the expected discrepancy of the differencing method is $n^{-\Theta(\log n)}$ [Yakir 1996], which proves a conjecture of Karmarkar and Karp. We quote this result without proof. It says that for many random items the discrepancy becomes extremely small, far below that of simple greedy methods. For integers it is only an indication.
+The bound $3/2$ is what this elementary argument gives. Fischetti and Martello [1987] show a sharper result, that the worst-case ratio of the differencing method is exactly $7/6$. We quote it without proof.
+
+**Random inputs.** For items drawn independently from a uniform distribution on $[0, 1]$, the expected discrepancy of the differencing method is $n^{-\Theta(\log n)}$ [Yakir 1996], which proves a conjecture of Karmarkar and Karp. We quote this result without proof. It says that for many random items the discrepancy becomes extremely small. For integers it is only an indication.
 
 ### 5.6 Complexity
 
-**Theorem 5.4.** `KARMARKAR-KARP` takes time $O(n \log n)$ and memory $O(n)$, and the time does not depend on the magnitude of the numbers.
+**Theorem 5.4.** `KARMARKAR-KARP` takes time $O(n \log n)$ and memory $O(n)$ numbers and indices, and the time does not depend on the magnitude of the numbers.
 
-*Proof.* Building the heap takes $O(n)$. The loop has $n - 1$ rounds, each with two extractions and one insertion of $O(\log n)$ time, which gives $O(n \log n)$. The graph $G$ has $n$ vertices and $n - 1$ edges, so the colouring by a breadth-first or depth-first search takes $O(n)$. The heap, the edges and the adjacency lists use $O(n)$ memory. $\square$
+*Proof.* Building the heap takes $O(n)$. The loop has $n - 1$ rounds, each with two extractions and one insertion of $O(\log n)$ time, which gives $O(n \log n)$. The graph $G$ has $n$ vertices and $n - 1$ edges, so the colouring by a breadth-first or depth-first search takes $O(n)$. The heap, the edges and the adjacency lists use $O(n)$ numbers and indices. $\square$
 
 ### 5.7 Range of application and remarks
 
-The algorithm needs no bound on $n$ beyond $n \ge 2$ and no bound on the numbers beyond the assumptions of Section 1.1; all differences are at most $\max_i a_i$, so the sum $S$ is not needed. It works for every input, in particular when neither dynamic programming nor meet in the middle is in range, for example for $1000$ elements of $25$ digits. A result with $d = 0$ proves YES, but $d > 0$ gives no answer, so a NO can come only from the parity test or from an exact algorithm.
+The algorithm needs no bound on $n$ beyond $n \ge 2$ and no bound on the numbers beyond the assumptions of Section 1.1; all differences are at most $\max_i a_i$, so the sum $S$ is not needed (Section 1.4). It works for every input, in particular when neither dynamic programming nor meet in the middle is in range, for example for $1000$ elements of $25$ digits. A result with $d = 0$ proves YES, but $d > 0$ gives no answer, so a NO can come only from the parity test or from an exact algorithm.
 
-**Remarks.** The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
+**Remarks.** The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$: when a number $a$ is added to the lighter part, the difference $d$ of the two parts becomes $|d - a| \le \max(d, a)$, and the claim follows by induction. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
 
 ---
