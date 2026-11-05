@@ -2,3 +2,4 @@
 #pragma once
 
 void test_number();
+void test_input();
