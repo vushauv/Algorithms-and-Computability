@@ -7,6 +7,7 @@ int main() {
     test_cli();
     test_brute_force();
     test_karmarkar_karp();
+    test_meet_in_the_middle();
 
     std::cout << check::passed << " checks passed, " << check::failed << " failed\n";
     return check::failed == 0 ? 0 : 1;
