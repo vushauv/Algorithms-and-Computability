@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "memory.hpp"
+
 namespace {
 
 using Word = std::uint64_t;
@@ -47,6 +49,7 @@ Verdict dp_partition(std::span<const Value> a) {
 
     // Every a[i] ≤ T now, so it fits in std::size_t as well.
     const auto T = static_cast<std::size_t>(pre.T);
+    require_memory("dynamic programming", Value{T / kWordBits + 1} * sizeof(Word));
     std::vector<Word> reach(T / kWordBits + 1, 0);
     reach[0] = 1;  // the empty sum
     std::size_t top = 0;  // upper bound on the obtainable sums

@@ -6,6 +6,8 @@
 #include <functional>
 #include <stdexcept>
 
+#include "memory.hpp"
+
 std::vector<Value> subset_sums(std::span<const Value> b) {
     const std::size_t m = b.size();
     const std::uint64_t count = std::uint64_t{1} << m;
@@ -29,6 +31,8 @@ Verdict meet_in_the_middle(std::span<const Value> a) {
     const Value T = pre.T;
 
     const std::size_t h = n / 2;
+    require_memory("meet in the middle",
+                   ((Value{1} << h) + (Value{1} << (n - h))) * sizeof(Value));
     std::vector<Value> LS = subset_sums(a.first(h));
     std::vector<Value> RS = subset_sums(a.subspan(h));
     std::sort(LS.begin(), LS.end());
