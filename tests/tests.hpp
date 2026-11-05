@@ -3,3 +3,4 @@
 
 void test_number();
 void test_input();
+void test_cli();
