@@ -4,6 +4,8 @@
 #include "tests.hpp"
 
 #include <string>
+
+#include "algorithms/dynamic_programming.hpp"
 #include <vector>
 
 namespace {
@@ -46,6 +48,15 @@ void test_cli() {
     CHECK_THROWS(parse({"in.txt", "--n-mitm"}), UsageError);
     CHECK_THROWS(parse({"--n-mitm", "65", "in.txt"}), UsageError);
     CHECK_THROWS(parse({"--t-dp", "-1", "in.txt"}), UsageError);
+
+    // --t-dp up to the largest target the bitset can index; --w-dp any value.
+    CHECK(parse({"--t-dp", to_string(kMaxDpTarget), "in.txt"}).t_dp == kMaxDpTarget);
+    CHECK_THROWS(parse({"--t-dp", to_string(kMaxDpTarget + 1), "in.txt"}), UsageError);
+    CHECK(parse({"in.txt"}).w_dp == kDefaultWDp);
+    CHECK(parse({"--w-dp", "0", "in.txt"}).w_dp == 0);
+    CHECK(parse({"--w-dp", "99999999999999999999999999999999999999", "in.txt"}).w_dp ==
+          kValueLimit - 1);
+    CHECK_THROWS(parse({"--w-dp", "1e12", "in.txt"}), UsageError);
 
     // Shortened display of long sets (no colours are involved).
     std::vector<Value> few{1, 2, 3};

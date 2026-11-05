@@ -6,10 +6,19 @@
 
 #include <vector>
 
+#include "algorithms/dynamic_programming.hpp"
+
+namespace {
+
+// No bound on the work n · T of dynamic programming.
+constexpr Value kAnyWork = ~Value{0};
+
+}  // namespace
+
 void test_solve() {
     using V = std::vector<Value>;
-    const Ranges defaults{44, 10'000'000'000};
-    const Ranges no_exact{0, 0};
+    const Ranges defaults{44, 10'000'000'000, kAnyWork};
+    const Ranges no_exact{0, 0, kAnyWork};
 
     // The examples of Section 6.3.
     const Solution balanced = solve(V{3, 1, 4, 2}, defaults);
@@ -29,11 +38,11 @@ void test_solve() {
     CHECK(by_dp.partition.d == 2);
     CHECK(by_dp.S == 36 && by_dp.T == 18);
 
-    const Solution by_mitm = solve(missed, Ranges{44, 17});
+    const Solution by_mitm = solve(missed, Ranges{44, 17, kAnyWork});
     CHECK(by_mitm.answer == Verdict::Yes);
     CHECK(by_mitm.decided_by == Method::MeetInTheMiddle);
 
-    const Solution unknown = solve(missed, Ranges{4, 17});
+    const Solution unknown = solve(missed, Ranges{4, 17, kAnyWork});
     CHECK(unknown.answer == Verdict::Unknown);
     CHECK(unknown.decided_by == Method::None);
     CHECK(unknown.partition.d == 2);
@@ -41,7 +50,7 @@ void test_solve() {
     // Even sum, d > 0, no balanced partition: the exact algorithm says NO.
     CHECK(solve(V{1, 1, 4}, defaults).answer == Verdict::No);
     CHECK(solve(V{1, 1, 4}, defaults).decided_by == Method::DynamicProgramming);
-    CHECK(solve(V{1, 1, 4}, Ranges{44, 0}).decided_by == Method::MeetInTheMiddle);
+    CHECK(solve(V{1, 1, 4}, Ranges{44, 0, kAnyWork}).decided_by == Method::MeetInTheMiddle);
     CHECK(solve(V{1, 1, 4}, no_exact).answer == Verdict::Unknown);
 
     // All zeros: d = 0, YES whatever the ranges (Section 6.1, step 1).
@@ -54,15 +63,33 @@ void test_solve() {
     CHECK(!dp_is_cheaper(20, 65536));
     CHECK(dp_is_cheaper(3, 181));     // 2.83 < 2^1.5 = 2.83, 181/64 = 2.828
     CHECK(!dp_is_cheaper(3, 182));
-    CHECK(choose_exact(10, 100, Ranges{9, 99}) == Method::None);
-    CHECK(choose_exact(10, 100, Ranges{10, 99}) == Method::MeetInTheMiddle);
-    CHECK(choose_exact(10, 100, Ranges{9, 100}) == Method::DynamicProgramming);
-    CHECK(choose_exact(40, Value{1} << 100, Ranges{44, ~Value{0}}) == Method::MeetInTheMiddle);
-    CHECK(choose_exact(100, Value{1} << 100, Ranges{44, ~Value{0}}) == Method::None);  // > kMaxDpTarget
+    CHECK(choose_exact(10, 100, Ranges{9, 99, kAnyWork}) == Method::None);
+    CHECK(choose_exact(10, 100, Ranges{10, 99, kAnyWork}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact(10, 100, Ranges{9, 100, kAnyWork}) == Method::DynamicProgramming);
+    CHECK(choose_exact(40, Value{1} << 100, Ranges{44, ~Value{0}, kAnyWork}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact(100, Value{1} << 100, Ranges{44, ~Value{0}, kAnyWork}) == Method::None);  // > kMaxDpTarget
+
+    // The work bound n · T ≤ w_dp, exactly at the limit and one above it.
+    CHECK(dp_limit(10, 100, Ranges{0, 100, 1000}) == DpLimit::InRange);
+    CHECK(dp_limit(10, 100, Ranges{0, 100, 999}) == DpLimit::Work);
+    CHECK(dp_limit(10, 101, Ranges{0, 100, kAnyWork}) == DpLimit::Target);
+    CHECK(dp_limit(3, 7, Ranges{0, 100, 21}) == DpLimit::InRange);  // 21 / 3 = 7
+    CHECK(dp_limit(3, 7, Ranges{0, 100, 20}) == DpLimit::Work);     // 20 / 3 = 6
+    // No overflow of n · T: T near the cap and the largest n of the input.
+    CHECK(dp_limit(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::InRange);
+    CHECK(dp_limit(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, 1'000'000}) == DpLimit::Work);
+    CHECK(choose_exact(10, 100, Ranges{10, 100, 999}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact(10, 100, Ranges{9, 100, 999}) == Method::None);
+    const Solution by_work = solve(missed, Ranges{44, 18, 5 * 18 - 1});  // n · T = 90
+    CHECK(by_work.decided_by == Method::MeetInTheMiddle);
+    CHECK(by_work.answer == Verdict::Yes);
+    CHECK(solve(missed, Ranges{44, 18, 5 * 18}).decided_by == Method::DynamicProgramming);
 
     // Random small sets: the answer agrees with brute force for every choice of
     // the exact algorithm, and UNKNOWN comes only when none is in range.
-    const Ranges choices[] = {defaults, Ranges{0, defaults.t_dp}, Ranges{defaults.n_mitm, 0}, no_exact};
+    const Ranges choices[] = {defaults, Ranges{0, defaults.t_dp, kAnyWork},
+                              Ranges{defaults.n_mitm, 0, kAnyWork},
+                              Ranges{defaults.n_mitm, defaults.t_dp, 100}, no_exact};
     for (int round = 0; round < 300; ++round) {
         const std::size_t n = random_sets::size_between(2, 14);
         const V a = random_sets::small_values(n, round % 3 == 0 ? 5 : 1000);

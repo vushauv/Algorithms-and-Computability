@@ -85,8 +85,20 @@ std::string method_name(Method method) {
     return "";
 }
 
+Ranges ranges_of(const Options& options) {
+    return Ranges{options.n_mitm, options.t_dp, options.w_dp};
+}
+
+// Why dynamic programming is out of range, for the messages.
+std::string dp_out_of_range(std::size_t n, Value T, const Options& options) {
+    if (dp_limit(n, T, ranges_of(options)) == DpLimit::Target)
+        return "T = " + to_string(T) + " > T_DP = " + to_string(options.t_dp);
+    return "n * T = " + std::to_string(n) + " * " + to_string(T) + " > W_DP = " +
+           to_string(options.w_dp);
+}
+
 void run_solve(const Instance& instance, const Options& options) {
-    const Solution solution = solve(instance.values, Ranges{options.n_mitm, options.t_dp});
+    const Solution solution = solve(instance.values, ranges_of(options));
     print_partition(instance.values, solution.partition);
 
     const std::string d = to_string(solution.partition.d);
@@ -109,13 +121,14 @@ void run_solve(const Instance& instance, const Options& options) {
             }
             return;
         }
-        case Method::None:
-            print_answer(solution.answer, "(n = " + std::to_string(instance.values.size()) +
-                                              " > N_MITM = " + std::to_string(options.n_mitm) +
-                                              " and T = " + to_string(solution.T) +
-                                              " > T_DP = " + to_string(options.t_dp) +
+        case Method::None: {
+            const std::size_t n = instance.values.size();
+            print_answer(solution.answer, "(n = " + std::to_string(n) + " > N_MITM = " +
+                                              std::to_string(options.n_mitm) + " and " +
+                                              dp_out_of_range(n, solution.T, options) +
                                               "; only the approximation, d = " + d + ")");
             return;
+        }
     }
 }
 
@@ -150,10 +163,9 @@ void run_single(std::size_t index, const Instance& instance, const Options& opti
             print_answer(meet_in_the_middle(a), "(meet in the middle)");
             return;
         case Algorithm::DynamicProgramming:
-            if (T > options.t_dp) {
-                output::warning(set_name(index, instance) +
-                                ": dynamic programming skipped, T = " + to_string(T) +
-                                " > T_DP = " + to_string(options.t_dp));
+            if (dp_limit(n, T, ranges_of(options)) != DpLimit::InRange) {
+                output::warning(set_name(index, instance) + ": dynamic programming skipped, " +
+                                dp_out_of_range(n, T, options));
                 return;
             }
             print_answer(dp_partition(a), "(dynamic programming, T = " + to_string(T) + ")");

@@ -13,9 +13,16 @@ bool dp_is_cheaper(std::size_t n, Value T) {
     return t / 64 < std::exp2(static_cast<long double>(n) / 2);
 }
 
-Method choose_exact(std::size_t n, Value T, const Ranges& ranges) {
+DpLimit dp_limit(std::size_t n, Value T, const Ranges& ranges) {
     // Above kMaxDpTarget dp_partition cannot index its bitset, whatever t_dp says.
-    const bool dp_in_range = T <= ranges.t_dp && T <= kMaxDpTarget;
+    if (T > ranges.t_dp || T > kMaxDpTarget) return DpLimit::Target;
+    // n · T ≤ w_dp, written so that the product cannot overflow; n ≥ 2.
+    if (T > ranges.w_dp / n) return DpLimit::Work;
+    return DpLimit::InRange;
+}
+
+Method choose_exact(std::size_t n, Value T, const Ranges& ranges) {
+    const bool dp_in_range = dp_limit(n, T, ranges) == DpLimit::InRange;
     const bool mitm_in_range = n <= ranges.n_mitm && n <= kMaxMeetInTheMiddleElements;
     if (dp_in_range && mitm_in_range) {
         return dp_is_cheaper(n, T) ? Method::DynamicProgramming : Method::MeetInTheMiddle;

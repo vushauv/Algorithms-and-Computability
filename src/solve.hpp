@@ -8,11 +8,20 @@
 #include "partition.hpp"
 
 // The ranges of the exact algorithms (report, Section 1.4): dynamic
-// programming if T ≤ t_dp, meet in the middle if n ≤ n_mitm.
+// programming if T ≤ t_dp and n · T ≤ w_dp, meet in the middle if n ≤ n_mitm.
+// The bound w_dp on the work of dynamic programming is not in the Stage 2
+// report (task.md section 6).
 struct Ranges {
     std::size_t n_mitm;
     Value t_dp;
+    Value w_dp;
 };
+
+// Why dynamic programming is out of range for a set of n numbers with
+// target T: Target if T > t_dp (or T > kMaxDpTarget), Work if n · T > w_dp.
+enum class DpLimit { InRange, Target, Work };
+
+DpLimit dp_limit(std::size_t n, Value T, const Ranges& ranges);
 
 // What decided the answer of SOLVE.
 enum class Method {

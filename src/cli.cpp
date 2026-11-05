@@ -3,6 +3,8 @@
 #include <string_view>
 #include <vector>
 
+#include "algorithms/dynamic_programming.hpp"
+
 namespace {
 
 Value parse_number_option(std::string_view name, std::string_view text) {
@@ -46,7 +48,13 @@ Options parse_options(int argc, char** argv) {
                 throw UsageError("--n-mitm must be at most " + std::to_string(kMaxNMitm));
             options.n_mitm = static_cast<std::size_t>(n);
         } else if (arg == "--t-dp") {
-            options.t_dp = parse_number_option(arg, value_of_option());
+            Value t = parse_number_option(arg, value_of_option());
+            // Above it the bitset cannot be indexed (dynamic_programming.hpp).
+            if (t > kMaxDpTarget)
+                throw UsageError("--t-dp must be at most " + to_string(kMaxDpTarget));
+            options.t_dp = t;
+        } else if (arg == "--w-dp") {
+            options.w_dp = parse_number_option(arg, value_of_option());
         } else if (arg == "--algorithm") {
             options.algorithm = parse_algorithm(value_of_option());
         } else if (arg.size() > 1 && arg[0] == '-') {
@@ -78,13 +86,17 @@ std::string usage_text() {
            "                 (default " + std::to_string(kDefaultNMitm) + ", at most " +
            std::to_string(kMaxNMitm) + ")\n"
            "  --t-dp T       dynamic programming only for half sums of at most T\n"
-           "                 (default " + to_string(kDefaultTDp) + ")\n"
+           "                 (default " + to_string(kDefaultTDp) + ", at most " +
+           to_string(kMaxDpTarget) + ")\n"
+           "  --w-dp W       dynamic programming only when n * T is at most W, which\n"
+           "                 bounds its time (default " + to_string(kDefaultWDp) + ")\n"
            "  --algorithm A  the algorithm to run on every set:\n"
            "                   solve  the final algorithm (default): Karmarkar-Karp,\n"
            "                          plus an exact algorithm when one is in range\n"
            "                   bf     brute force alone (exact, at most 64 numbers)\n"
            "                   mitm   meet in the middle alone (exact, within --n-mitm)\n"
-           "                   dp     dynamic programming alone (exact, within --t-dp)\n"
+           "                   dp     dynamic programming alone (exact, within --t-dp\n"
+           "                          and --w-dp)\n"
            "                   kk     Karmarkar-Karp alone (approximation)\n"
            "  -h, --help     this text\n"
            "\n"
