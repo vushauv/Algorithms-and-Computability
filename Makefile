@@ -36,8 +36,9 @@ $(PROGRAM): $(MAIN_OBJ) $(LIB_OBJ)
 $(TESTS): $(TEST_OBJ) $(LIB_OBJ)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-test: $(TESTS)
+test: $(TESTS) $(PROGRAM)
 	./$(TESTS)
+	sh tests/cli_test.sh $(PROGRAM)
 
 # One compiler call from the sources; -static so that no DLL beyond the
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
