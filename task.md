@@ -51,23 +51,44 @@ Mail must go to **both** instructors: rabiatul.adawiyah.dokt@pw.edu.pl and wlady
 - The code implements the algorithms of the Stage 2 report and must match its pseudocode (CONSTITUTION point 6): brute force with Gray code (§2), meet in the middle (§3), dynamic programming (§4), Karmarkar-Karp (§5) and the final algorithm `SOLVE` (§6).
 - The program reads the constraints of section 7 and the thresholds $N_{MITM}$, $T_{DP}$ from the command line, so Stage 4 can measure past them.
 
-Plan of the code (draft, Nov 5, 2026; no code is written yet). Build with `make`, C++20 (section 6):
+Plan of the code (agreed Nov 5, 2026; no code is written yet). Build with `make`, C++20 (section 6):
 
 | Module | Content | Report |
 |---|---|---|
 | `number` | the alias `Value = unsigned __int128`, decimal parser and printer, checked addition | §1.4 |
 | `input` | reading a file into a list of multisets, checks of section 7, error messages with line numbers | §1.1 |
-| `common` | the shared preliminary checks: $S$, parity, $S = 0$, $T = S/2$; `ctz` | §1.2, §2.1 |
-| `brute_force` | `BRUTE-FORCE` with Gray code, decides only | §2.2 |
-| `meet_in_the_middle` | `SUBSET-SUMS` and `MEET-IN-THE-MIDDLE`, decides only | §3.2 |
-| `dynamic_programming` | `DP-PARTITION` on a bitset, decides only | §4.3 |
-| `karmarkar_karp` | `KARMARKAR-KARP` with the edge list and 2-colouring, returns $(A, B, d)$ | §5.2 |
+| `partition` | shared types (`Verdict`, `Partition`) and the preliminary checks: $S$, parity, $S = 0$, $T = S/2$ | §1.2 |
+| `algorithms/brute_force` | `BRUTE-FORCE` with Gray code, decides only | §2.2 |
+| `algorithms/meet_in_the_middle` | `SUBSET-SUMS` and `MEET-IN-THE-MIDDLE`, decides only | §3.2 |
+| `algorithms/dynamic_programming` | `DP-PARTITION` on a bitset, decides only | §4.3 |
+| `algorithms/karmarkar_karp` | `KARMARKAR-KARP` with the edge list and 2-colouring, returns $(A, B, d)$ | §5.2 |
 | `solve` | `SOLVE`: Karmarkar-Karp always, plus an exact algorithm in range | §6.2 |
 | `output` | coloured and plain output (`--no-color`, `NO_COLOR`, not a terminal) | CONSTITUTION 4 |
-| `main` | command line, one set after another | |
+| `cli` | command-line options | |
+| `main` | reads the file, runs each set, catches input errors | |
 | `tests/` | every exact algorithm and the $d$ of Karmarkar-Karp against brute force on random small inputs; parser tests | CONSTITUTION 7 |
 
-All exact algorithms share the preliminary checks in `common` and take the multiset as a read-only span, so the test driver runs them interchangeably.
+All exact algorithms share the preliminary checks in `partition` and take the multiset as a read-only span, so the test driver runs them interchangeably.
+
+Steps (agreed Nov 5, 2026; one commit per step, three PRs into `dev`):
+
+| Step | Content | Check |
+|---|---|---|
+| **PR 1: reading** | | |
+| 1 | Skeleton: `Makefile`, `.gitignore`, empty `main.cpp`, `tests/check.hpp` | `make`, `make test`, `make clean` work |
+| 2 | `number`: `Value`, `parse_value`, `to_string`, `checked_add` | tests at 0, leading zeros, $10^{38}-1$, $10^{38}$, junk |
+| 3 | `input`: `read_instances`, the checks of section 7 with line numbers | one test per error |
+| 4 | `output`, `cli`, `main` printing the sets read | the two example files, `--no-color`, `\| cat`, a broken file exits with code 1 |
+| **PR 2: algorithms** | | |
+| 5 | `partition.hpp` and brute force (§2.2) | hand-made cases, the examples of §2.3 |
+| 6 | Karmarkar-Karp (§5.2) | §5.3 examples; random inputs: valid partition, sums differ by $d$, $d = 0$ implies YES |
+| 7 | Meet in the middle (§3.2) | §3.3 examples; equals brute force on random sets with $n \le 20$, duplicates and zeros |
+| 8 | Dynamic programming (§4.3), bitset by words | §4.4 examples; equals brute force; $T$ at word boundaries |
+| **PR 3: the program** | | |
+| 9 | `SOLVE` (§6.2), `--algorithm`, final output | example files; a DP case, a MITM case, an UNKNOWN case |
+| 10 | `examples/`, `make windows`, README build section, `dist/partition.exe` | the `.exe` runs on Windows without extra DLLs |
+
+Not in Stage 3: timing code (Stage 4), multithreading, a big-integer fallback, configuration files.
 
 ### Stage 2 (delivered): documentation of algorithms
 
@@ -124,7 +145,9 @@ The Stage 2 submission serves as the formal choice of procedure. We need to deci
 - [x] Build system: **`make`**. Decided Nov 5, 2026. A `Makefile` at the repository root builds the Linux binary (`make`), the static Windows executable with MinGW-w64 (`make windows`, `x86_64-w64-mingw32-g++ -static`), the tests (`make test`) and cleans up (`make clean`); the README lists the same compiler commands for building without `make` (CONSTITUTION point 5). No CMake.
 - [x] C++ standard: **C++20** (`-std=c++20`). Decided Nov 5, 2026. Rationale: it has `std::span` and `std::countr_zero`, which the algorithms need, and is fully supported by GCC 13 and MinGW-w64 GCC; the earlier "C++21" in the CONSTITUTION was a typo (no such standard exists) and is corrected.
 - [x] Output: **readable and coloured on both Linux and Windows, with colours optionally disabled**. Decided Nov 5, 2026. ANSI colours on Linux; on Windows the program enables ANSI processing in the console at startup (`SetConsoleMode` with `ENABLE_VIRTUAL_TERMINAL_PROCESSING`, Windows 10 and later) and falls back to plain output if that fails. Colours are off with `--no-color`, when `NO_COLOR` is set, or when stdout is not a terminal; the text is the same in both modes (CONSTITUTION point 4).
-- [ ] Code layout and module split: the draft in section 3 (Stage 3).
+- [x] Code layout: **`src/` with the algorithms in `src/algorithms/`, tests in `tests/`, sample inputs in `examples/`, build output in `build/` (not committed), the prebuilt Windows executable in `dist/` (committed before the demo)**. Decided Nov 5, 2026. Module table in section 3. Shared types and the preliminary checks of §1.2 live once in `partition.hpp`; only `output` prints and only it contains Windows-specific code; input errors are exceptions caught in `main`.
+- [x] Command line: `partition [--no-color] [--n-mitm N] [--t-dp T] [--algorithm solve|bf|mitm|dp|kk] FILE`. Decided Nov 5, 2026. `--algorithm` runs a single algorithm, for the Stage 4 timings.
+- [x] Choice of the exact algorithm in `SOLVE` when both are in range (provisional, tuned in Stage 4): dynamic programming if $T/64 < 2^{n/2}$ (Proposition 4.4 of the report), otherwise meet in the middle. Decided Nov 5, 2026. Kept in one function.
 
 ## 7. Input constraints (our own, set Oct 28, 2026)
 
