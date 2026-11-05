@@ -1,0 +1,4 @@
+# Kept byte for byte: the CRLF sample input, the batch file for cmd.exe, the executable.
+examples/09_windows_line_endings.txt -text
+*.bat eol=crlf
+*.exe binary
