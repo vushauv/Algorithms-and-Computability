@@ -4,6 +4,7 @@
 // Exit codes: 0 success, 1 invalid input file, 2 invalid command line.
 
 #include <iostream>
+#include <string_view>
 
 #include "cli.hpp"
 #include "input.hpp"
@@ -13,6 +14,14 @@ using output::paint;
 using output::Style;
 
 namespace {
+
+// --no-color must hold also for the message about an invalid command line,
+// which is printed before the options are known.
+bool no_color_requested(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i)
+        if (std::string_view(argv[i]) == "--no-color") return true;
+    return false;
+}
 
 void print_instance(std::size_t index, const Instance& instance) {
     std::cout << paint("Set " + std::to_string(index), Style::Heading)
@@ -28,7 +37,7 @@ int main(int argc, char** argv) {
     try {
         options = parse_options(argc, argv);
     } catch (const UsageError& error) {
-        output::init(false);
+        output::init(no_color_requested(argc, argv));
         output::error(error.what());
         std::cerr << "Try 'partition --help'.\n";
         return 2;

@@ -36,5 +36,6 @@ private:
 
 std::vector<Instance> read_instances(std::istream& in);
 
-// Opens the file and reads it; InputError also when it cannot be opened.
+// Opens the file and reads it; InputError also when it cannot be opened or
+// is a directory. The messages do not repeat the path; the caller adds it.
 std::vector<Instance> read_instances_from_file(const std::string& path);

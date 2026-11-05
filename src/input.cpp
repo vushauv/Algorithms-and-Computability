@@ -1,9 +1,12 @@
 #include "input.hpp"
 
+#include <filesystem>
 #include <fstream>
 #include <string_view>
 
 namespace {
+
+constexpr std::string_view kUtf8Bom = "\xEF\xBB\xBF";
 
 std::string location(std::size_t line, std::size_t column) {
     if (line == 0) return "";
@@ -64,6 +67,8 @@ Value parse_field(const Field& field, std::size_t line_number) {
 std::size_t read_set_count(std::istream& in) {
     std::string line;
     if (!next_line(in, line)) throw InputError(0, 0, "the file is empty");
+    // Some Windows editors start a UTF-8 file with a byte order mark.
+    if (line.starts_with(kUtf8Bom)) line.erase(0, kUtf8Bom.size());
     std::vector<Field> fields = split_fields(line, 1);
     if (fields.size() != 1)
         throw InputError(1, 0, "the first line must contain only the number of sets");
@@ -131,7 +136,11 @@ std::vector<Instance> read_instances(std::istream& in) {
 }
 
 std::vector<Instance> read_instances_from_file(const std::string& path) {
+    // A directory opens without error on Linux and then reads as empty.
+    std::error_code ignored;
+    if (std::filesystem::is_directory(path, ignored))
+        throw InputError(0, 0, "is a directory, not a file");
     std::ifstream file(path, std::ios::binary);  // binary: \r\n is handled by next_line
-    if (!file) throw InputError(0, 0, "cannot open the file '" + path + "'");
+    if (!file) throw InputError(0, 0, "cannot open the file");
     return read_instances(file);
 }

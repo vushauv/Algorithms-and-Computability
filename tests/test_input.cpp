@@ -38,6 +38,7 @@ void test_input() {
     CHECK(read("1\r\n5 5\r\n").size() == 1);          // Windows line endings
     CHECK(read("1\n5 5\n\n\n").size() == 1);          // empty lines at the end
     CHECK(read("1\n0 0 007\n")[0].values[2] == 7);    // zeros and leading zeros
+    CHECK(read("\xEF\xBB\xBF" "1\r\n5 5\r\n").size() == 1);  // UTF-8 byte order mark
 
     const std::string max38(38, '9');
     CHECK(read("1\n" + max38 + " " + max38 + "\n")[0].sum == 2 * (kValueLimit - 1));
@@ -86,4 +87,10 @@ void test_input() {
     }
 
     CHECK_THROWS(read_instances_from_file("no/such/file.txt"), InputError);
+    try {
+        read_instances_from_file("raw_regulations");
+        CHECK(false);
+    } catch (const InputError& error) {
+        CHECK(std::string(error.what()) == "is a directory, not a file");
+    }
 }
