@@ -1,0 +1,11 @@
+Dear All,
+
+We are approaching the time for submitting solutions to the second stage of the laboratory task. Please refer to the description provided on my website.
+
+Submitting the documentation in PDF format (documentation of algorithms, including algorithms pseudocode, exhaustive description, and analysis of their complexity) by the end of the day on October 29, accompanied by a clear statement that this material constitutes the second stage, serves as a formal selection of the procedure to be followed for the laboratory assignment.
+
+Notice: my website is accessible only from within the university network; therefore, I have attached a screenshot relevant to our course.
+
+Dear All,
+Let us make a small correction: deadline is October 30, not October 29.
+Sorry for the mess.
