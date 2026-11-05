@@ -37,9 +37,12 @@ Run it on an input file:
 ./build/linux/partition --help
 ```
 
-Options: `--no-color`; `--n-mitm N` and `--t-dp T`, the ranges of meet in the
-middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$, default
-$10^{10}$); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone.
+Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
+meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
+default $10^{10}$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
+time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone. `make test`
+also runs `tests/cli_test.sh`, which checks the exit codes and that the text is
+the same with and without colours.
 Exit codes: 0 success, 1 invalid input file, 2 invalid command line, 3 an
 algorithm could not be run on some set.
 
