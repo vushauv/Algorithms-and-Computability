@@ -4,6 +4,10 @@ Laboratory assignment, fall 2026: the partition problem (basic version, two
 subsets with equal sums). See `task.md` for the assignment and
 `CONSTITUTION.md` for the project rules.
 
+Status: Stage 2 (the report in `docs/stage2/`) is finished; Stage 3 (the
+program, due Nov 20, 2026) is being drafted. Build instructions for the
+program will be added here with the first code.
+
 ## Stage 2 report
 
 The report is written in Markdown, one file per section in `docs/stage2/`

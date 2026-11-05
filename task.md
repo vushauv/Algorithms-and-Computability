@@ -2,7 +2,7 @@
 
 Sources: `raw_regulations/` (course website, emails of 16.10.26 and 23.10.26, input examples).
 
-> **Current stage: Stage 2 (documentation of algorithms), due Oct 30, 2026 (end of day).**
+> **Current stage: Stage 3 (implementation and sample inputs), due Nov 20, 2026, with a live demo on the faculty computers.** Stage 2 (the report) is finished; its sources are in `docs/stage2/`.
 
 ## 1. The problem
 
@@ -26,8 +26,8 @@ Teams of up to 4 students. The course offers two versions; **we chose the basic 
 | Stage | Content | Due | Weight |
 |---|---|---|---|
 | 1 | Teams organised and a conceptual solution (an idea we can explain in words). No documents or code due. | Oct 8 (done) | none |
-| **2 (current)** | **Documentation of algorithms: pseudocode, exhaustive description, complexity analysis** | **Oct 30, 2026** | **33%** |
-| 3 | Implementation of the algorithms and sample input preparation. Live demo of working code on faculty computers **without compilers installed**. | Nov 20, 2026 | 33% |
+| 2 | Documentation of algorithms: pseudocode, exhaustive description, complexity analysis | Oct 30, 2026 (report finished) | 33% |
+| **3 (current)** | **Implementation of the algorithms and sample input preparation. Live demo of working code on faculty computers without compilers installed.** | **Nov 20, 2026** | **33%** |
 | 4 | Empirical testing and a report on the tests. Deliver everything: documentation, program, sources, examples. | Dec 4, 2026 | 34% |
 
 Rules:
@@ -42,7 +42,34 @@ Lab classes are on Fridays in room 203. Remaining dates: Nov 6, Nov 20, Nov 27 (
 
 Mail must go to **both** instructors: rabiatul.adawiyah.dokt@pw.edu.pl and wladyslaw.homenda@pw.edu.pl.
 
-## 3. Stage 2: what we must deliver now
+## 3. Deliverables
+
+### Stage 3 (current): implementation, due Nov 20, 2026
+
+- **Live demo** of the working program on the faculty computers, which have **no compilers**, so we bring a prebuilt, statically linked Windows executable (CONSTITUTION points 2 and 5).
+- **Sample inputs** prepared by us, in the input format of section 1, covering YES and NO instances, duplicates, zeros, large values and each input error.
+- The code implements the algorithms of the Stage 2 report and must match its pseudocode (CONSTITUTION point 6): brute force with Gray code (§2), meet in the middle (§3), dynamic programming (§4), Karmarkar-Karp (§5) and the final algorithm `SOLVE` (§6).
+- The program reads the constraints of section 7 and the thresholds $N_{MITM}$, $T_{DP}$ from the command line, so Stage 4 can measure past them.
+
+Plan of the code (draft, Nov 5, 2026; no code is written yet). Build with `make`, C++20 (section 6):
+
+| Module | Content | Report |
+|---|---|---|
+| `number` | the alias `Value = unsigned __int128`, decimal parser and printer, checked addition | §1.4 |
+| `input` | reading a file into a list of multisets, checks of section 7, error messages with line numbers | §1.1 |
+| `common` | the shared preliminary checks: $S$, parity, $S = 0$, $T = S/2$; `ctz` | §1.2, §2.1 |
+| `brute_force` | `BRUTE-FORCE` with Gray code, decides only | §2.2 |
+| `meet_in_the_middle` | `SUBSET-SUMS` and `MEET-IN-THE-MIDDLE`, decides only | §3.2 |
+| `dynamic_programming` | `DP-PARTITION` on a bitset, decides only | §4.3 |
+| `karmarkar_karp` | `KARMARKAR-KARP` with the edge list and 2-colouring, returns $(A, B, d)$ | §5.2 |
+| `solve` | `SOLVE`: Karmarkar-Karp always, plus an exact algorithm in range | §6.2 |
+| `output` | coloured and plain output (`--no-color`, `NO_COLOR`, not a terminal) | CONSTITUTION 4 |
+| `main` | command line, one set after another | |
+| `tests/` | every exact algorithm and the $d$ of Karmarkar-Karp against brute force on random small inputs; parser tests | CONSTITUTION 7 |
+
+All exact algorithms share the preliminary checks in `common` and take the multiset as a read-only span, so the test driver runs them interchangeably.
+
+### Stage 2 (delivered): documentation of algorithms
 
 - **Format:** PDF, sent by email. The website also allows a flash drive, but the email is the formal route.
 - **Statement:** it must say clearly that the material is **Stage 2**. Sending it by the deadline with this statement is also the **formal selection of the procedure** for the assignment (formal mode or individual mode, see section 5).
@@ -94,6 +121,10 @@ The Stage 2 submission serves as the formal choice of procedure. We need to deci
 - [ ] Ranges of the exact algorithms ($N_{MITM}$, $T_{DP}$): **not fixed in the Stage 2 report**; the values are determined by experiments once the algorithms are implemented. Decided Oct 29, 2026. Provisional values: $N_{MITM} = 44$, $T_{DP} = 10^{10}$.
 - [x] Brute force is **not used by the final algorithm** and has no range parameter ($N_{BF}$ dropped, Oct 30, 2026). Rationale: meet in the middle is faster for every $n \ge 5$ and its memory is negligible for the few tens of elements brute force can handle. Brute force stays in the report as the baseline and in the program as the reference for testing (CONSTITUTION point 7). Prototype measurements of Oct 29 (random 25-digit numbers, 12 cores, 15 GB): brute force with Gray code $n = 30$ takes 2.3 s; meet in the middle $n = 44$ takes 0.9 s and about 260 MB, $n = 48$ takes 4 s and 1 GB; one dynamic programming pass over $10^{10}$ bits (1.25 GB) takes 0.07 to 0.13 s, so the work $n \cdot T$ also needs a bound (about $6 \cdot 10^{12}$ for one minute).
 - [x] Final algorithm in the Stage 2 report: Karmarkar-Karp always, plus an exact algorithm in range; when both are in range the report says only that the cheaper one for the input is chosen (estimates of Section 4.7) and fixes no rule, and it states no complexity theorem for the combination. Decided Oct 30, 2026. Rationale: the rule and the thresholds depend on measurements that come with Stage 3, so the report would otherwise commit to numbers that the experiments may change.
+- [x] Build system: **`make`**. Decided Nov 5, 2026. A `Makefile` at the repository root builds the Linux binary (`make`), the static Windows executable with MinGW-w64 (`make windows`, `x86_64-w64-mingw32-g++ -static`), the tests (`make test`) and cleans up (`make clean`); the README lists the same compiler commands for building without `make` (CONSTITUTION point 5). No CMake.
+- [x] C++ standard: **C++20** (`-std=c++20`). Decided Nov 5, 2026. Rationale: it has `std::span` and `std::countr_zero`, which the algorithms need, and is fully supported by GCC 13 and MinGW-w64 GCC; the earlier "C++21" in the CONSTITUTION was a typo (no such standard exists) and is corrected.
+- [x] Output: **readable and coloured on both Linux and Windows, with colours optionally disabled**. Decided Nov 5, 2026. ANSI colours on Linux; on Windows the program enables ANSI processing in the console at startup (`SetConsoleMode` with `ENABLE_VIRTUAL_TERMINAL_PROCESSING`, Windows 10 and later) and falls back to plain output if that fails. Colours are off with `--no-color`, when `NO_COLOR` is set, or when stdout is not a terminal; the text is the same in both modes (CONSTITUTION point 4).
+- [ ] Code layout and module split: the draft in section 3 (Stage 3).
 
 ## 7. Input constraints (our own, set Oct 28, 2026)
 
