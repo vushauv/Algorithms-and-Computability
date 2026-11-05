@@ -1,6 +1,5 @@
 // Command-line options:
-//   partition [--no-color] [--n-mitm N] [--t-dp T] FILE
-// (--algorithm comes with the final algorithm, step 9 of the plan.)
+//   partition [--no-color] [--n-mitm N] [--t-dp T] [--algorithm A] FILE
 #pragma once
 
 #include <cstddef>
@@ -17,12 +16,16 @@ inline constexpr Value kDefaultTDp = 10'000'000'000;
 // index of a subset no longer fits in a 64-bit mask.
 inline constexpr std::size_t kMaxNMitm = 64;
 
+// --algorithm: SOLVE (the default) or one algorithm alone, for timings.
+enum class Algorithm { Solve, BruteForce, MeetInTheMiddle, DynamicProgramming, KarmarkarKarp };
+
 struct Options {
     std::string path;
     bool no_color = false;
     bool help = false;
     std::size_t n_mitm = kDefaultNMitm;
     Value t_dp = kDefaultTDp;
+    Algorithm algorithm = Algorithm::Solve;
 };
 
 class UsageError : public std::runtime_error {

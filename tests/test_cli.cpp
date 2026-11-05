@@ -23,12 +23,21 @@ void test_cli() {
     CHECK(!defaults.no_color);
     CHECK(defaults.n_mitm == kDefaultNMitm);
     CHECK(defaults.t_dp == kDefaultTDp);
+    CHECK(defaults.algorithm == Algorithm::Solve);
 
     Options all = parse({"--no-color", "--n-mitm", "30", "--t-dp", "1000", "in.txt"});
     CHECK(all.no_color);
     CHECK(all.n_mitm == 30);
     CHECK(all.t_dp == 1000);
     CHECK(all.path == "in.txt");
+
+    CHECK(parse({"--algorithm", "bf", "in.txt"}).algorithm == Algorithm::BruteForce);
+    CHECK(parse({"--algorithm", "mitm", "in.txt"}).algorithm == Algorithm::MeetInTheMiddle);
+    CHECK(parse({"--algorithm", "dp", "in.txt"}).algorithm == Algorithm::DynamicProgramming);
+    CHECK(parse({"--algorithm", "kk", "in.txt"}).algorithm == Algorithm::KarmarkarKarp);
+    CHECK(parse({"--algorithm", "solve", "in.txt"}).algorithm == Algorithm::Solve);
+    CHECK_THROWS(parse({"--algorithm", "BF", "in.txt"}), UsageError);
+    CHECK_THROWS(parse({"in.txt", "--algorithm"}), UsageError);
 
     CHECK(parse({"--help"}).help);
     CHECK_THROWS(parse({}), UsageError);
