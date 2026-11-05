@@ -5,8 +5,34 @@ subsets with equal sums). See `task.md` for the assignment and
 `CONSTITUTION.md` for the project rules.
 
 Status: Stage 2 (the report in `docs/stage2/`) is finished; Stage 3 (the
-program, due Nov 20, 2026) is being drafted. Build instructions for the
-program will be added here with the first code.
+program, due Nov 20, 2026) is being written. For now the program reads and
+checks the input file and prints the sets; the algorithms come next.
+
+## Program
+
+Requirements: GCC 13 or Clang 16 (C++20 and `unsigned __int128`); for the
+Windows executable, MinGW-w64 (`x86_64-w64-mingw32-g++`).
+
+```sh
+make             # build/linux/partition
+make test        # build and run the tests (from the repository root)
+make windows     # static build/windows/partition.exe, needs no DLLs
+make clean
+```
+
+The same without `make`, from the repository root:
+
+```sh
+g++ -std=c++20 -O2 -Isrc src/*.cpp -o partition
+x86_64-w64-mingw32-g++ -std=c++20 -O2 -static -Isrc src/*.cpp -o partition.exe
+```
+
+Run it on an input file:
+
+```sh
+./build/linux/partition raw_regulations/AaC_example_1.txt
+./build/linux/partition --help
+```
 
 ## Stage 2 report
 

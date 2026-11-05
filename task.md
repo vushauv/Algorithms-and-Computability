@@ -51,7 +51,7 @@ Mail must go to **both** instructors: rabiatul.adawiyah.dokt@pw.edu.pl and wlady
 - The code implements the algorithms of the Stage 2 report and must match its pseudocode (CONSTITUTION point 6): brute force with Gray code (§2), meet in the middle (§3), dynamic programming (§4), Karmarkar-Karp (§5) and the final algorithm `SOLVE` (§6).
 - The program reads the constraints of section 7 and the thresholds $N_{MITM}$, $T_{DP}$ from the command line, so Stage 4 can measure past them.
 
-Plan of the code (agreed Nov 5, 2026; no code is written yet). Build with `make`, C++20 (section 6):
+Plan of the code (agreed Nov 5, 2026; steps 1 to 4 written in PR 1). Build with `make`, C++20 (section 6):
 
 | Module | Content | Report |
 |---|---|---|
