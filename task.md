@@ -51,7 +51,7 @@ Mail must go to **both** instructors: rabiatul.adawiyah.dokt@pw.edu.pl and wlady
 - The code implements the algorithms of the Stage 2 report and must match its pseudocode (CONSTITUTION point 6): brute force with Gray code (§2), meet in the middle (§3), dynamic programming (§4), Karmarkar-Karp (§5) and the final algorithm `SOLVE` (§6).
 - The program reads the constraints of section 7 and the thresholds $N_{MITM}$, $T_{DP}$ from the command line, so Stage 4 can measure past them.
 
-Plan of the code (agreed Nov 5, 2026; steps 1 to 4 written in PR 1). Build with `make`, C++20 (section 6):
+Plan of the code (agreed Nov 5, 2026; all steps written: PR 1 steps 1 to 4, PR 2 steps 5 to 8, PR 3 steps 9 and 10). Build with `make`, C++20 (section 6):
 
 | Module | Content | Report |
 |---|---|---|
@@ -148,6 +148,7 @@ The Stage 2 submission serves as the formal choice of procedure. We need to deci
 - [x] Code layout: **`src/` with the algorithms in `src/algorithms/`, tests in `tests/`, sample inputs in `examples/`, build output in `build/` (not committed), the prebuilt Windows executable in `dist/` (committed before the demo)**. Decided Nov 5, 2026. Module table in section 3. Shared types and the preliminary checks of §1.2 live once in `partition.hpp`; only `output` prints and only it contains Windows-specific code; input errors are exceptions caught in `main`.
 - [x] Command line: `partition [--no-color] [--n-mitm N] [--t-dp T] [--algorithm solve|bf|mitm|dp|kk] FILE`. Decided Nov 5, 2026. `--algorithm` runs a single algorithm, for the Stage 4 timings.
 - [x] Choice of the exact algorithm in `SOLVE` when both are in range (provisional, tuned in Stage 4): dynamic programming if $T/64 < 2^{n/2}$ (Proposition 4.4 of the report), otherwise meet in the middle. Decided Nov 5, 2026. Kept in one function.
+- [x] `--algorithm bf|mitm|dp|kk` runs one algorithm alone; meet in the middle and dynamic programming still respect `--n-mitm` and `--t-dp` and are skipped with a warning beyond them (raise the option to go further), brute force only has its hard limit $n \le 64$. An algorithm that cannot run on a set (that limit, or no memory) is an error for that set, the other sets still run, and the exit code is 3 (1: invalid input file, 2: invalid command line). Decided Nov 5, 2026.
 
 ## 7. Input constraints (our own, set Oct 28, 2026)
 

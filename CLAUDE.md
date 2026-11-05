@@ -9,7 +9,7 @@ University lab project (Algorithms and Computability, fall 2026): the **partitio
 
 ## Where we are
 
-**Stage 3 (implementation and sample inputs), due Nov 20, 2026, with a live demo on lab machines that have no compiler.** We are **writing the code** of the algorithms specified in the Stage 2 report, from scratch from the report, in three PRs into `dev` (plan and steps in `task.md` section 3). PR 1 (steps 1 to 4: build, `number`, `input`, `output`/`cli`/`main`) is on the branch `feature/stage3-reading`; the algorithms (PR 2) and `SOLVE` with the Windows executable (PR 3) come next. Build with `make`, C++20; decisions, including the code layout and the command line, are in `task.md` section 6.
+**Stage 3 (implementation and sample inputs), due Nov 20, 2026, with a live demo on lab machines that have no compiler.** We are **writing the code** of the algorithms specified in the Stage 2 report, from scratch from the report, in three PRs into `dev` (plan and steps in `task.md` section 3). The PRs are stacked: PR 1 (steps 1 to 4: build, `number`, `input`, `output`/`cli`/`main`) on `feature/stage3-reading`, PR 2 (steps 5 to 8, the algorithms) on `feature/stage3-algorithms`, PR 3 (steps 9 and 10: `SOLVE`, `--algorithm`, `examples/`, `dist/partition.exe`) on `feature/stage3-program`. `make dist` rebuilds the committed Windows executable; rebuild and commit it after any code change before the demo. Build with `make`, C++20; decisions, including the code layout and the command line, are in `task.md` section 6.
 
 Stage 2 is finished: the report and its PDF are in `docs/stage2/` on `dev`.
 
