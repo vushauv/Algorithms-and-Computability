@@ -7,7 +7,8 @@ subsets with equal sums). See `task.md` for the assignment and
 Status: Stage 2 (the report in `docs/stage2/`) is finished; Stage 3 (the
 program, due Nov 20, 2026) is written: for every set of the input file the
 program runs the final algorithm of Section 6 of the report and prints the
-answer (YES, NO or UNKNOWN) with the Karmarkar-Karp partition.
+answer (YES, NO or UNKNOWN) with the Karmarkar-Karp partition, and with YES a
+balanced partition.
 
 ## Program
 
@@ -39,7 +40,7 @@ Run it on an input file:
 
 Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
 meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
-default $10^{10}$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
+default $3 \cdot 10^8$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
 time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone. `make test`
 also runs `tests/cli_test.sh`, which checks the exit codes and that the text is
 the same with and without colours.

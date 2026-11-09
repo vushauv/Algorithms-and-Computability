@@ -1,5 +1,5 @@
-// KARMARKAR-KARP differencing (report, Section 5.2): the approximation, and
-// the only algorithm that constructs a partition. O(n log n).
+// KARMARKAR-KARP differencing (report, Section 5.2): the approximation, which
+// returns a partition for every input, balanced or not. O(n log n).
 #pragma once
 
 #include <span>

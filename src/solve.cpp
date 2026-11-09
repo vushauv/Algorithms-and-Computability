@@ -36,12 +36,18 @@ Solution solve(std::span<const Value> a, const Ranges& ranges) {
     const Value S = total_sum(a);
     Partition partition = karmarkar_karp(a);  // O(n log n), always
     const Value T = S / 2;
-    if (partition.d == 0) return {Verdict::Yes, Method::KarmarkarKarp, std::move(partition), S, T};
-    if (S % 2 == 1) return {Verdict::No, Method::OddSum, std::move(partition), S, T};
+    if (partition.d == 0) {
+        ExactAnswer balanced = partition;
+        return {Verdict::Yes, Method::KarmarkarKarp, std::move(partition), std::move(balanced), S, T};
+    }
+    if (S % 2 == 1) return {Verdict::No, Method::OddSum, std::move(partition), std::nullopt, S, T};
 
     const Method exact = choose_exact(a.size(), T, ranges);
-    Verdict answer = Verdict::Unknown;
-    if (exact == Method::DynamicProgramming) answer = dp_partition(a);
-    if (exact == Method::MeetInTheMiddle) answer = meet_in_the_middle(a);
-    return {answer, exact, std::move(partition), S, T};
+    if (exact == Method::None) {
+        return {Verdict::Unknown, exact, std::move(partition), std::nullopt, S, T};
+    }
+    ExactAnswer balanced =
+        exact == Method::DynamicProgramming ? dp_partition(a) : meet_in_the_middle(a);
+    const Verdict answer = verdict_of(balanced);
+    return {answer, exact, std::move(partition), std::move(balanced), S, T};
 }

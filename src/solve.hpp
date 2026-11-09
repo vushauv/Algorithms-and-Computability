@@ -35,7 +35,9 @@ enum class Method {
 struct Solution {
     Verdict answer;
     Method decided_by;
-    Partition partition;  // of Karmarkar-Karp, with its discrepancy d
+    Partition partition;   // of Karmarkar-Karp, with its discrepancy d
+    ExactAnswer balanced;  // present iff the answer is YES: the partition above
+                           // when d = 0, otherwise that of the exact algorithm
     Value S;
     Value T;  // S / 2
 };

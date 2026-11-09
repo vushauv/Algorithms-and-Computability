@@ -74,7 +74,7 @@ std::string usage_text() {
     return "Usage: partition [options] FILE\n"
            "\n"
            "Decides for every set in FILE whether it can be split into two parts\n"
-           "with equal sums.\n"
+           "with equal sums, and prints such a split when one is found.\n"
            "\n"
            "FILE: line 1 is the number of sets, each next line is one set of\n"
            "non-negative integers (below 10^38) separated by single spaces.\n"

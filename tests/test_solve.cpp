@@ -1,5 +1,6 @@
 #include "algorithms/brute_force.hpp"
 #include "check.hpp"
+#include "partition_check.hpp"
 #include "random_sets.hpp"
 #include "solve.hpp"
 #include "tests.hpp"
@@ -13,11 +14,19 @@ namespace {
 // No bound on the work n · T of dynamic programming.
 constexpr Value kAnyWork = ~Value{0};
 
+// Theorem 6.1: the partition of Karmarkar-Karp is valid, and a balanced
+// partition comes with the answer YES and only with it.
+bool is_valid_solution(const std::vector<Value>& a, const Solution& s) {
+    if (!partition_check::is_partition(a, s.partition)) return false;
+    if (s.answer == Verdict::Unknown) return !s.balanced;
+    return partition_check::is_answer(a, s.balanced, s.answer);
+}
+
 }  // namespace
 
 void test_solve() {
     using V = std::vector<Value>;
-    const Ranges defaults{44, 10'000'000'000, kAnyWork};
+    const Ranges defaults{44, 300'000'000, kAnyWork};
     const Ranges no_exact{0, 0, kAnyWork};
 
     // The examples of Section 6.3.
@@ -25,11 +34,14 @@ void test_solve() {
     CHECK(balanced.answer == Verdict::Yes);
     CHECK(balanced.decided_by == Method::KarmarkarKarp);
     CHECK(balanced.partition.d == 0);
+    CHECK(is_valid_solution(V{3, 1, 4, 2}, balanced));
+    CHECK(balanced.balanced->A == balanced.partition.A);  // the same partition
 
     const Solution odd = solve(V{2, 3, 4}, defaults);
     CHECK(odd.answer == Verdict::No);
     CHECK(odd.decided_by == Method::OddSum);
     CHECK(odd.partition.d == 1);
+    CHECK(is_valid_solution(V{2, 3, 4}, odd));
 
     const V missed{5, 6, 7, 8, 10};
     const Solution by_dp = solve(missed, defaults);
@@ -37,15 +49,18 @@ void test_solve() {
     CHECK(by_dp.decided_by == Method::DynamicProgramming);  // T/64 < 2^(5/2)
     CHECK(by_dp.partition.d == 2);
     CHECK(by_dp.S == 36 && by_dp.T == 18);
+    CHECK(is_valid_solution(missed, by_dp));  // {5, 6, 7} against {8, 10}
 
     const Solution by_mitm = solve(missed, Ranges{44, 17, kAnyWork});
     CHECK(by_mitm.answer == Verdict::Yes);
     CHECK(by_mitm.decided_by == Method::MeetInTheMiddle);
+    CHECK(is_valid_solution(missed, by_mitm));
 
     const Solution unknown = solve(missed, Ranges{4, 17, kAnyWork});
     CHECK(unknown.answer == Verdict::Unknown);
     CHECK(unknown.decided_by == Method::None);
     CHECK(unknown.partition.d == 2);
+    CHECK(is_valid_solution(missed, unknown));
 
     // Even sum, d > 0, no balanced partition: the exact algorithm says NO.
     CHECK(solve(V{1, 1, 4}, defaults).answer == Verdict::No);
@@ -93,9 +108,10 @@ void test_solve() {
     for (int round = 0; round < 300; ++round) {
         const std::size_t n = random_sets::size_between(2, 14);
         const V a = random_sets::small_values(n, round % 3 == 0 ? 5 : 1000);
-        const Verdict expected = brute_force(a);
+        const Verdict expected = verdict_of(brute_force(a));
         for (const Ranges& ranges : choices) {
             const Solution s = solve(a, ranges);
+            CHECK(is_valid_solution(a, s));
             if (s.decided_by == Method::None) {
                 CHECK(s.answer == Verdict::Unknown);
                 CHECK(s.partition.d > 0 && s.S % 2 == 0);
@@ -110,6 +126,7 @@ void test_solve() {
         const V yes = random_sets::large_yes_instance(16);
         const Solution s = solve(yes, defaults);
         CHECK(s.answer == Verdict::Yes);
+        CHECK(is_valid_solution(yes, s));
         CHECK(s.decided_by == Method::KarmarkarKarp || s.decided_by == Method::MeetInTheMiddle);
     }
 }
