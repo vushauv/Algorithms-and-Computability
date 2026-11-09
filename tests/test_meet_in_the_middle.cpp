@@ -1,9 +1,12 @@
 #include "algorithms/brute_force.hpp"
+#include "algorithms/dynamic_programming.hpp"
 #include "algorithms/meet_in_the_middle.hpp"
 #include "check.hpp"
+#include "memory.hpp"
 #include "random_sets.hpp"
 #include "tests.hpp"
 
+#include <cstdint>
 #include <stdexcept>
 #include <vector>
 
@@ -49,4 +52,14 @@ void test_meet_in_the_middle() {
     CHECK(meet_in_the_middle(random_sets::large_yes_instance(40)) == Verdict::Yes);
 
     CHECK_THROWS(meet_in_the_middle(V(125, 1)), std::invalid_argument);
+
+    // Where the physical memory is known (Linux), a table larger than it is
+    // refused before it is allocated.
+    const std::uint64_t physical = physical_memory_bytes();
+    if (physical > 0) {
+        CHECK_THROWS(require_memory("test", Value{physical} + 1), std::runtime_error);
+        require_memory("test", physical);
+        CHECK_THROWS(meet_in_the_middle(V(124, 1)), std::runtime_error);  // 2 · 2^62 sums
+        CHECK_THROWS(dp_partition(V{kMaxDpTarget, kMaxDpTarget}), std::runtime_error);
+    }
 }

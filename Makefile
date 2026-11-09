@@ -3,6 +3,7 @@
 #   make           the program, build/linux/partition
 #   make test      build and run the tests
 #   make windows   static Windows executable, build/windows/partition.exe
+#   make dist      the same, copied to dist/partition.exe (committed for the demo)
 #   make clean     remove build/
 #
 # The README lists the same compiler commands for building without make.
@@ -15,6 +16,7 @@ BUILD    = build/linux
 PROGRAM  = $(BUILD)/partition
 TESTS    = $(BUILD)/run_tests
 WINDOWS  = build/windows/partition.exe
+DIST     = dist/partition.exe
 
 MAIN_SRC = src/main.cpp
 LIB_SRC  = $(filter-out $(MAIN_SRC),$(wildcard src/*.cpp src/algorithms/*.cpp))
@@ -24,7 +26,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test windows clean
+.PHONY: all test windows dist clean
 
 all: $(PROGRAM)
 
@@ -34,13 +36,19 @@ $(PROGRAM): $(MAIN_OBJ) $(LIB_OBJ)
 $(TESTS): $(TEST_OBJ) $(LIB_OBJ)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-test: $(TESTS)
+test: $(TESTS) $(PROGRAM)
 	./$(TESTS)
+	sh tests/cli_test.sh $(PROGRAM)
 
-# One compiler call from the sources; -static so that no DLL is needed.
+# One compiler call from the sources; -static so that no DLL beyond the
+# system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
 windows:
 	mkdir -p build/windows
-	$(MINGW) $(CXXFLAGS) -static -Isrc $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
+	$(MINGW) $(CXXFLAGS) -static -s -Isrc $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
+
+dist: windows
+	mkdir -p dist
+	cp $(WINDOWS) $(DIST)
 
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp
