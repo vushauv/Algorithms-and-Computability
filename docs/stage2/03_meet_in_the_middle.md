@@ -12,7 +12,7 @@ $$
 
 Every subset $A \subseteq \lbrace 1, \dots, n \rbrace$ decomposes uniquely as $A = (A \cap L) \cup (A \cap R)$, and $\Sigma(A) = \Sigma(A \cap L) + \Sigma(A \cap R)$. Hence a subset with sum $T$ exists if and only if some subset sum of $L$ and some subset sum of $R$ add up to $T$ (Lemma 3.2 below).
 
-The algorithm computes the lists `LS` and `RS` of all $2^h$ subset sums of $L$ and all $2^{n-h}$ subset sums of $R$, sorts them, and looks for a pair of entries with sum $T$ by a two-pointer sweep. This avoids testing all $2^h \cdot 2^{n-h}$ pairs. The price is memory: the two lists must be stored.
+The algorithm computes the lists `LS` and `RS` of all $2^h$ subset sums of $L$ and all $2^{n-h}$ subset sums of $R$, sorts them, and looks for a pair of entries with sum $T$ by a two-pointer sweep. This avoids testing all $2^h \cdot 2^{n-h}$ pairs. The price is memory: the two lists must be stored. The lists hold only sums, so when the sweep finds two entries that add up to $T$, the subsets with these sums are found again by `FIND-SUBSET` of Section 2.2, one in each half.
 
 ### 3.2 Algorithm
 
@@ -22,7 +22,7 @@ The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1), so $h \g
 MEET-IN-THE-MIDDLE(a[1..n])
     S ← Σ a[i]
     if S is odd then return NO
-    if S = 0 then return YES                       // Section 1.2
+    if S = 0 then return ({1}, {2, …, n})          // Section 1.2
     T ← S / 2
     h ← ⌊n / 2⌋
     LS ← SUBSET-SUMS(a[1..h])                      // 2^h sums
@@ -32,7 +32,11 @@ MEET-IN-THE-MIDDLE(a[1..n])
     i ← 1; j ← 1
     while i ≤ |LS| and j ≤ |RS| do
         s ← LS[i] + RS[j]
-        if s = T then return YES
+        if s = T then
+            AL ← FIND-SUBSET(a[1..h], LS[i])       // Section 2.2
+            AR ← FIND-SUBSET(a[h+1..n], RS[j])
+            A ← AL ∪ { h + k : k ∈ AR }
+            return (A, {1, …, n} \ A)
         if s < T then i ← i + 1
         else j ← j + 1
     return NO
@@ -53,6 +57,10 @@ A subset of $b_1, \dots, b_m$ is represented by a mask as in Section 2.1: bit $k
 #### The sweep
 
 The sweep starts at the smallest left sum and the largest right sum. If their total is smaller than $T$, no entry of `RS` at or after the current position can reach $T$ together with the current left sum, because those entries are not larger than the current one. So the left pointer advances. If the total is larger than $T$, the right pointer advances for the symmetric reason. Each iteration either returns or moves one pointer forward.
+
+#### Recovering the subsets
+
+Sorting loses the masks, so the lists cannot tell which subsets produce the two sums that meet. The sums suffice: `LS[i]` is the sum of some subset of the left half by Lemma 3.1, and `FIND-SUBSET` finds such a subset by the Gray-code enumeration of the $2^h$ masks of the left half, in time $O(2^h)$ and constant memory. The same holds for `RS[j]` and the right half, whose indices $k$ refer to $a_{h+1}, \dots, a_n$ and are therefore shifted by $h$. Storing a mask next to every sum would avoid the two enumerations, but it would enlarge each of the $O(2^{n/2})$ entries of the lists, whose memory limits the algorithm (Section 3.6), whereas the enumerations cost less time than the sorting (Section 3.5) and no memory.
 
 #### No overflow
 
@@ -79,9 +87,9 @@ After sorting, `LS` $= (0, 1, 3, 4)$ and `RS` $= (6, 4, 2, 0)$. The sweep procee
 | -------- | --------- | ----- | ---------------------------- |
 | $0$      | $6$       | $6$   | too large, advance right     |
 | $0$      | $4$       | $4$   | too small, advance left      |
-| $1$      | $4$       | $5$   | equal to $T$, answer YES     |
+| $1$      | $4$       | $5$   | equal to $T$, recover the subsets |
 
-The sums $1$ and $4$ come from the subsets $\lbrace 1 \rbrace$ and $\lbrace 4 \rbrace$, so $\lbrace 1, 4 \rbrace$ and its complement $\lbrace 3, 2 \rbrace$ both have sum $5$. The algorithm itself does not record these subsets, since the masks are lost by sorting; it only answers YES.
+The subsets with the sums $1$ and $4$ are found again by `FIND-SUBSET`. In the left half $(3, 1)$ it visits the masks $01$, $11$ and $10$ with the sums $3$, $4$ and $1$, so the left sum $1$ is that of $\lbrace 1 \rbrace$, the element $a_2$. In the right half $(4, 2)$ the first mask $01$ already has the sum $4$, so the right sum $4$ is that of $\lbrace 4 \rbrace$, the element $a_3$. The algorithm returns the balanced partition $A = \lbrace 2, 3 \rbrace$, $B = \lbrace 1, 4 \rbrace$, with the values $\lbrace 1, 4 \rbrace$ and $\lbrace 3, 2 \rbrace$ and the sum $5$ on both sides.
 
 #### A NO instance
 
@@ -112,9 +120,9 @@ For $a = (2, 3, 4)$ the sum $S = 9$ is odd and the answer NO is given before the
 
 *Proof.* Each iteration either returns or advances one pointer, and the loop ends when a pointer leaves its list, so the number of iterations is bounded as stated. Now suppose that entries with $x + y = T$ exist, and fix such a pair of positions. Let the pointers be at the entries $x'$ and $y'$. We claim that, as long as the loop has not returned, the fixed $x$ is at or after $x'$ and the fixed $y$ is at or after $y'$. This holds at the start. In particular, while the claim holds the pointers are inside the lists, so the loop condition is true. If $x' + y' = T$, the sweep returns YES. If $x' + y' < T$, then $y \le y'$, because `RS` is descending, hence $x' + y \le x' + y' < T$. So $x'$ is not the entry $x$, and $x$ lies strictly after $x'$ in `LS`. Advancing the left pointer keeps the claim. If $x' + y' > T$, then $x \ge x'$, because `LS` is ascending, hence $x + y' \ge x' + y' > T$. So $y'$ is not the entry $y$, and $y$ lies strictly after $y'$. Advancing the right pointer keeps the claim. Since the number of iterations is finite and the loop cannot end by exhaustion while the claim holds, it ends with a return, and the only return inside the loop is YES. $\square$
 
-**Theorem 3.4.** `MEET-IN-THE-MIDDLE` terminates and returns YES if and only if a balanced partition exists.
+**Theorem 3.4.** `MEET-IN-THE-MIDDLE` terminates and returns a balanced partition if one exists, and NO otherwise.
 
-*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4; the latter uses $n \ge 2$. Let $S$ be even and positive, so $T > 0$. The algorithm terminates, since the subset sums are generated by finite loops and the sweep ends by Lemma 3.3. If it answers YES, it has found $x \in$ `LS` and $y \in$ `RS` with $x + y = T$, so by Lemma 3.2 there is $A$ with $\Sigma(A) = T$. Its complement has sum $S - T = T$, so $(A, B)$ is a balanced partition, and both parts are non-empty because $T > 0$. Conversely, if a balanced partition exists, there is $A$ with $\Sigma(A) = T$, so by Lemma 3.2 and Lemma 3.3 the sweep answers YES. If no balanced partition exists, the answer cannot be YES by the first direction, so it is NO. $\square$
+*Proof.* The cases of odd $S$ and of $S = 0$ are as in Theorem 2.4; the latter uses $n \ge 2$. Let $S$ be even and positive, so $T > 0$. The algorithm terminates, since the subset sums are generated by finite loops, the sweep ends by Lemma 3.3 and `FIND-SUBSET` terminates by Theorem 2.4. Suppose the sweep stops at entries $x$ of `LS` and $y$ of `RS` with $x + y = T$. By Lemma 3.1, $x$ is the sum of a subset of $a_1, \dots, a_h$ and $y$ the sum of a subset of $a_{h+1}, \dots, a_n$, so by Theorem 2.4 the two calls of `FIND-SUBSET` return such subsets $A_L \subseteq L$ and, after the shift by $h$, $A_R \subseteq R$. As $L$ and $R$ are disjoint, $A = A_L \cup A_R$ has the sum $x + y = T$. Its complement has the sum $S - T = T$, so $(A, B)$ is a balanced partition, and both parts are non-empty because $T > 0$. Conversely, if a balanced partition exists, there is $A$ with $\Sigma(A) = T$, so by Lemma 3.2 and Lemma 3.3 the sweep finds such entries, and the algorithm returns a balanced partition as just shown. If no balanced partition exists, the sweep cannot find such entries by Lemma 3.2, so the answer is NO. $\square$
 
 The proof works with indices, so equal values give separate masks and are neither merged nor lost, and zeros need no special case.
 
@@ -122,9 +130,9 @@ The proof works with indices, so equal values give separate masks and are neithe
 
 We count operations on 128-bit numbers in the model of Section 1.4.
 
-**Theorem 3.5.** In the worst case `MEET-IN-THE-MIDDLE` takes time $O(n \cdot 2^{n/2})$ and memory $O(2^{n/2})$ numbers beyond the input, and the time does not depend on the magnitude of the numbers. If $S$ is odd or zero, the answer is found in $O(n)$.
+**Theorem 3.5.** In the worst case `MEET-IN-THE-MIDDLE` takes time $O(n \cdot 2^{n/2})$ and memory $O(2^{n/2})$ numbers beyond the input and the returned partition, and the time does not depend on the magnitude of the numbers. If $S$ is odd or zero, the answer is found in $O(n)$.
 
-*Proof.* The sum and the parity test take $O(n)$. Let $h = \lfloor n/2 \rfloor$. By Lemma 3.1 the generation of the lists takes, per entry, one $\mathrm{ctz}$, one exclusive or and one addition, which is $O(1)$ by Theorem 2.5, so $O(2^h + 2^{n-h})$ in total. Sorting with a comparison sort takes $O(N \log N)$ comparisons for a list of $N$ entries, each $O(1)$, which gives $O(2^h \cdot h + 2^{n-h} \cdot (n-h))$ because $\log_2 2^h = h$. The sweep performs at most $2^h + 2^{n-h}$ iterations by Lemma 3.3, each $O(1)$. No iteration overflows (Section 3.2). Since $2^h \le 2^{n/2}$, $2^{n-h} \le 2 \cdot 2^{n/2}$ and $h, n - h \le n$, the total is $O(n \cdot 2^{n/2})$. The two lists hold $2^h + 2^{n-h} = O(2^{n/2})$ numbers. An in-place sort needs no further memory, and a merge sort needs another $O(2^{n/2})$ numbers. $\square$
+*Proof.* The sum and the parity test take $O(n)$. Let $h = \lfloor n/2 \rfloor$. By Lemma 3.1 the generation of the lists takes, per entry, one $\mathrm{ctz}$, one exclusive or and one addition, which is $O(1)$ by Theorem 2.5, so $O(2^h + 2^{n-h})$ in total. Sorting with a comparison sort takes $O(N \log N)$ comparisons for a list of $N$ entries, each $O(1)$, which gives $O(2^h \cdot h + 2^{n-h} \cdot (n-h))$ because $\log_2 2^h = h$. The sweep performs at most $2^h + 2^{n-h}$ iterations by Lemma 3.3, each $O(1)$. No iteration overflows (Section 3.2). The recovery is performed at most once: the two calls of `FIND-SUBSET` take $O(2^h + 2^{n-h})$ time and $O(1)$ memory by Theorem 2.5, and writing the partition takes $O(n)$. Since $2^h \le 2^{n/2}$, $2^{n-h} \le 2 \cdot 2^{n/2}$ and $h, n - h \le n$, the total is $O(n \cdot 2^{n/2})$. The two lists hold $2^h + 2^{n-h} = O(2^{n/2})$ numbers. An in-place sort needs no further memory, and a merge sort needs another $O(2^{n/2})$ numbers. $\square$
 
 The factor $n$ comes only from sorting. Generating the lists already sorted, by merging, would avoid it; we sort for simplicity. The factor does not matter for the range of application, which is limited by memory (Section 3.6).
 
