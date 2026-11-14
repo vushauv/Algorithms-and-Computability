@@ -1,0 +1,8 @@
+Subject: AaC, output format, a correction
+
+Dear All,
+There is a small mistake in description of output file format: there is no coma separating numbers in subsets.
+The correct formulation of the lines of subset:
+"- Then k lines, one per subset: the subset's sum, a space, then its numbers separated by a space."
+Attached exaples are correct.
+Władysław Homenda

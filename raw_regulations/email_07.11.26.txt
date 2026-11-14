@@ -1,0 +1,21 @@
+Subject: AaC, the formal solution path, the third stage
+
+Dear All,
+
+The third stage is approaching. It involves programming the algorithms and preparing test cases.
+
+Please prepare executable files. You may create separate programs for each algorithm or a single program that includes all of them. If you choose the latter, the specific algorithm should be selected via a command-line parameter.
+
+Important: The programs must run on a "clean" Windows system—that is, one with no compilers installed.
+
+I suggest running the programs from the console, passing parameters that specify the path to the input file, the number of subsets, and—if necessary—any other required data.
+
+Please include a "readme.txt" file (keep it concise) that explains how to execute the programs and where the results are saved (if this is not already obvious).
+
+Additionally, please prepare a set of examples that can be used to verify that the programs are functioning correctly and performing the intended calculations.
+
+I will accept any solution that aligns with common sense (as I define it).
+
+Materials for the third stage will be sent via email or—if that is not possible—provided during the laboratory sessions.
+
+Władysław Homenda
