@@ -1,7 +1,7 @@
 # Stage 4: benchmark plan
 
 What we will measure for Stage 4 (due Dec 4, 2026), how, and which graphs go
-into the report. Written Nov 14, 2026; the ranges below were checked with one
+into the report. The ranges below were checked with one
 trial run of every experiment on the current program (section 6).
 
 Stage 4 asks for "results of computational tests, including performance
@@ -152,18 +152,10 @@ What the trial shows:
 
 - **Language of the scripts (2 to 4).** CONSTITUTION point 1 says all code is
   C++20. Generating inputs and drawing graphs is much shorter in Python
-  (matplotlib); the program itself stays C++. This needs the team's agreement.
+  (matplotlib); the program itself stays C++. Can we do it with Python?
 - **The machine** for the final numbers, and whether a few points are also
   measured on a lab machine.
 - **Big numbers** (E8): only if the numbers of any size are implemented.
 - **Final $N_{MITM}$, $T_{DP}$, $W_{DP}$ and the rule** of `SOLVE`, after E2,
   E3 and E5; then `task.md` section 6 and the report (§6.2) are updated.
 
-## 9. Schedule
-
-| When | What |
-| --- | --- |
-| until Nov 20 | Stage 3 demo first; the team agrees on this plan |
-| Nov 21 to 25 | `--time`, generator, runner; experiments E1 to E7 |
-| Nov 26 to 30 | graphs; report: tests, technical description of the program, conclusions; Stage 2 fixes |
-| Dec 1 to 4 | review, PDF, submission |
