@@ -5,11 +5,13 @@ next line: one multiset of non-negative integers separated by single spaces).
 Run one with
 
 ```sh
-./build/linux/partition examples/01_report_examples.txt     # Linux
-dist\partition.exe examples\01_report_examples.txt           # Windows
+./build/linux/partition examples/01_report_examples.txt 2     # Linux
+dist\partition.exe examples\01_report_examples.txt 2           # Windows
 ```
 
-or all of them on Windows with `examples\run_examples.bat`.
+or all of them on Windows with `examples\run_examples.bat`. Each run also saves
+its results next to the input, for example `01_report_examples_output.txt`
+(not committed).
 
 ## Valid inputs
 
@@ -24,6 +26,7 @@ or all of them on Windows with `examples\run_examples.bat`.
 | `07_unknown.txt` | 2 | $n = 100$ and $1000$ values of 25 digits: no exact algorithm is in range, the answer is UNKNOWN with the Karmarkar-Karp partition |
 | `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest allowed) and leading zeros |
 | `09_windows_line_endings.txt` | 2 | CRLF line endings |
+| `10_homenda_example.txt` | 2 | the input of Homenda's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
 
 The YES sets of `05_large_values.txt` are made balanced by construction; the
 others are random. The answers were checked against brute force
