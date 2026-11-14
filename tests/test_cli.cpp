@@ -41,6 +41,14 @@ void test_cli() {
     CHECK_THROWS(parse({"--algorithm", "BF", "in.txt"}), UsageError);
     CHECK_THROWS(parse({"in.txt", "--algorithm"}), UsageError);
 
+    // K, the number of subsets, after FILE: 2 only.
+    CHECK(parse({"in.txt"}).subsets == kSubsets);
+    Options with_k = parse({"in.txt", "2", "--no-color"});
+    CHECK(with_k.path == "in.txt" && with_k.subsets == 2 && with_k.no_color);
+    CHECK_THROWS(parse({"in.txt", "5"}), UsageError);
+    CHECK_THROWS(parse({"in.txt", "two"}), UsageError);
+    CHECK_THROWS(parse({"in.txt", "2", "2"}), UsageError);
+
     CHECK(parse({"--help"}).help);
     CHECK_THROWS(parse({}), UsageError);
     CHECK_THROWS(parse({"a.txt", "b.txt"}), UsageError);

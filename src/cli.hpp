@@ -1,5 +1,5 @@
 // Command-line options:
-//   partition [--no-color] [--n-mitm N] [--t-dp T] [--w-dp W] [--algorithm A] FILE
+//   partition [--no-color] [--n-mitm N] [--t-dp T] [--w-dp W] [--algorithm A] FILE [K]
 #pragma once
 
 #include <cstddef>
@@ -21,11 +21,16 @@ inline constexpr Value kDefaultWDp = 1'000'000'000'000;
 // index of a subset no longer fits in a 64-bit mask.
 inline constexpr std::size_t kMaxNMitm = 64;
 
+// K, the number of subsets, which Homenda passes to every program; the program
+// splits a set into two parts, so K = 2 is the only value accepted.
+inline constexpr std::size_t kSubsets = 2;
+
 // --algorithm: SOLVE (the default) or one algorithm alone, for timings.
 enum class Algorithm { Solve, BruteForce, MeetInTheMiddle, DynamicProgramming, KarmarkarKarp };
 
 struct Options {
     std::string path;
+    std::size_t subsets = kSubsets;
     bool no_color = false;
     bool help = false;
     std::size_t n_mitm = kDefaultNMitm;

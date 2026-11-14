@@ -1,16 +1,21 @@
 #!/bin/sh
 # Tests of the program as a whole (run by make test, from the repository root):
-# the exit codes, and the same text with and without colours (CONSTITUTION
-# points 3 and 4).
+# the exit codes, the results file, and the same text with and without colours
+# (CONSTITUTION points 3 and 4).
 #
 #   sh tests/cli_test.sh build/linux/partition
+#
+# The program saves a results file next to its input, so the sample inputs are
+# copied to a temporary directory and run there.
 
-PROGRAM=$1
+PROGRAM=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 passed=0
 failed=0
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 ESC=$(printf '\033')
+cp -R examples raw_regulations "$TMP"/
+cd "$TMP" || exit 1
 
 pass() { passed=$((passed + 1)); }
 fail() { failed=$((failed + 1)); echo "cli_test: $*" >&2; }
@@ -24,11 +29,12 @@ expect() {
     if [ "$got" -eq "$want" ]; then pass; else fail "exit $got, expected $want: $*"; fi
 }
 
-# 0: valid files, help, a skipped exact algorithm (a warning, not an error).
+# 0: valid files, help, a skipped exact algorithm (a warning, not an error), K = 2.
 for f in examples/*.txt raw_regulations/AaC_example_*.txt; do expect 0 "$f"; done
 expect 0 --help
 expect 0 --algorithm mitm --n-mitm 4 examples/02_yes.txt
 expect 0 --algorithm dp --w-dp 1 examples/02_yes.txt
+expect 0 examples/02_yes.txt 2
 
 # 1: invalid input files.
 for f in examples/errors/*.txt; do expect 1 "$f"; done
@@ -43,14 +49,46 @@ expect 2 --n-mitm 65 examples/02_yes.txt
 expect 2 --t-dp 9223372036854775808 examples/02_yes.txt
 expect 2 --w-dp -1 examples/02_yes.txt
 expect 2 --algorithm all examples/02_yes.txt
+expect 2 examples/02_yes.txt 5
+expect 2 examples/02_yes.txt 2 2
 
 # 3: brute force cannot run on 65 numbers; the next set is still answered.
-printf '2\n%s\n1 1\n' "$(seq -s ' ' 1 65)" > "$TMP/bf.txt"
+printf '2\n%s\n1 1\n' "$(seq 1 65 | tr '\n' ' ' | sed 's/ $//')" > "$TMP/bf.txt"  # seq -s adds a space on macOS
 expect 3 --algorithm bf "$TMP/bf.txt"
 if "$PROGRAM" --algorithm bf "$TMP/bf.txt" 2>/dev/null | grep -q 'Answer: YES'; then
     pass
 else
     fail "the set after a failed one is not answered"
+fi
+# ... and both sets are in the results file, the first one with the partition
+# of Karmarkar-Karp (S = 2145 is odd, d = 1).
+if [ "$(awk 'NR==1||NR==6||NR==8||NR==11{print} NR==3{print $1}' "$TMP/bf_output.txt" |
+        tr '\n' ' ')" = "2 2 2145 1 2 1 1 0 " ]; then
+    pass
+else
+    fail "the results file of a failed set"
+fi
+
+# 4: the results file cannot be written (a directory has its name).
+mkdir "$TMP/blocked_output.txt"
+printf '1\n1 1\n' > "$TMP/blocked.txt"
+expect 4 "$TMP/blocked.txt"
+
+# The results file: _output.txt in place of .txt, in Homenda's format, no
+# newline at the end; none for an invalid input file.
+"$PROGRAM" examples/01_report_examples.txt >/dev/null 2>&1
+printf '4 2\n\n10 3 1 4 2\n5 4 1\n5 3 2\n0\n\n9 2 3 4\n4 4\n5 3 2\n1\n\n%s\n%s\n%s\n0\n\n%s\n%s\n%s\n2' \
+    '36 5 6 7 8 10' '18 10 8' '18 7 6 5' '6 1 1 4' '4 4' '2 1 1' > "$TMP/expected.txt"
+if cmp -s "$TMP/expected.txt" examples/01_report_examples_output.txt; then
+    pass
+else
+    fail "the results file of 01_report_examples.txt"
+fi
+"$PROGRAM" examples/errors/08_two_spaces.txt >/dev/null 2>&1
+if [ -e examples/errors/08_two_spaces_output.txt ]; then
+    fail "a results file for an invalid input file"
+else
+    pass
 fi
 
 # The work bound: n * T > W_DP and n > N_MITM gives UNKNOWN with the reason.
@@ -69,6 +107,7 @@ done
 # without the colour codes it is the text of --no-color.
 if command -v script >/dev/null 2>&1; then
     for f in examples/0*.txt examples/errors/08_two_spaces.txt; do
+        case $f in *_output.txt) continue ;; esac  # results of the runs above
         env -u NO_COLOR script -qec "'$PROGRAM' '$f'" /dev/null > "$TMP/tty" 2>&1
         if grep -q "$ESC" "$TMP/tty"; then pass; else fail "no colours on a terminal: $f"; fi
         sed "s/$ESC\[[0-9;]*m//g" "$TMP/tty" | tr -d '\r' > "$TMP/stripped"
