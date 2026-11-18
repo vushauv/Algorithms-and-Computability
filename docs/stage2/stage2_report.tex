@@ -426,17 +426,22 @@ Algorithm & Range & Limiting resource \\
 \endhead
 Meet in the middle (Section 3) & \(n \le N_{MITM}\) & memory \(O(2^{n/2})\) \\
 \midrule
-Dynamic programming (Section 4) & \(\Sigma(M)/2 \le T_{DP}\) & memory \(O(\Sigma(M) \log n)\) bits and time \(O(n \cdot \Sigma(M))\) \\
+Dynamic programming (Section 4) & \(\Sigma(M)/2 \le T_{DP}\) and \(n \cdot \Sigma(M)/2 \le W_{DP}\) & memory \(O(\Sigma(M) \log n)\) bits, bounded by \(T_{DP}\), and time
+\(O(n \cdot \Sigma(M))\), bounded by \(W_{DP}\) \\
 \bottomrule
 \end{longtable}
 
 Brute force (Section 2) is the baseline for the other two and is not
-used by the final algorithm, so it has no range. The values of
-\(N_{MITM}\) and \(T_{DP}\) are not fixed in this document. They depend
-on the implementation and on the machine, so they are determined
-experimentally after the algorithms have been implemented. The analysis
-of each algorithm holds for any values of the parameters. The final
-algorithm (Section 6) takes them as input.
+used by the final algorithm, so it has no range. Dynamic programming has
+two parameters because its two resources grow differently: the memory
+depends on the target alone, whereas the time is proportional to \(n\)
+times the target, so a target within \(T_{DP}\) still costs too much
+time when \(n\) is large. The values of \(N_{MITM}\), \(T_{DP}\) and
+\(W_{DP}\) are not fixed in this document. They depend on the
+implementation and on the machine, so they are determined experimentally
+after the algorithms have been implemented. The analysis of each
+algorithm holds for any values of the parameters. The final algorithm
+(Section 6) takes them as input.
 
 \hypertarget{brute-force}{%
 \section{2. Brute force}\label{brute-force}}
@@ -977,7 +982,7 @@ has sum \(x + y = T\). \(\square\)
 
 \textbf{Lemma 3.3} (sweep). The loop performs at most
 \(|LS| + |RS| - 1\) iterations. If entries with \(x + y = T\) exist, the
-sweep stops at such a pair of entries and recovers the subsets.
+sweep stops at such a pair of entries.
 
 \emph{Proof.} Each iteration either returns or advances one pointer, and
 the loop ends when a pointer leaves its list, so the number of
@@ -1074,10 +1079,6 @@ makes the algorithm suitable for numbers of \(25\) digits and more, up
 to the bound of Section 1.1, where dynamic programming is infeasible.
 When \(n > N_{MITM}\) but the target sum is small, the dynamic
 programming of Section 4 takes over.
-
-\textbf{Remark.} Schroeppel and Shamir {[}1981{]} reduce the memory to
-\(O(2^{n/4})\) at essentially the same time. We do not use their
-algorithm.
 
 \hypertarget{dynamic-programming}{%
 \section{4. Dynamic programming}\label{dynamic-programming}}
@@ -1380,11 +1381,14 @@ middle}\label{range-of-application-and-comparison-with-meet-in-the-middle}}
 The tables have \(T + 1\) bits and \(T + 1\) entries of \texttt{first}.
 Stored as \(32\)-bit numbers, which suffice for \(n < 2^{32}\), the
 entries take \(4(T + 1)\) bytes, thirty-two times the bitset, so the
-memory limits the algorithm to \(T \le T_{DP}\) (Section 1.4). A target
-of order \(2.5 \cdot 10^8\) already needs about a gigabyte, and the
-numbers of \(25\) digits of interest have \(T\) of order \(10^{24}\) at
-least, since a single such number is at least \(10^{24}\), which is far
-out of range.
+memory limits the algorithm to \(T \le T_{DP}\) (Section 1.4). The time
+is limited separately: by Theorem 4.3 it grows with the product
+\(n \cdot T\), which the bound on \(T\) does not control, so the
+algorithm is applied only if also \(n \cdot T \le W_{DP}\) (Section
+1.4). A target of order \(2.5 \cdot 10^8\) already needs about a
+gigabyte, and the numbers of \(25\) digits of interest have \(T\) of
+order \(10^{24}\) at least, since a single such number is at least
+\(10^{24}\), which is far out of range.
 
 \hypertarget{comparison-with-meet-in-the-middle}{%
 \subsubsection{Comparison with meet in the
@@ -1417,8 +1421,9 @@ It needs less memory if and only if \(4T < 32 \cdot 2^{n/2}\), that is,
 
 Since \(T \le T_{DP}\), the threshold for the number of operations is at
 most \(2 \log_2 T_{DP} - 12\) and the threshold for the memory at most
-\(2 \log_2 T_{DP} - 6\), which are about forty-four and about fifty for
-\(T_{DP}\) of order \(10^{8}\). Moreover, meet in the middle is applied
+\(2 \log_2 T_{DP} - 6\), which are about forty-one and about forty-seven
+for \(T_{DP} = 10^{8}\), and about forty-four and about fifty for
+\(T_{DP} = 3 \cdot 10^{8}\). Moreover, meet in the middle is applied
 only for \(n \le N_{MITM}\), whereas dynamic programming has no bound on
 \(n\). Two examples illustrate the choice.
 
@@ -1686,9 +1691,8 @@ and \(n - 1\) edges, so the colouring by a breadth-first or depth-first
 search takes \(O(n)\). The heap, the edges and the adjacency lists use
 \(O(n)\) numbers and indices. \(\square\)
 
-\hypertarget{range-of-application-and-remarks}{%
-\subsection{5.7 Range of application and
-remarks}\label{range-of-application-and-remarks}}
+\hypertarget{range-of-application-2}{%
+\subsection{5.7 Range of application}\label{range-of-application-2}}
 
 The algorithm needs no bound on \(n\) beyond \(n \ge 2\) and no bound on
 the numbers beyond the assumptions of Section 1.1; all differences are
@@ -1698,21 +1702,6 @@ nor meet in the middle is in range, for example for \(1000\) elements of
 \(25\) digits. A result with \(d = 0\) proves YES, but \(d > 0\) gives
 no answer, so a NO can come only from the parity test or from an exact
 algorithm.
-
-\hypertarget{related-methods}{%
-\subsubsection{Related methods}\label{related-methods}}
-
-The greedy method, which processes the numbers in descending order and
-puts each into the part with the smaller sum so far, also takes time
-\(O(n \log n)\) and satisfies \(d \le \max_i a_i\): when a number \(a\)
-is added to the lighter part, the difference \(d\) of the two parts
-becomes \(|d - a| \le \max(d, a)\), and the claim follows by induction.
-As a scheduling algorithm (longest processing time first) its ratio on
-the larger part is \(7/6\) for two machines {[}Graham 1969{]}. Korf
-{[}1998{]} turns the differencing method into an exact search that at
-each step also tries to put the two largest numbers into the \emph{same}
-part, replacing them by \(x + y\). Its worst case is exponential, and we
-do not use it.
 
 \hypertarget{the-final-algorithm}{%
 \section{6. The final algorithm}\label{the-final-algorithm}}
@@ -1766,13 +1755,14 @@ The result of the final algorithm is a quadruple (answer, \((A, B)\),
 \item
   Otherwise \(d > 0\), \(\Sigma(M)\) is even and positive, and the
   question is open. An exact algorithm is applied if one of them is in
-  range, that is, dynamic programming if \(T \le T_{DP}\) and meet in
-  the middle if \(n \le N_{MITM}\) (Section 1.4). If both are in range,
-  the choice depends on the input: by Section 4.7, dynamic programming
-  is the cheaper one for many small numbers and meet in the middle for
-  few large ones. The rule that decides between them is fixed together
-  with the parameters \(N_{MITM}\) and \(T_{DP}\), after the algorithms
-  have been implemented and measured. Both algorithms return a balanced
+  range, that is, dynamic programming if \(T \le T_{DP}\) and
+  \(n \cdot T \le W_{DP}\), and meet in the middle if \(n \le N_{MITM}\)
+  (Section 1.4). If both are in range, the choice depends on the input:
+  by Section 4.7, dynamic programming is the cheaper one for many small
+  numbers and meet in the middle for few large ones. The rule that
+  decides between them is fixed together with the parameters
+  \(N_{MITM}\), \(T_{DP}\) and \(W_{DP}\), after the algorithms have
+  been implemented and measured. Both algorithms return a balanced
   partition exactly when one exists (Theorems 3.4 and 4.2), so the
   choice affects the cost, and possibly which balanced partition is
   returned, but not the answer. A returned balanced partition becomes
@@ -1812,20 +1802,21 @@ tested.
 \subsection{6.2 Algorithm}\label{algorithm-4}}
 
 The input is a multiset \(a_1, \dots, a_n\) with \(n \ge 2\) (Section
-1.1). The parameters \(N_{MITM}\) and \(T_{DP}\) are those of Section
-1.4.
+1.1). The parameters \(N_{MITM}\), \(T_{DP}\) and \(W_{DP}\) are those
+of Section 1.4.
 
 \begin{verbatim}
-SOLVE(a[1..n]; N_MITM, T_DP)
+SOLVE(a[1..n]; N_MITM, T_DP, W_DP)
     S ← Σ a[i]
     (A, B, d) ← KARMARKAR-KARP(a)                   // O(n log n), always
     if d = 0 then return (YES, A, B, d, (A, B))     // balanced; includes S = 0
     if S is odd then return (NO, A, B, d, —)        // Section 1.2
     T ← S / 2
-    if T ≤ T_DP and n ≤ N_MITM then
+    dp ← (T ≤ T_DP and T ≤ ⌊W_DP / n⌋)              // dynamic programming is in range
+    if dp and n ≤ N_MITM then
         // Section 4.7
         EXACT ← DP-PARTITION or MEET-IN-THE-MIDDLE, whichever is cheaper for (n, T)
-    else if T ≤ T_DP then EXACT ← DP-PARTITION
+    else if dp then EXACT ← DP-PARTITION
     else if n ≤ N_MITM then EXACT ← MEET-IN-THE-MIDDLE
     else return (UNKNOWN, A, B, d, —)
     P ← EXACT(a)                                    // a balanced partition, or NO
@@ -1833,7 +1824,10 @@ SOLVE(a[1..n]; N_MITM, T_DP)
     return (YES, A, B, d, P)
 \end{verbatim}
 
-The symbol --- stands for the absent balanced partition.
+The symbol --- stands for the absent balanced partition. The condition
+\(n \cdot T \le W_{DP}\) is tested as
+\(T \le \lfloor W_{DP} / n \rfloor\), which is equivalent for integers
+and does not compute the product, so it cannot overflow.
 
 When only one exact algorithm is in range, it is run. When both are in
 range, the one with the smaller cost for the given \(n\) and \(T\) is
@@ -1865,8 +1859,9 @@ misses the balanced partition \(\lbrace 5, 6, 7 \rbrace\),
 \(\lbrace 8, 10 \rbrace\), the exact algorithm finds it, and the result
 contains both, so the comparison of Section 6.1 records that the
 approximation has missed the optimum. The answer UNKNOWN occurs only for
-inputs with an even sum, \(d > 0\), \(T > T_{DP}\) and \(n > N_{MITM}\),
-for example for \(1000\) numbers of \(25\) digits.
+inputs with an even sum, \(d > 0\), \(n > N_{MITM}\) and dynamic
+programming out of range (\(T > T_{DP}\) or \(n \cdot T > W_{DP}\)), for
+example for \(1000\) numbers of \(25\) digits.
 
 \hypertarget{correctness-4}{%
 \subsection{6.4 Correctness}\label{correctness-4}}
@@ -1888,7 +1883,7 @@ result of \texttt{SOLVE}.
   If \(d = 0\), the answer is YES and \(P = (A, B)\).
 \item
   The answer is UNKNOWN only if \(\Sigma(M)\) is even, \(d > 0\),
-  \(T > T_{DP}\) and \(n > N_{MITM}\).
+  \(n > N_{MITM}\), and \(T > T_{DP}\) or \(n \cdot T > W_{DP}\).
 \end{enumerate}
 
 \emph{Proof.} Part 1 is Theorem 5.2, and part 3 is the first test of the
@@ -1906,12 +1901,14 @@ algorithm. For parts 2 and 4 consider the possible returns.
 \item
   \emph{The remaining case.} Now \(S\) is even and \(d > 0\). Then
   \(S > 0\), since \(S = 0\) gives \(d = 0\) as above, so \(T > 0\). If
-  \texttt{DP-PARTITION} is run, then \(T \le T_{DP}\), and by Theorem
-  4.2 it returns a balanced partition, which becomes \(P\) with the
-  answer YES, if one exists, and NO otherwise. The same holds for
-  \texttt{MEET-IN-THE-MIDDLE} with \(n \le N_{MITM}\) by Theorem 3.4.
-  Otherwise \(T > T_{DP}\) and \(n > N_{MITM}\), the answer is UNKNOWN,
-  as stated in part 4, and \(P\) is absent. \(\square\)
+  \texttt{DP-PARTITION} is run, then \(T \le T_{DP}\) and
+  \(n \cdot T \le W_{DP}\), and by Theorem 4.2 it returns a balanced
+  partition, which becomes \(P\) with the answer YES, if one exists, and
+  NO otherwise. The same holds for \texttt{MEET-IN-THE-MIDDLE} with
+  \(n \le N_{MITM}\) by Theorem 3.4. Otherwise dynamic programming is
+  out of range, that is, \(T > T_{DP}\) or \(n \cdot T > W_{DP}\), and
+  \(n > N_{MITM}\); the answer is UNKNOWN, as stated in part 4, and
+  \(P\) is absent. \(\square\)
 \end{itemize}
 
 If the answer is YES and \(d > 0\), the partition \((A, B)\) of the
@@ -1943,11 +1940,6 @@ the exact algorithms and returns UNKNOWN otherwise.
   0-7167-1045-5. Cited in Sections 1.1 and 1.3 for pseudo-polynomial
   algorithms and strong NP-completeness (Section 4.2 of the book).
 \item
-  R. L. Graham, ``Bounds on multiprocessing timing anomalies'',
-  \emph{SIAM Journal on Applied Mathematics} 17(2), 416--429, 1969.
-  doi:10.1137/0117039. Cited in Section 5.7 for the ratio of the greedy
-  method (longest processing time first).
-\item
   E. Horowitz and S. Sahni, ``Computing partitions with applications to
   the knapsack problem'', \emph{Journal of the ACM} 21(2), 277--292,
   1974. doi:10.1145/321812.321823. Cited in Sections 1.1 and 3 as the
@@ -1964,17 +1956,6 @@ the exact algorithms and returns UNKNOWN otherwise.
   Computations}, Plenum Press, 85--103, 1972.
   doi:10.1007/978-1-4684-2001-2\_9. Cited in Sections 1.1 and 1.3 for
   the NP-completeness of PARTITION.
-\item
-  R. E. Korf, ``A complete anytime algorithm for number partitioning'',
-  \emph{Artificial Intelligence} 106(2), 181--203, 1998.
-  doi:10.1016/S0004-3702(98)00086-1. Cited in Section 5.7 for the exact
-  search built on the differencing method.
-\item
-  R. Schroeppel and A. Shamir, ``A \(T = O(2^{n/2})\),
-  \(S = O(2^{n/4})\) algorithm for certain NP-complete problems'',
-  \emph{SIAM Journal on Computing} 10(3), 456--464, 1981.
-  doi:10.1137/0210033. Cited in Section 3.6 for the reduction of the
-  memory of meet in the middle.
 \item
   B. Yakir, ``The differencing algorithm LDM for partitioning: a proof
   of a conjecture of Karmarkar and Karp'', \emph{Mathematics of
