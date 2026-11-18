@@ -73,6 +73,18 @@ fi
 mkdir "$TMP/blocked_output.txt"
 printf '1\n1 1\n' > "$TMP/blocked.txt"
 expect 4 "$TMP/blocked.txt"
+# The console results come first and are all there; the error follows them.
+"$PROGRAM" --no-color "$TMP/blocked.txt" > "$TMP/blocked_out" 2>&1
+if grep -q 'YES' "$TMP/blocked_out" && grep -q 'cannot write the results file' "$TMP/blocked_out" \
+    && ! grep -q 'Results saved' "$TMP/blocked_out"; then
+    pass
+else
+    fail "console results of a set whose results file cannot be written"
+fi
+# A failed set (exit 3) and an unwritable file (4): the exit code is 4.
+{ echo 1; yes 1 | head -n 65 | tr '\n' ' ' | sed 's/ $//'; echo; } > "$TMP/blocked_two.txt"
+mkdir "$TMP/blocked_two_output.txt"
+expect 4 --algorithm bf "$TMP/blocked_two.txt"
 
 # The results file: _output.txt in place of .txt, in Homenda's format, no
 # newline at the end; none for an invalid input file.

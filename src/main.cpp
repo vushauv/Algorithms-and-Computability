@@ -248,13 +248,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    // The results file is written after all the sets are solved and printed, so
+    // that an unwritable directory (a read-only stick) loses no console output.
     const std::string results_path = result_file::path_for(options.path);
-    std::ofstream results(results_path, std::ios::binary);  // "\n" also on Windows
-    if (!results) {
-        output::error("cannot write the results file " + results_path);
-        return 4;
-    }
-    results << result_file::header(instances.size(), options.subsets);
+    std::string results = result_file::header(instances.size(), options.subsets);
 
     int exit_code = 0;
     for (std::size_t i = 0; i < instances.size(); ++i) {
@@ -275,13 +272,16 @@ int main(int argc, char** argv) {
             exit_code = 3;
         }
         if (!found) found = fallback_partition(instances[i].values);
-        results << "\n\n" << result_file::format_set(instances[i].values, *found);
+        results += "\n\n" + result_file::format_set(instances[i].values, *found);
     }
 
-    results.close();
-    if (!results) {
+    std::ofstream file(results_path, std::ios::binary);  // "\n" also on Windows
+    file << results;
+    file.close();
+    if (!file) {
+        std::cout << "\n";
         output::error("cannot write the results file " + results_path);
-        return 4;
+        return 4;  // after all the console output; takes precedence over 3
     }
     std::cout << "\nResults saved to " << results_path << "\n";
     return exit_code;
