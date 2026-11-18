@@ -8,6 +8,7 @@ RUN (from the console; partition.exe needs no installation)
 
     INPUT_FILE  line 1: the number of sets; each next line: one set of
                 non-negative integers below 10^38, separated by single spaces
+                (extra spaces and tabs are accepted)
     K           the number of subsets: 2 (the default and the only value)
 
     Example, from the main folder of the project:

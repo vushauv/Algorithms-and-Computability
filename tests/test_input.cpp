@@ -46,6 +46,7 @@ void test_input() {
     CHECK(read("1\n1 2 \n")[0].values.size() == 2);            // trailing space
     CHECK(read("1\n1\t2\n")[0].values.size() == 2);            // tab
     CHECK(read(" 1 \r\n\t1  2 \t\r\n \r\n")[0].sum == 3);     // everywhere, with CRLF
+    CHECK(read("1\r\r\n1 2\r\r\n")[0].sum == 3);               // a doubled \r at the end of a line
     try {
         read("1\n 12  3x\n");
         CHECK(false);

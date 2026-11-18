@@ -15,10 +15,11 @@ std::string location(std::size_t line, std::size_t column) {
     return text + ": ";
 }
 
-// Reads the next line without its line ending (\n or \r\n).
+// Reads the next line without its line ending (\n or \r\n). A file converted
+// twice can end its lines with \r\r\n, so every \r at the end is dropped.
 bool next_line(std::istream& in, std::string& line) {
     if (!std::getline(in, line)) return false;
-    if (!line.empty() && line.back() == '\r') line.pop_back();
+    while (!line.empty() && line.back() == '\r') line.pop_back();
     return true;
 }
 
