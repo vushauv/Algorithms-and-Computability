@@ -19,8 +19,8 @@ Each exponential algorithm is applied only within a range of inputs, because out
 | Algorithm | Range | Limiting resource |
 | --- | --- | --- |
 | Meet in the middle (Section 3) | $n \le N_{MITM}$ | memory $O(2^{n/2})$ |
-| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ | memory $O(\Sigma(M) \log n)$ bits and time $O(n \cdot \Sigma(M))$ |
+| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ and $n \cdot \Sigma(M)/2 \le W_{DP}$ | memory $O(\Sigma(M) \log n)$ bits, bounded by $T_{DP}$, and time $O(n \cdot \Sigma(M))$, bounded by $W_{DP}$ |
 
-Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. The values of $N_{MITM}$ and $T_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
+Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. Dynamic programming has two parameters because its two resources grow differently: the memory depends on the target alone, whereas the time is proportional to $n$ times the target, so a target within $T_{DP}$ still costs too much time when $n$ is large. The values of $N_{MITM}$, $T_{DP}$ and $W_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
 
 ---
