@@ -140,6 +140,4 @@ The factor $n$ comes only from sorting. Generating the lists already sorted, by 
 
 The algorithm stores $2^{n/2}$ sums for each half, each a 128-bit number of $16$ bytes, so its memory doubles with every two additional elements. For a few tens of elements the lists are small, for forty to fifty elements they take from tens of megabytes to about a gigabyte, and for sixty elements they exceed the memory of a computer. The memory is therefore the limiting resource, and the algorithm is applied for $n \le N_{MITM}$ (Section 1.4), where $N_{MITM}$ is of the order of a few tens. This range is larger than that of brute force, which is limited by time, and it does not depend on the size of the numbers. This makes the algorithm suitable for numbers of $25$ digits and more, up to the bound of Section 1.1, where dynamic programming is infeasible. When $n > N_{MITM}$ but the target sum is small, the dynamic programming of Section 4 takes over.
 
-**Remark.** Schroeppel and Shamir [1981] reduce the memory to $O(2^{n/4})$ at essentially the same time. We do not use their algorithm.
-
 ---

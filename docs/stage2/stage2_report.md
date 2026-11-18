@@ -396,8 +396,6 @@ The factor $n$ comes only from sorting. Generating the lists already sorted, by 
 
 The algorithm stores $2^{n/2}$ sums for each half, each a 128-bit number of $16$ bytes, so its memory doubles with every two additional elements. For a few tens of elements the lists are small, for forty to fifty elements they take from tens of megabytes to about a gigabyte, and for sixty elements they exceed the memory of a computer. The memory is therefore the limiting resource, and the algorithm is applied for $n \le N_{MITM}$ (Section 1.4), where $N_{MITM}$ is of the order of a few tens. This range is larger than that of brute force, which is limited by time, and it does not depend on the size of the numbers. This makes the algorithm suitable for numbers of $25$ digits and more, up to the bound of Section 1.1, where dynamic programming is infeasible. When $n > N_{MITM}$ but the target sum is small, the dynamic programming of Section 4 takes over.
 
-**Remark.** Schroeppel and Shamir [1981] reduce the memory to $O(2^{n/4})$ at essentially the same time. We do not use their algorithm.
-
 ---
 
 ## 4. Dynamic programming
@@ -667,13 +665,9 @@ For items drawn independently from a uniform distribution on $[0, 1]$, the expec
 
 *Proof.* Building the heap takes $O(n)$. The loop has $n - 1$ rounds, each with two extractions and one insertion of $O(\log n)$ time, which gives $O(n \log n)$. The graph $G$ has $n$ vertices and $n - 1$ edges, so the colouring by a breadth-first or depth-first search takes $O(n)$. The heap, the edges and the adjacency lists use $O(n)$ numbers and indices. $\square$
 
-### 5.7 Range of application and remarks
+### 5.7 Range of application
 
 The algorithm needs no bound on $n$ beyond $n \ge 2$ and no bound on the numbers beyond the assumptions of Section 1.1; all differences are at most $\max_i a_i$, so the sum $S$ is not needed (Section 1.4). It works for every input, in particular when neither dynamic programming nor meet in the middle is in range, for example for $1000$ elements of $25$ digits. A result with $d = 0$ proves YES, but $d > 0$ gives no answer, so a NO can come only from the parity test or from an exact algorithm.
-
-#### Related methods
-
-The greedy method, which processes the numbers in descending order and puts each into the part with the smaller sum so far, also takes time $O(n \log n)$ and satisfies $d \le \max_i a_i$: when a number $a$ is added to the lighter part, the difference $d$ of the two parts becomes $|d - a| \le \max(d, a)$, and the claim follows by induction. As a scheduling algorithm (longest processing time first) its ratio on the larger part is $7/6$ for two machines [Graham 1969]. Korf [1998] turns the differencing method into an exact search that at each step also tries to put the two largest numbers into the *same* part, replacing them by $x + y$. Its worst case is exponential, and we do not use it.
 
 ---
 
@@ -766,11 +760,8 @@ The cost of `SOLVE` is the cost of Karmarkar-Karp (Theorem 5.4) plus the cost of
 
 - M. Fischetti and S. Martello, "Worst-case analysis of the differencing method for the partition problem", *Mathematical Programming* 37(1), 117–120, 1987. doi:10.1007/BF02591687. Cited in Section 5.5 for the worst-case ratio $7/6$ of the differencing method.
 - M. R. Garey and D. S. Johnson, *Computers and Intractability: A Guide to the Theory of NP-Completeness*, W. H. Freeman, 1979. ISBN 0-7167-1045-5. Cited in Sections 1.1 and 1.3 for pseudo-polynomial algorithms and strong NP-completeness (Section 4.2 of the book).
-- R. L. Graham, "Bounds on multiprocessing timing anomalies", *SIAM Journal on Applied Mathematics* 17(2), 416–429, 1969. doi:10.1137/0117039. Cited in Section 5.7 for the ratio of the greedy method (longest processing time first).
 - E. Horowitz and S. Sahni, "Computing partitions with applications to the knapsack problem", *Journal of the ACM* 21(2), 277–292, 1974. doi:10.1145/321812.321823. Cited in Sections 1.1 and 3 as the origin of meet in the middle.
 - N. Karmarkar and R. M. Karp, "The differencing method of set partitioning", Technical Report UCB/CSD-83-113, Computer Science Division, University of California, Berkeley, 1983. https://www2.eecs.berkeley.edu/Pubs/TechRpts/1983/6353.html. Cited in Sections 1.1 and 5 as the origin of the differencing method.
 - R. M. Karp, "Reducibility among combinatorial problems", in R. E. Miller and J. W. Thatcher (eds.), *Complexity of Computer Computations*, Plenum Press, 85–103, 1972. doi:10.1007/978-1-4684-2001-2_9. Cited in Sections 1.1 and 1.3 for the NP-completeness of PARTITION.
-- R. E. Korf, "A complete anytime algorithm for number partitioning", *Artificial Intelligence* 106(2), 181–203, 1998. doi:10.1016/S0004-3702(98)00086-1. Cited in Section 5.7 for the exact search built on the differencing method.
-- R. Schroeppel and A. Shamir, "A $T = O(2^{n/2})$, $S = O(2^{n/4})$ algorithm for certain NP-complete problems", *SIAM Journal on Computing* 10(3), 456–464, 1981. doi:10.1137/0210033. Cited in Section 3.6 for the reduction of the memory of meet in the middle.
 - B. Yakir, "The differencing algorithm LDM for partitioning: a proof of a conjecture of Karmarkar and Karp", *Mathematics of Operations Research* 21(1), 85–99, 1996. doi:10.1287/moor.21.1.85. Cited in Sections 1.1 and 5.5 for the expected discrepancy $n^{-\Theta(\log n)}$ on i.i.d. uniform items.
 
