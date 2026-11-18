@@ -46,7 +46,7 @@ void test_solve() {
     const V missed{5, 6, 7, 8, 10};
     const Solution by_dp = solve(missed, defaults);
     CHECK(by_dp.answer == Verdict::Yes);
-    CHECK(by_dp.decided_by == Method::DynamicProgramming);  // T/64 < 2^(5/2)
+    CHECK(by_dp.decided_by == Method::DynamicProgramming);  // T/32 < 2^(5/2)
     CHECK(by_dp.partition.d == 2);
     CHECK(by_dp.S == 36 && by_dp.T == 18);
     CHECK(is_valid_solution(missed, by_dp));  // {5, 6, 7} against {8, 10}
@@ -71,13 +71,13 @@ void test_solve() {
     // All zeros: d = 0, YES whatever the ranges (Section 6.1, step 1).
     CHECK(solve(V{0, 0, 0}, no_exact).answer == Verdict::Yes);
 
-    // The rule of Proposition 4.4: DP iff T/64 < 2^(n/2).
-    CHECK(dp_is_cheaper(2, 127));     // 127/64 < 2
-    CHECK(!dp_is_cheaper(2, 128));    // 128/64 = 2
-    CHECK(dp_is_cheaper(20, 65535));  // 1023.98 < 1024
-    CHECK(!dp_is_cheaper(20, 65536));
-    CHECK(dp_is_cheaper(3, 181));     // 2.83 < 2^1.5 = 2.83, 181/64 = 2.828
-    CHECK(!dp_is_cheaper(3, 182));
+    // The rule: DP iff T/32 < 2^(n/2) (Proposition 4.4 with the cost doubled).
+    CHECK(dp_is_cheaper(2, 63));      // 63/32 < 2
+    CHECK(!dp_is_cheaper(2, 64));     // 64/32 = 2
+    CHECK(dp_is_cheaper(20, 32767));  // 1023.97 < 1024
+    CHECK(!dp_is_cheaper(20, 32768));
+    CHECK(dp_is_cheaper(3, 90));      // 2.8125 < 2^1.5 = 2.8284
+    CHECK(!dp_is_cheaper(3, 91));     // 2.84375
     CHECK(choose_exact(10, 100, Ranges{9, 99, kAnyWork}) == Method::None);
     CHECK(choose_exact(10, 100, Ranges{10, 99, kAnyWork}) == Method::MeetInTheMiddle);
     CHECK(choose_exact(10, 100, Ranges{9, 100, kAnyWork}) == Method::DynamicProgramming);

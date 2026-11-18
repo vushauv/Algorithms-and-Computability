@@ -17,6 +17,9 @@ std::vector<std::size_t> indices_of(std::uint64_t g) {
 }  // namespace
 
 std::optional<std::vector<std::size_t>> find_subset(std::span<const Value> b, Value x) {
+    if (b.size() > kMaxFindSubsetElements) {
+        throw std::invalid_argument("find_subset needs at most 63 elements");
+    }
     // Bit i of the mask g puts b[i] in the subset; g = 0 is the empty subset.
     std::uint64_t g = 0;
     Value sum = 0;

@@ -35,6 +35,24 @@ void test_brute_force() {
     CHECK(find_subset(V{}, 0) == I{});
     CHECK(find_subset(V{}, 1) == std::nullopt);
 
+    // m = 62 and 63: only a hit near the start of the Gray code is affordable.
+    for (std::size_t m : {62, 63}) {
+        V b(m, 0);
+        b[0] = 5;
+        CHECK(find_subset(b, 0) == I{});          // the empty subset, at once
+        CHECK(find_subset(b, 5) == I{0});         // the first step
+        b[20] = 7;                                // reached after about 2^20 steps
+        const auto found = find_subset(b, 7);
+        CHECK(found.has_value() && partition_check::sum_of(b, *found) == 7);
+        const auto both = find_subset(b, 12);
+        CHECK(both.has_value() && partition_check::sum_of(b, *both) == 12);
+    }
+    // An unreachable sum is exhausted only for small m.
+    CHECK(find_subset(V(20, 2), 7) == std::nullopt);
+    CHECK_THROWS(find_subset(V(64, 0), 0), std::invalid_argument);
+    CHECK_THROWS(find_subset(V(64, 0), 1), std::invalid_argument);
+    CHECK_THROWS(find_subset(V(1000, 1), 3), std::invalid_argument);
+
     // The examples of Section 2.3: the mask 110 stands for A = {a[1], a[2]}.
     CHECK(answers(brute_force, V{3, 1, 4, 2}, Verdict::Yes));
     CHECK(brute_force(V{3, 1, 4, 2})->A == (I{1, 2}));

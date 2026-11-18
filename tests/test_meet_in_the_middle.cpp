@@ -55,6 +55,33 @@ void test_meet_in_the_middle() {
     // Beyond the reach of brute force in the tests: n = 40.
     CHECK(answers(meet_in_the_middle, random_sets::large_yes_instance(40), Verdict::Yes));
 
+    // Recovery where x or y is 0 at larger n: all the non-zero values in one
+    // half (the other half is zeros), then random sparse sets with zeros and
+    // duplicates, checked against dynamic programming (cheap for small values).
+    for (std::size_t n : {30, 33, 40}) {
+        V right_only(n, 0);
+        right_only[n - 1] = 6;
+        right_only[n - 2] = 2;
+        right_only[n - 3] = 4;  // {2, 4} against {6}
+        CHECK(answers(meet_in_the_middle, right_only, Verdict::Yes));
+        V left_only(right_only.rbegin(), right_only.rend());
+        CHECK(answers(meet_in_the_middle, left_only, Verdict::Yes));
+        V no(n, 0);
+        no[n - 1] = 2;
+        no[0] = 4;
+        no[1] = 4;  // S = 10, T = 5 is not reachable
+        CHECK(answers(meet_in_the_middle, no, Verdict::No));
+    }
+    for (int round = 0; round < 40; ++round) {
+        const std::size_t n = random_sets::size_between(30, 40);
+        V a(n, 0);
+        const std::size_t nonzero = random_sets::size_between(2, 6);
+        for (std::size_t i = 0; i < nonzero; ++i) a[random_sets::size_between(0, n - 1)] = random_sets::size_between(1, 9);
+        CHECK(answers(meet_in_the_middle, a, verdict_of(dp_partition(a))));
+        V d = random_sets::small_values(n, 2);  // many zeros and duplicates
+        CHECK(answers(meet_in_the_middle, d, verdict_of(dp_partition(d))));
+    }
+
     CHECK_THROWS(meet_in_the_middle(V(125, 1)), std::invalid_argument);
 
     // Where the physical memory is known (Linux), a table larger than it is

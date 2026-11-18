@@ -10,7 +10,8 @@
 bool dp_is_cheaper(std::size_t n, Value T) {
     // In floating point: 2^(n/2) is irrational for odd n, and T² may overflow.
     const long double t = static_cast<long double>(T);
-    return t / 64 < std::exp2(static_cast<long double>(n) / 2);
+    // t / 64 words per pass (Proposition 4.4) times 2 for the first-reach table.
+    return t / 32 < std::exp2(static_cast<long double>(n) / 2);
 }
 
 DpLimit dp_limit(std::size_t n, Value T, const Ranges& ranges) {

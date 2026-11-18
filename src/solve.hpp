@@ -43,7 +43,8 @@ struct Solution {
 };
 
 // The rule when both exact algorithms are in range (provisional, task.md
-// section 6): dynamic programming if T/64 < 2^(n/2) (Proposition 4.4).
+// section 6): dynamic programming if T/32 < 2^(n/2), that is Proposition 4.4
+// (T/64 < 2^(n/2)) with the cost of dynamic programming doubled for its table.
 bool dp_is_cheaper(std::size_t n, Value T);
 
 // The exact algorithm that SOLVE runs for a set of n numbers with target T:
