@@ -9,25 +9,36 @@ University lab project (Algorithms and Computability, fall 2026): the **partitio
 
 ## Where we are
 
-**Stage 2 (documentation of algorithms), due Oct 30, 2026.** No code yet. The Stage 2 report is **content-complete and reviewed** on `dev`; what remains is the conversion to LaTeX/PDF and the submission email.
+**Stage 3 (implementation and sample inputs), due Nov 20, 2026, with a live demo on lab machines that have no compiler.** We are **writing the code** of the algorithms specified in the Stage 2 report, from scratch from the report, in three PRs into `dev` (plan and steps in `task.md` section 3). The PRs are stacked: PR 1 (steps 1 to 4: build, `number`, `input`, `output`/`cli`/`main`) on `feature/stage3-reading`, PR 2 (steps 5 to 8, the algorithms) on `feature/stage3-algorithms`, PR 3 (steps 9 and 10: `SOLVE`, `--algorithm`, `examples/`, `dist/partition.exe`) on `feature/stage3-program`. `make dist` rebuilds the committed Windows executable; rebuild and commit it after any code change before the demo. Build with `make`, C++20; decisions, including the code layout and the command line, are in `task.md` section 6.
+
+Stage 2 is finished: the report and its PDF are in `docs/stage2/` on `dev`.
+
+### Rules for the code
+
+- **The Stage 2 report is the specification.** Each algorithm follows its pseudocode (§2.2 brute force, §3.2 meet in the middle, §4.3 dynamic programming, §5.2 Karmarkar-Karp, §6.2 `SOLVE`); names of functions and variables follow the pseudocode where reasonable. If the code needs to deviate, raise it with the user instead of silently diverging (CONSTITUTION point 6).
+- **Reuse, don't duplicate:** one number module (alias `Value`, parser, printer, checked addition), one input module, one module with the shared preliminary checks ($S$, parity, $S = 0$, $T$); the exact algorithms take a read-only span of values so tests run them interchangeably.
+- **Output is nice and coloured on Linux and Windows**, colours optionally disabled: results, warnings and errors in distinct colours; on Windows enable ANSI in the console at startup (`SetConsoleMode` + `ENABLE_VIRTUAL_TERMINAL_PROCESSING`) and fall back to plain text; plain mode with `--no-color`, with `NO_COLOR` set, or when stdout is not a terminal; the same text in both modes. All of this lives in the `output` module, the algorithms never print.
+- **Results are also saved to disk in Homenda's format** (`raw_regulations/email_27.10.26.txt`, corrected on 28.10 and 29.10, example `AaClab_output.txt`): `FILE_output.txt` next to the input, built only by the `result_file` module. The format is fixed by Homenda; match the example exactly, it is tested byte for byte. The command line takes `FILE [K]` with $K = 2$ only.
+- Brute force is the test reference only, never called by `SOLVE`.
+- Tests compare every exact algorithm with brute force on random small inputs, and check that Karmarkar-Karp returns a valid partition whose discrepancy is $d$.
 
 Decided (details in `task.md` section 6):
 - **Version: basic.** Partition a multiset into **2 subsets with equal sums**. The advanced version (k subsets) is out of scope; do not mention it in documents.
 - **Numbers: unsigned 128-bit integers** (`unsigned __int128`), with input constraints in `task.md` section 7.
-- **Language: C++**, prebuilt static Windows executable for the demo.
-- **Final algorithm:** the program always runs Karmarkar-Karp and adds an exact algorithm in range (dynamic programming if $T \le T_{DP}$, meet in the middle if $n \le N_{MITM}$). When both are in range, the report says only that the cheaper one for the input is chosen (Section 4.7 gives the estimates); the exact rule is fixed with the parameters after the experiments. The report has no complexity theorem for the final algorithm (removed Oct 30, 2026). **Brute force is not used by the final algorithm**; it is the baseline in the report and the test reference in the code (no $N_{BF}$ parameter, dropped Oct 30, 2026). The report describes only the Gray-code brute force; the direct enumeration is mentioned in one sentence.
-- **Exact algorithms decide only** (YES/NO); Karmarkar-Karp is the only algorithm that constructs a partition.
+- **Language: C++20, built with `make`** (no CMake); prebuilt static Windows executable (MinGW-w64, `make windows`) for the demo.
+- **Final algorithm:** the program always runs Karmarkar-Karp and adds an exact algorithm in range (dynamic programming if $T \le T_{DP}$, meet in the middle if $n \le N_{MITM}$). The code also requires $n \cdot T \le W_{DP}$ for dynamic programming (`--w-dp`, added Nov 5, 2026); the report does not have it yet, it goes into §6.2 and Theorem 6.1 in Stage 4. When both are in range, the report says only that the cheaper one for the input is chosen (Section 4.7 gives the estimates); the exact rule is fixed with the parameters after the experiments. The report has no complexity theorem for the final algorithm (removed Oct 30, 2026). **Brute force is not used by the final algorithm**; it is the baseline in the report and the test reference in the code (no $N_{BF}$ parameter, dropped Oct 30, 2026). The report describes only the Gray-code brute force; the direct enumeration is mentioned in one sentence.
+- **Every exact algorithm returns a balanced partition** when one exists, or NO (since Nov 9, 2026; before, they decided only): brute force from its mask, meet in the middle by `FIND-SUBSET` on each half after the sweep, dynamic programming from a first-reach table. Karmarkar-Karp remains the approximation: it returns a partition for every input, with its discrepancy $d$. The Stage 2 report was updated to match on Nov 18, 2026 (PR #28; `task.md` section 6).
 - **References** (Section 7): six entries (Graham, Korf and Schroeppel-Shamir dropped with their remarks on Oct 30, 2026), each verified against the publisher's record on Oct 30, 2026 and given a DOI/ISBN/URL. Karmarkar-Karp is cited as UCB/CSD-83-113, 1983 (Berkeley's catalogue; much of the literature says 1982).
 
 Still open: mode (formal or individual).
 
 The report is split into one file per section in `docs/stage2/`, numbered in reading order (`00_title.md` with the title and the abstract, `01_1_introduction.md`, ..., `07_references.md`). Headings: `##` section, `###` subsection (both numbered in the text), `####` unnumbered subsubsection; the table of contents goes down to the subsections. `docs/stage2/stage2_report.md`, `.tex` and `.pdf` are generated by `make` in `docs/stage2/` (pandoc + XeLaTeX; preamble and Lua filter in `docs/stage2/tex/`, commands also in `README.md`); regenerate them after editing a section, never edit them directly. Check the PDF visually after a rebuild (`pdftoppm`), pandoc defaults are not good enough.
 
-**All sections (1 to 7) are reviewed and frozen. Do not edit them unless asked.**
+**All sections (1 to 7) are reviewed and frozen. Do not edit them unless asked.** If the implementation shows that the report is wrong, tell the user; fixes go in Stage 4.
 
-### Review workflow (since Oct 29, 2026)
+### Review workflow (since Oct 29, 2026, for documents and code)
 
-- `dev` is the integration branch; `main` holds submitted material. The Stage 2 report lives on `dev`.
+- `dev` is the integration branch; `main` holds submitted material. The Stage 2 report lives on `dev`; Stage 3 code goes to `dev` the same way.
 - Each change gets its own branch and PR into `dev`. Keep a PR to one concern; one commit per section file.
 - `dev` has a ruleset requiring an approving review. The owner merges with `gh pr merge --merge --admin` when the user says so; do not use `--admin` unprompted.
 - The user marks the state of a reviewed section with a local tag such as `reviewed-1.1` and uses `git diff reviewed-1.1 -- docs/stage2/<file>` to see what changed since. Do not move or push these tags yourself.
@@ -48,8 +59,8 @@ The files in `docs/stage2/` form a **mathematical report in the style of a paper
 
 ## How to work here
 
-- This is a research and discussion phase: answer questions, compare options, point to sources. Don't write code or documents unless asked.
-- The Stage 2 deliverable is a PDF with pseudocode, a detailed description and a complexity analysis for every algorithm. Editing quality is graded.
+- This is the implementation phase: write code when asked, in small reviewable steps (one module or algorithm per PR into `dev`). Don't change the report in `docs/stage2/` unless asked.
+- The Stage 3 deliverable is a program that builds on Linux and Windows, a prebuilt static Windows executable for the demo, and sample inputs.
 - Any exact exponential algorithm needs a polynomial-time approximation next to it.
 - Inputs are multisets with numbers of about 25 digits, so handle duplicates and respect the 128-bit limits and input constraints in `task.md` section 7.
 - Cite sources with a short justification. Don't invent references; say so if one can't be verified.

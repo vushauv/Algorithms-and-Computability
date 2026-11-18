@@ -1,0 +1,20 @@
+Subject: AaC, output format
+
+Dear All,
+Below are the requirements for the output file of the solution.
+Solution output format:
+Results must be saved to disk. The output file name is the input file name with _output.txt in place of.txt: AaC_example_1.txt becomes AaC_example_1_output.txt.
+First line: n (number of sets) and k (number of subsets, given to the program as a parameter), separated by a space.
+
+* For each set, a first line: the sum of the whole set, a space, then the original set in input order, with numbers separated by a comma and a space.
+* Then k lines, one per subset: the subset's sum, a space, then its numbers separated by a comma and a space.
+* Then maximal difference of sums of numbers in subsets
+
+A blank line separates consecutive sets.
+Two sorting rules apply:
+Within a subset: numbers in non-increasing order (largest first).
+Between subsets: lines ordered lexicographically non-increasing by their content: compare the largest numbers first, then the second largest, and so on. Subsets are not ordered by their sums.
+Example of input and output files is attached.
+Władysław Homenda
+
+Attachments: AaClab.txt, AaClab_output.txt (saved in this directory).

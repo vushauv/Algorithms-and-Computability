@@ -10,7 +10,7 @@ Every value computed by an algorithm below is a subset sum or the non-negative d
 
 #### Cost model
 
-We use the unit-cost RAM model: an arithmetic operation or a comparison on a 128-bit number costs $O(1)$, and so does an operation on a machine word of $w = 64$ bits, which dynamic programming uses for its bitset (Section 4). Time bounds count such operations and are expressed in $n$ and, for dynamic programming, in $\Sigma(M)$. Memory is counted in 128-bit numbers, except for the bitset of Section 4, which is counted in bits.
+We use the unit-cost RAM model: an arithmetic operation or a comparison on a 128-bit number costs $O(1)$, and so does an operation on a machine word of $w = 64$ bits, which dynamic programming uses for its bitset (Section 4). Time bounds count such operations and are expressed in $n$ and, for dynamic programming, in $\Sigma(M)$. Memory is counted in 128-bit numbers, except for the tables of Section 4, which are counted in bits.
 
 #### Ranges of the algorithms
 
@@ -19,7 +19,7 @@ Each exponential algorithm is applied only within a range of inputs, because out
 | Algorithm | Range | Limiting resource |
 | --- | --- | --- |
 | Meet in the middle (Section 3) | $n \le N_{MITM}$ | memory $O(2^{n/2})$ |
-| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ | memory $O(\Sigma(M))$ bits and time $O(n \cdot \Sigma(M))$ |
+| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ | memory $O(\Sigma(M) \log n)$ bits and time $O(n \cdot \Sigma(M))$ |
 
 Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. The values of $N_{MITM}$ and $T_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
 

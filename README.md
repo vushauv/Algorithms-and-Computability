@@ -4,6 +4,74 @@ Laboratory assignment, fall 2026: the partition problem (basic version, two
 subsets with equal sums). See `task.md` for the assignment and
 `CONSTITUTION.md` for the project rules.
 
+Status: Stage 2 (the report in `docs/stage2/`) is finished; Stage 3 (the
+program, due Nov 20, 2026) is written: for every set of the input file the
+program runs the final algorithm of Section 6 of the report and prints the
+answer (YES, NO or UNKNOWN) with the Karmarkar-Karp partition, and with YES a
+balanced partition.
+
+## Program
+
+Requirements: GCC 13 or Clang 16 (C++20 and `unsigned __int128`); for the
+Windows executable, MinGW-w64 (`x86_64-w64-mingw32-g++`).
+
+```sh
+make             # build/linux/partition
+make test        # build and run the tests (from the repository root)
+make windows     # static build/windows/partition.exe, needs no DLLs
+make dist        # the same, copied to dist/partition.exe
+make clean
+```
+
+The same without `make`, from the repository root:
+
+```sh
+g++ -std=c++20 -O2 -Isrc src/*.cpp src/algorithms/*.cpp -o partition
+x86_64-w64-mingw32-g++ -std=c++20 -O2 -static -s -Isrc src/*.cpp src/algorithms/*.cpp -o partition.exe
+```
+
+Run it on an input file, optionally followed by the number of subsets `K`
+(only 2 is accepted):
+
+```sh
+./build/linux/partition raw_regulations/AaC_example_1.txt 2
+./build/linux/partition --algorithm mitm --n-mitm 30 examples/05_large_values.txt
+./build/linux/partition --help
+```
+
+The results are printed and also saved next to the input, with `_output.txt`
+in place of `.txt` (`AaC_example_1.txt` gives `AaC_example_1_output.txt`), in
+Homenda's format (`raw_regulations/email_27.10.26.txt`, corrected on 28.10
+and 29.10): the
+line `N 2`, then for every set, after a blank line, its sum and numbers, the
+two subsets with their sums (numbers largest first, the subsets in
+lexicographically non-increasing order) and the difference of the two sums.
+The subsets are the balanced partition when one is found, otherwise the
+Karmarkar-Karp partition. These files are not committed (`.gitignore`).
+
+Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
+meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
+default $3 \cdot 10^8$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
+time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone. `make test`
+also runs `tests/cli_test.sh`, which checks the exit codes, the results file
+and that the text is the same with and without colours.
+Exit codes: 0 success, 1 invalid input file, 2 invalid command line, 3 an
+algorithm could not be run on some set, 4 the results file could not be written.
+
+### Demo on Windows (no compiler)
+
+`dist/partition.exe` is the prebuilt static executable (`make dist`); it needs
+only the system DLLs. `dist/readme.txt` is the short guide Homenda asked for.
+On the lab machine:
+
+```bat
+dist\partition.exe examples\10_homenda_example.txt 2
+examples\run_examples.bat
+```
+
+The sample inputs and their expected results are described in
+`examples/README.md`.
+
 ## Stage 2 report
 
 The report is written in Markdown, one file per section in `docs/stage2/`

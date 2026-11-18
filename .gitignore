@@ -1,0 +1,5 @@
+build/
+# Results files that the program saves next to its inputs; Homenda's example
+# is kept.
+*_output.txt
+!raw_regulations/AaClab_output.txt
