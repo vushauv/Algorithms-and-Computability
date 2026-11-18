@@ -10,7 +10,9 @@
 
 // Provisional ranges of the exact algorithms (task.md section 6).
 inline constexpr std::size_t kDefaultNMitm = 44;
-inline constexpr Value kDefaultTDp = 10'000'000'000;
+// Dynamic programming keeps T + 1 bits and T + 1 step numbers of 4 bytes, so
+// about 1.2 GB at T = 3 · 10^8.
+inline constexpr Value kDefaultTDp = 300'000'000;
 // Bound on n · T for dynamic programming, whose time is O(n · T / 64): about
 // 10 s for the worst case on a 2026 laptop (a NO instance with d > 0).
 inline constexpr Value kDefaultWDp = 1'000'000'000'000;

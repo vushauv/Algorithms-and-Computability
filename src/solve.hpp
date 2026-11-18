@@ -35,13 +35,16 @@ enum class Method {
 struct Solution {
     Verdict answer;
     Method decided_by;
-    Partition partition;  // of Karmarkar-Karp, with its discrepancy d
+    Partition partition;   // of Karmarkar-Karp, with its discrepancy d
+    ExactAnswer balanced;  // present iff the answer is YES: the partition above
+                           // when d = 0, otherwise that of the exact algorithm
     Value S;
     Value T;  // S / 2
 };
 
 // The rule when both exact algorithms are in range (provisional, task.md
-// section 6): dynamic programming if T/64 < 2^(n/2) (Proposition 4.4).
+// section 6): dynamic programming if T/32 < 2^(n/2), that is Proposition 4.4
+// (T/64 < 2^(n/2)) with the cost of dynamic programming doubled for its table.
 bool dp_is_cheaper(std::size_t n, Value T);
 
 // The exact algorithm that SOLVE runs for a set of n numbers with target T:

@@ -1,5 +1,5 @@
-// MEET-IN-THE-MIDDLE of Horowitz and Sahni (report, Section 3.2). Decides
-// only. Time O(n · 2^(n/2)), memory 2^(n/2) sums per half.
+// MEET-IN-THE-MIDDLE of Horowitz and Sahni (report, Section 3.2): a balanced
+// partition, or NO. Time O(n · 2^(n/2)), memory 2^(n/2) sums per half.
 #pragma once
 
 #include <cstddef>
@@ -17,4 +17,6 @@ inline constexpr std::size_t kMaxMeetInTheMiddleElements = 2 * 62;
 std::vector<Value> subset_sums(std::span<const Value> b);
 
 // Requires n ≥ 2. Throws std::invalid_argument if n > kMaxMeetInTheMiddleElements.
-Verdict meet_in_the_middle(std::span<const Value> a);
+// The sorted lists keep only the sums, so the subsets with the two sums that
+// meet are found again with FIND-SUBSET: O(2^(n/2)) more time, no more memory.
+ExactAnswer meet_in_the_middle(std::span<const Value> a);

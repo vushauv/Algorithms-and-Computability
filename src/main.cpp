@@ -66,12 +66,26 @@ void print_partition(std::span<const Value> a, const Partition& partition) {
     print_part("B", a, partition.B);
 }
 
+// The balanced partition found by an exact algorithm.
+void print_balanced(std::string_view by, std::span<const Value> a, const Partition& partition) {
+    std::cout << "  Balanced partition (" << by << "):\n";
+    print_part("A", a, partition.A);
+    print_part("B", a, partition.B);
+}
+
 void print_answer(Verdict answer, std::string_view reason) {
     std::string word = "UNKNOWN";
     Style style = Style::Warning;
     if (answer == Verdict::Yes) word = "YES", style = Style::Yes;
     if (answer == Verdict::No) word = "NO", style = Style::No;
     std::cout << "  Answer: " << paint(word, style) << " " << paint(reason, Style::Dim) << "\n";
+}
+
+// The answer of one exact algorithm run alone, with its partition if YES.
+void print_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
+                 std::string_view reason) {
+    if (answer) print_balanced(name, a, *answer);
+    print_answer(verdict_of(answer), reason);
 }
 
 std::string method_name(Method method) {
@@ -114,8 +128,8 @@ void run_solve(const Instance& instance, const Options& options) {
             const std::string by = "(" + method_name(solution.decided_by) + ", T = " +
                                    to_string(solution.T) + ")";
             if (solution.answer == Verdict::Yes) {
-                print_answer(solution.answer,
-                             by + "; a balanced partition exists, the one above misses it by d = " + d);
+                print_balanced(method_name(solution.decided_by), instance.values, *solution.balanced);
+                print_answer(solution.answer, by + "; Karmarkar-Karp missed it by d = " + d);
             } else {
                 print_answer(solution.answer, by + "; no balanced partition exists");
             }
@@ -152,7 +166,7 @@ void run_single(std::size_t index, const Instance& instance, const Options& opti
                                             std::to_string(kMaxBruteForceElements) +
                                             " numbers, the set has " + std::to_string(n));
             }
-            print_answer(brute_force(a), "(brute force)");
+            print_exact("brute force", a, brute_force(a), "(brute force)");
             return;
         case Algorithm::MeetInTheMiddle:
             if (n > options.n_mitm) {
@@ -160,7 +174,7 @@ void run_single(std::size_t index, const Instance& instance, const Options& opti
                                 std::to_string(n) + " > N_MITM = " + std::to_string(options.n_mitm));
                 return;
             }
-            print_answer(meet_in_the_middle(a), "(meet in the middle)");
+            print_exact("meet in the middle", a, meet_in_the_middle(a), "(meet in the middle)");
             return;
         case Algorithm::DynamicProgramming:
             if (dp_limit(n, T, ranges_of(options)) != DpLimit::InRange) {
@@ -168,7 +182,8 @@ void run_single(std::size_t index, const Instance& instance, const Options& opti
                                 dp_out_of_range(n, T, options));
                 return;
             }
-            print_answer(dp_partition(a), "(dynamic programming, T = " + to_string(T) + ")");
+            print_exact("dynamic programming", a, dp_partition(a),
+                        "(dynamic programming, T = " + to_string(T) + ")");
             return;
     }
 }
