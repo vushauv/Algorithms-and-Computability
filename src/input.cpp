@@ -15,35 +15,40 @@ std::string location(std::size_t line, std::size_t column) {
     return text + ": ";
 }
 
-// Reads the next line without its line ending (\n or \r\n).
+// Reads the next line without its line ending (\n or \r\n). A file converted
+// twice can end its lines with \r\r\n, so every \r at the end is dropped.
 bool next_line(std::istream& in, std::string& line) {
     if (!std::getline(in, line)) return false;
-    if (!line.empty() && line.back() == '\r') line.pop_back();
+    while (!line.empty() && line.back() == '\r') line.pop_back();
     return true;
 }
 
-// The fields of a line separated by single spaces, with their columns.
+// A number of a line with its column.
 struct Field {
     std::string_view text;
     std::size_t column;
 };
 
-std::vector<Field> split_fields(std::string_view line, std::size_t line_number) {
+bool is_blank(char c) {
+    return c == ' ' || c == '\t';
+}
+
+// The numbers of a line. A single space separates them in the format of the
+// assignment; extra spaces and tabs, also at either end of the line, are
+// skipped, so that a stray space does not reject the whole file.
+std::vector<Field> split_fields(std::string_view line) {
     std::vector<Field> fields;
-    std::size_t start = 0;
-    while (true) {
-        std::size_t end = line.find(' ', start);
-        std::string_view text = line.substr(start, end == std::string_view::npos ? end : end - start);
-        if (text.empty()) {
-            std::string what = start == 0 ? "the line starts with a space"
-                             : end == std::string_view::npos ? "the line ends with a space"
-                             : "two spaces in a row";
-            throw InputError(line_number, start + 1, what + "; numbers are separated by single spaces");
+    std::size_t i = 0;
+    while (i < line.size()) {
+        if (is_blank(line[i])) {
+            ++i;
+            continue;
         }
-        fields.push_back({text, start + 1});
-        if (end == std::string_view::npos) return fields;
-        start = end + 1;
+        const std::size_t start = i;
+        while (i < line.size() && !is_blank(line[i])) ++i;
+        fields.push_back({line.substr(start, i - start), start + 1});
     }
+    return fields;
 }
 
 Value parse_field(const Field& field, std::size_t line_number) {
@@ -69,7 +74,7 @@ std::size_t read_set_count(std::istream& in) {
     if (!next_line(in, line)) throw InputError(0, 0, "the file is empty");
     // Some Windows editors start a UTF-8 file with a byte order mark.
     if (line.starts_with(kUtf8Bom)) line.erase(0, kUtf8Bom.size());
-    std::vector<Field> fields = split_fields(line, 1);
+    std::vector<Field> fields = split_fields(line);
     if (fields.size() != 1)
         throw InputError(1, 0, "the first line must contain only the number of sets");
     Value count = parse_field(fields[0], 1);
@@ -79,15 +84,15 @@ std::size_t read_set_count(std::istream& in) {
 }
 
 Instance read_set(const std::string& line, std::size_t line_number) {
-    if (line.empty())
+    std::vector<Field> fields = split_fields(line);
+    if (fields.empty())
         throw InputError(line_number, 0, "empty line; a set needs at least " +
                                              std::to_string(kMinElements) + " numbers");
-    std::vector<Field> fields = split_fields(line, line_number);
     if (fields.size() > kMaxElements)
         throw InputError(line_number, 0, "a set may have at most " + std::to_string(kMaxElements) +
                                              " numbers, found " + std::to_string(fields.size()));
 
-    // The numbers are parsed before their count is checked, so that "1<tab>2"
+    // The numbers are parsed before their count is checked, so that "1,2"
     // is reported as a bad character and not as a set with one element.
     Instance instance{{}, 0, line_number};
     instance.values.reserve(fields.size());
@@ -125,10 +130,10 @@ std::vector<Instance> read_instances(std::istream& in) {
         instances.push_back(read_set(line, line_number));
     }
 
-    // Empty lines at the end are tolerated, anything else is not.
+    // Empty and blank lines at the end are tolerated, anything else is not.
     while (next_line(in, line)) {
         ++line_number;
-        if (!line.empty())
+        if (!split_fields(line).empty())
             throw InputError(line_number, 0, "the first line announces " + std::to_string(count) +
                                                  " sets, but the file has more lines");
     }

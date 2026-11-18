@@ -30,7 +30,10 @@ expect() {
 }
 
 # 0: valid files, help, a skipped exact algorithm (a warning, not an error), K = 2.
-for f in examples/*.txt raw_regulations/AaC_example_*.txt; do expect 0 "$f"; done
+for f in examples/*.txt raw_regulations/AaC_example_*.txt; do
+    case $f in *_output.txt) continue ;; esac  # results left by earlier runs
+    expect 0 "$f"
+done
 expect 0 --help
 expect 0 --algorithm mitm --n-mitm 4 examples/02_yes.txt
 expect 0 --algorithm dp --w-dp 1 examples/02_yes.txt
@@ -96,8 +99,8 @@ if cmp -s "$TMP/expected.txt" examples/01_report_examples_output.txt; then
 else
     fail "the results file of 01_report_examples.txt"
 fi
-"$PROGRAM" examples/errors/08_two_spaces.txt >/dev/null 2>&1
-if [ -e examples/errors/08_two_spaces_output.txt ]; then
+"$PROGRAM" examples/errors/07_one_element.txt >/dev/null 2>&1
+if [ -e examples/errors/07_one_element_output.txt ]; then
     fail "a results file for an invalid input file"
 else
     pass
@@ -111,14 +114,14 @@ else
 fi
 
 # Plain output: not a terminal, --no-color, NO_COLOR.
-for f in examples/01_report_examples.txt examples/errors/08_two_spaces.txt; do
+for f in examples/01_report_examples.txt examples/errors/07_one_element.txt; do
     if "$PROGRAM" "$f" 2>&1 | grep -q "$ESC"; then fail "colours in a pipe: $f"; else pass; fi
 done
 
 # Under a pseudo-terminal (script of util-linux) the output is coloured, and
 # without the colour codes it is the text of --no-color.
 if command -v script >/dev/null 2>&1; then
-    for f in examples/0*.txt examples/errors/08_two_spaces.txt; do
+    for f in examples/0*.txt examples/errors/07_one_element.txt; do
         case $f in *_output.txt) continue ;; esac  # results of the runs above
         env -u NO_COLOR script -qec "'$PROGRAM' '$f'" /dev/null > "$TMP/tty" 2>&1
         if grep -q "$ESC" "$TMP/tty"; then pass; else fail "no colours on a terminal: $f"; fi

@@ -120,9 +120,9 @@ Each exponential algorithm is applied only within a range of inputs, because out
 | Algorithm | Range | Limiting resource |
 | --- | --- | --- |
 | Meet in the middle (Section 3) | $n \le N_{MITM}$ | memory $O(2^{n/2})$ |
-| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ | memory $O(\Sigma(M) \log n)$ bits and time $O(n \cdot \Sigma(M))$ |
+| Dynamic programming (Section 4) | $\Sigma(M)/2 \le T_{DP}$ and $n \cdot \Sigma(M)/2 \le W_{DP}$ | memory $O(\Sigma(M) \log n)$ bits, bounded by $T_{DP}$, and time $O(n \cdot \Sigma(M))$, bounded by $W_{DP}$ |
 
-Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. The values of $N_{MITM}$ and $T_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
+Brute force (Section 2) is the baseline for the other two and is not used by the final algorithm, so it has no range. Dynamic programming has two parameters because its two resources grow differently: the memory depends on the target alone, whereas the time is proportional to $n$ times the target, so a target within $T_{DP}$ still costs too much time when $n$ is large. The values of $N_{MITM}$, $T_{DP}$ and $W_{DP}$ are not fixed in this document. They depend on the implementation and on the machine, so they are determined experimentally after the algorithms have been implemented. The analysis of each algorithm holds for any values of the parameters. The final algorithm (Section 6) takes them as input.
 
 ---
 
@@ -523,7 +523,7 @@ The length of the input is $\sum_i \log_2 (a_i + 1) = O(n \log S)$ bits, whereas
 
 ### 4.7 Range of application and comparison with meet in the middle
 
-The tables have $T + 1$ bits and $T + 1$ entries of `first`. Stored as $32$-bit numbers, which suffice for $n < 2^{32}$, the entries take $4(T + 1)$ bytes, thirty-two times the bitset, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). A target of order $2.5 \cdot 10^8$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$ at least, since a single such number is at least $10^{24}$, which is far out of range.
+The tables have $T + 1$ bits and $T + 1$ entries of `first`. Stored as $32$-bit numbers, which suffice for $n < 2^{32}$, the entries take $4(T + 1)$ bytes, thirty-two times the bitset, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). The time is limited separately: by Theorem 4.3 it grows with the product $n \cdot T$, which the bound on $T$ does not control, so the algorithm is applied only if also $n \cdot T \le W_{DP}$ (Section 1.4). A target of order $2.5 \cdot 10^8$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$ at least, since a single such number is at least $10^{24}$, which is far out of range.
 
 #### Comparison with meet in the middle
 
@@ -689,7 +689,7 @@ The result of the final algorithm is a quadruple (answer, $(A, B)$, $d$, $P$), w
 
 1. If $d = 0$, the partition $(A, B)$ is balanced, the answer is YES, and $P = (A, B)$. This also covers $\Sigma(M) = 0$, because $d \le \max_i a_i = 0$ by Proposition 5.3.
 2. If $\Sigma(M)$ is odd, the answer is NO (Section 1.2).
-3. Otherwise $d > 0$, $\Sigma(M)$ is even and positive, and the question is open. An exact algorithm is applied if one of them is in range, that is, dynamic programming if $T \le T_{DP}$ and meet in the middle if $n \le N_{MITM}$ (Section 1.4). If both are in range, the choice depends on the input: by Section 4.7, dynamic programming is the cheaper one for many small numbers and meet in the middle for few large ones. The rule that decides between them is fixed together with the parameters $N_{MITM}$ and $T_{DP}$, after the algorithms have been implemented and measured. Both algorithms return a balanced partition exactly when one exists (Theorems 3.4 and 4.2), so the choice affects the cost, and possibly which balanced partition is returned, but not the answer. A returned balanced partition becomes $P$ with the answer YES, and NO stays NO.
+3. Otherwise $d > 0$, $\Sigma(M)$ is even and positive, and the question is open. An exact algorithm is applied if one of them is in range, that is, dynamic programming if $T \le T_{DP}$ and $n \cdot T \le W_{DP}$, and meet in the middle if $n \le N_{MITM}$ (Section 1.4). If both are in range, the choice depends on the input: by Section 4.7, dynamic programming is the cheaper one for many small numbers and meet in the middle for few large ones. The rule that decides between them is fixed together with the parameters $N_{MITM}$, $T_{DP}$ and $W_{DP}$, after the algorithms have been implemented and measured. Both algorithms return a balanced partition exactly when one exists (Theorems 3.4 and 4.2), so the choice affects the cost, and possibly which balanced partition is returned, but not the answer. A returned balanced partition becomes $P$ with the answer YES, and NO stays NO.
 4. If neither exact algorithm is in range, the answer is UNKNOWN.
 
 #### Comparison of the approximation with the exact answer
@@ -702,18 +702,19 @@ Brute force is not used. Its time is $\Theta(2^n)$, whereas the time of meet in 
 
 ### 6.2 Algorithm
 
-The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1). The parameters $N_{MITM}$ and $T_{DP}$ are those of Section 1.4.
+The input is a multiset $a_1, \dots, a_n$ with $n \ge 2$ (Section 1.1). The parameters $N_{MITM}$, $T_{DP}$ and $W_{DP}$ are those of Section 1.4.
 
 ```
-SOLVE(a[1..n]; N_MITM, T_DP)
+SOLVE(a[1..n]; N_MITM, T_DP, W_DP)
     S ← Σ a[i]
     (A, B, d) ← KARMARKAR-KARP(a)                   // O(n log n), always
     if d = 0 then return (YES, A, B, d, (A, B))     // balanced; includes S = 0
     if S is odd then return (NO, A, B, d, —)        // Section 1.2
     T ← S / 2
-    if T ≤ T_DP and n ≤ N_MITM then
+    dp ← (T ≤ T_DP and T ≤ ⌊W_DP / n⌋)              // dynamic programming is in range
+    if dp and n ≤ N_MITM then
         EXACT ← DP-PARTITION or MEET-IN-THE-MIDDLE, whichever is cheaper for (n, T)   // Section 4.7
-    else if T ≤ T_DP then EXACT ← DP-PARTITION
+    else if dp then EXACT ← DP-PARTITION
     else if n ≤ N_MITM then EXACT ← MEET-IN-THE-MIDDLE
     else return (UNKNOWN, A, B, d, —)
     P ← EXACT(a)                                    // a balanced partition, or NO
@@ -721,7 +722,7 @@ SOLVE(a[1..n]; N_MITM, T_DP)
     return (YES, A, B, d, P)
 ```
 
-The symbol — stands for the absent balanced partition.
+The symbol — stands for the absent balanced partition. The condition $n \cdot T \le W_{DP}$ is tested as $T \le \lfloor W_{DP} / n \rfloor$, which is equivalent for integers and does not compute the product, so it cannot overflow.
 
 When only one exact algorithm is in range, it is run. When both are in range, the one with the smaller cost for the given $n$ and $T$ is run, and the two cost estimates of Section 4.7 are the starting point for this rule.
 
@@ -733,7 +734,7 @@ When only one exact algorithm is in range, it is run. When both are in range, th
 | $(2, 3, 4)$ | $d = 1$ | $S = 9$ is odd | NO, with the partition of discrepancy $1$ |
 | $(5, 6, 7, 8, 10)$ | $d = 2$ | $S = 36$, $T = 18$, both exact algorithms are in range and answer YES | YES with the balanced partition $\lbrace 5, 6, 7 \rbrace$, $\lbrace 8, 10 \rbrace$ found by the exact algorithm, next to the partition of discrepancy $2$ |
 
-The third row shows what the exact algorithm adds. The approximation misses the balanced partition $\lbrace 5, 6, 7 \rbrace$, $\lbrace 8, 10 \rbrace$, the exact algorithm finds it, and the result contains both, so the comparison of Section 6.1 records that the approximation has missed the optimum. The answer UNKNOWN occurs only for inputs with an even sum, $d > 0$, $T > T_{DP}$ and $n > N_{MITM}$, for example for $1000$ numbers of $25$ digits.
+The third row shows what the exact algorithm adds. The approximation misses the balanced partition $\lbrace 5, 6, 7 \rbrace$, $\lbrace 8, 10 \rbrace$, the exact algorithm finds it, and the result contains both, so the comparison of Section 6.1 records that the approximation has missed the optimum. The answer UNKNOWN occurs only for inputs with an even sum, $d > 0$, $n > N_{MITM}$ and dynamic programming out of range ($T > T_{DP}$ or $n \cdot T > W_{DP}$), for example for $1000$ numbers of $25$ digits.
 
 ### 6.4 Correctness
 
@@ -742,13 +743,13 @@ The third row shows what the exact algorithm adds. The approximation misses the 
 1. $(A, B)$ is a partition of $\lbrace 1, \dots, n \rbrace$ into two non-empty parts, and $d = |\Sigma(A) - \Sigma(B)|$.
 2. If the answer is YES, $P$ is a balanced partition. If the answer is NO, no balanced partition exists. If the answer is NO or UNKNOWN, $P$ is absent.
 3. If $d = 0$, the answer is YES and $P = (A, B)$.
-4. The answer is UNKNOWN only if $\Sigma(M)$ is even, $d > 0$, $T > T_{DP}$ and $n > N_{MITM}$.
+4. The answer is UNKNOWN only if $\Sigma(M)$ is even, $d > 0$, $n > N_{MITM}$, and $T > T_{DP}$ or $n \cdot T > W_{DP}$.
 
 *Proof.* Part 1 is Theorem 5.2, and part 3 is the first test of the algorithm. For parts 2 and 4 consider the possible returns.
 
 - *Return in the first test.* Since $d = 0$, $P = (A, B)$ is a balanced partition, so YES is correct.
 - *Return in the second test.* If $S$ is odd, a balanced partition would give $S = 2\Sigma(A)$, which is impossible, so NO is correct (Section 1.2), and $P$ is absent.
-- *The remaining case.* Now $S$ is even and $d > 0$. Then $S > 0$, since $S = 0$ gives $d = 0$ as above, so $T > 0$. If `DP-PARTITION` is run, then $T \le T_{DP}$, and by Theorem 4.2 it returns a balanced partition, which becomes $P$ with the answer YES, if one exists, and NO otherwise. The same holds for `MEET-IN-THE-MIDDLE` with $n \le N_{MITM}$ by Theorem 3.4. Otherwise $T > T_{DP}$ and $n > N_{MITM}$, the answer is UNKNOWN, as stated in part 4, and $P$ is absent. $\square$
+- *The remaining case.* Now $S$ is even and $d > 0$. Then $S > 0$, since $S = 0$ gives $d = 0$ as above, so $T > 0$. If `DP-PARTITION` is run, then $T \le T_{DP}$ and $n \cdot T \le W_{DP}$, and by Theorem 4.2 it returns a balanced partition, which becomes $P$ with the answer YES, if one exists, and NO otherwise. The same holds for `MEET-IN-THE-MIDDLE` with $n \le N_{MITM}$ by Theorem 3.4. Otherwise dynamic programming is out of range, that is, $T > T_{DP}$ or $n \cdot T > W_{DP}$, and $n > N_{MITM}$; the answer is UNKNOWN, as stated in part 4, and $P$ is absent. $\square$
 
 If the answer is YES and $d > 0$, the partition $(A, B)$ of the approximation is not balanced, and $P$ is. By Proposition 5.3, the discrepancy of $(A, B)$ is at most $\max_i a_i$ in any case. If the answer is NO or UNKNOWN, the discrepancy $d$ is the quality of an approximation, and we do not claim that it is minimal.
 

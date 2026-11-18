@@ -123,7 +123,7 @@ The length of the input is $\sum_i \log_2 (a_i + 1) = O(n \log S)$ bits, whereas
 
 ### 4.7 Range of application and comparison with meet in the middle
 
-The tables have $T + 1$ bits and $T + 1$ entries of `first`. Stored as $32$-bit numbers, which suffice for $n < 2^{32}$, the entries take $4(T + 1)$ bytes, thirty-two times the bitset, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). A target of order $2.5 \cdot 10^8$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$ at least, since a single such number is at least $10^{24}$, which is far out of range.
+The tables have $T + 1$ bits and $T + 1$ entries of `first`. Stored as $32$-bit numbers, which suffice for $n < 2^{32}$, the entries take $4(T + 1)$ bytes, thirty-two times the bitset, so the memory limits the algorithm to $T \le T_{DP}$ (Section 1.4). The time is limited separately: by Theorem 4.3 it grows with the product $n \cdot T$, which the bound on $T$ does not control, so the algorithm is applied only if also $n \cdot T \le W_{DP}$ (Section 1.4). A target of order $2.5 \cdot 10^8$ already needs about a gigabyte, and the numbers of $25$ digits of interest have $T$ of order $10^{24}$ at least, since a single such number is at least $10^{24}$, which is far out of range.
 
 #### Comparison with meet in the middle
 
