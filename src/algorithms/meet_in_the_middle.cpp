@@ -13,8 +13,8 @@
 namespace {
 
 // The balanced partition whose part A has the sum x in the first h elements
-// and the sum y in the others. x is an entry of LS and y one of RS, so both
-// subsets exist (Lemma 3.1) and FIND-SUBSET finds them.
+// and the sum y in the others. x is an entry of LS and y one of RS, so a
+// subset with each sum exists and find_subset finds it.
 Partition recover(std::span<const Value> a, std::size_t h, Value x, Value y) {
     std::vector<std::size_t> A = *find_subset(a.first(h), x);
     const std::vector<std::size_t> right = *find_subset(a.subspan(h), y);
