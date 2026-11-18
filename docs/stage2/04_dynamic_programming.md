@@ -139,7 +139,7 @@ It needs less memory if and only if $4T < 32 \cdot 2^{n/2}$, that is, $n > 2 \lo
 
 *Proof.* Take logarithms to base $2$ in the two inequalities. $\square$
 
-Since $T \le T_{DP}$, the threshold is at most $2 \log_2 T_{DP} - 12$, which is about forty for $T_{DP}$ of order $10^{8}$. Moreover, meet in the middle is applied only for $n \le N_{MITM}$, whereas dynamic programming has no bound on $n$. Two examples illustrate the choice.
+Since $T \le T_{DP}$, the threshold for the number of operations is at most $2 \log_2 T_{DP} - 12$ and the threshold for the memory at most $2 \log_2 T_{DP} - 6$, which are about forty-four and about fifty for $T_{DP}$ of order $10^{8}$. Moreover, meet in the middle is applied only for $n \le N_{MITM}$, whereas dynamic programming has no bound on $n$. Two examples illustrate the choice.
 
 | | many small numbers | few large numbers |
 | --- | --- | --- |
