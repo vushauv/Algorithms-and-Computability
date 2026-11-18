@@ -10,6 +10,7 @@ int main() {
     test_meet_in_the_middle();
     test_dynamic_programming();
     test_solve();
+    test_result_file();
 
     std::cout << check::passed << " checks passed, " << check::failed << " failed\n";
     return check::failed == 0 ? 0 : 1;

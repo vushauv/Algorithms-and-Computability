@@ -1,0 +1,10 @@
+Subject: AaC, output format, a correction again
+
+Dear All,
+There is a small mistake in description of output file format: there is no coma separating numbers in the set and the subsets.
+The correct formulation of the lines corresponding to subsets:
+" - For each set, a first line: the sum of the whole set, a space, then the original set in input order, with numbers separated by a space."
+"- Then k lines, one per subset: the subset's sum, a space, then its numbers separated by a space."
+Attached exaples are correct.
+I am sorry for the mess.
+Władysław Homenda

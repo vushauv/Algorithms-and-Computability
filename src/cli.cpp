@@ -30,6 +30,7 @@ Algorithm parse_algorithm(std::string_view text) {
 Options parse_options(int argc, char** argv) {
     Options options;
     std::vector<std::string_view> args(argv + 1, argv + argc);
+    std::vector<std::string_view> positional;  // FILE and K
 
     for (std::size_t i = 0; i < args.size(); ++i) {
         std::string_view arg = args[i];
@@ -59,25 +60,40 @@ Options parse_options(int argc, char** argv) {
             options.algorithm = parse_algorithm(value_of_option());
         } else if (arg.size() > 1 && arg[0] == '-') {
             throw UsageError("unknown option '" + std::string(arg) + "'");
-        } else if (options.path.empty()) {
-            options.path = arg;
         } else {
-            throw UsageError("only one input file is accepted");
+            positional.push_back(arg);
         }
     }
 
-    if (options.path.empty() && !options.help) throw UsageError("no input file given");
+    if (positional.empty() && !options.help) throw UsageError("no input file given");
+    if (positional.size() > 2)
+        throw UsageError("expected FILE and K, got " + std::to_string(positional.size()) +
+                         " arguments");
+    if (!positional.empty()) options.path = positional[0];
+    if (positional.size() == 2) {
+        ParsedValue k = parse_value(positional[1]);
+        if (k.status != ParseStatus::Ok || k.value != kSubsets)
+            throw UsageError("K, the number of subsets, must be " + std::to_string(kSubsets) +
+                             ", got '" + std::string(positional[1]) + "'");
+    }
     return options;
 }
 
 std::string usage_text() {
-    return "Usage: partition [options] FILE\n"
+    return "Usage: partition [options] FILE [K]\n"
            "\n"
            "Decides for every set in FILE whether it can be split into two parts\n"
            "with equal sums, and prints such a split when one is found.\n"
            "\n"
            "FILE: line 1 is the number of sets, each next line is one set of\n"
            "non-negative integers (below 10^38) separated by single spaces.\n"
+           "K:    the number of subsets, 2 (the default and the only value accepted).\n"
+           "\n"
+           "The results are also saved next to FILE, with _output.txt in place of\n"
+           ".txt (in.txt gives in_output.txt): for every set its sum and numbers,\n"
+           "the two subsets with their sums, and the difference of the sums. The\n"
+           "subsets are the balanced partition when one is found, and otherwise\n"
+           "the partition of Karmarkar-Karp.\n"
            "\n"
            "Options:\n"
            "  --no-color     plain output (also when NO_COLOR is set or the output\n"
@@ -101,5 +117,6 @@ std::string usage_text() {
            "  -h, --help     this text\n"
            "\n"
            "Exit codes: 0 success, 1 invalid input file, 2 invalid command line,\n"
-           "3 an algorithm could not be run on some set.\n";
+           "3 an algorithm could not be run on some set, 4 the results file could\n"
+           "not be written.\n";
 }

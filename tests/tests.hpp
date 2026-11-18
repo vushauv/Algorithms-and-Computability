@@ -9,3 +9,4 @@ void test_karmarkar_karp();
 void test_meet_in_the_middle();
 void test_dynamic_programming();
 void test_solve();
+void test_result_file();
