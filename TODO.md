@@ -1,8 +1,4 @@
 # TODO
 
-- [ ] Ask Homenda (cc rabiatul.adawiyah.dokt@pw.edu.pl and wladyslaw.homenda@pw.edu.pl) for constraints on the input:
-  - maximum number of sets in a file,
-  - maximum number of elements in a set,
-  - maximum size of a number (digits). The only evidence is `raw_regulations/AaC_example_2.txt` with about 25 digits.
-  - whether zero and duplicates are allowed.
-  Until answered, we use our own constraints from `task.md` section 7.
+- [x] Ask Homenda for constraints on the input (number of sets, elements per set, size of a number). Answer, recorded Nov 18, 2026: the input should not be limited.
+- [ ] Rework the input limits of `task.md` section 7 for unlimited input (next piece of work; `task.md` section 6).
