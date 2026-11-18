@@ -40,6 +40,19 @@ void test_input() {
     CHECK(read("1\n0 0 007\n")[0].values[2] == 7);    // zeros and leading zeros
     CHECK(read("\xEF\xBB\xBF" "1\r\n5 5\r\n").size() == 1);  // UTF-8 byte order mark
 
+    // Extra spaces and tabs are skipped; the columns still count them.
+    CHECK(read("1\n1  2\n")[0].values.size() == 2);            // two spaces
+    CHECK(read("1\n 1 2\n")[0].values.size() == 2);            // leading space
+    CHECK(read("1\n1 2 \n")[0].values.size() == 2);            // trailing space
+    CHECK(read("1\n1\t2\n")[0].values.size() == 2);            // tab
+    CHECK(read(" 1 \r\n\t1  2 \t\r\n \r\n")[0].sum == 3);     // everywhere, with CRLF
+    try {
+        read("1\n 12  3x\n");
+        CHECK(false);
+    } catch (const InputError& error) {
+        CHECK(error.column() == 6);
+    }
+
     const std::string max38(38, '9');
     CHECK(read("1\n" + max38 + " " + max38 + "\n")[0].sum == 2 * (kValueLimit - 1));
 
@@ -59,10 +72,8 @@ void test_input() {
     CHECK(error_line("1\n1 2\n3 4\n") == 3);          // more sets than announced
     CHECK(error_line("1\n\n") == 2);                  // empty set
     CHECK(error_line("1\n5\n") == 2);                 // one element
-    CHECK(error_line("1\n1  2\n") == 2);              // two spaces
-    CHECK(error_line("1\n 1 2\n") == 2);              // leading space
-    CHECK(error_line("1\n1 2 \n") == 2);              // trailing space
-    CHECK(error_line("1\n1\t2\n") == 2);              // tab
+    CHECK(error_line("1\n  \n") == 2);               // a set of spaces only
+    CHECK(error_line("1\n1,2\n") == 2);              // comma
     CHECK(error_line("1\n1 -2\n") == 2);              // negative number
     CHECK(error_line("1\n1 2.5\n") == 2);             // not an integer
     CHECK(error_line("2\n1 2\n1 1" + std::string(38, '0') + "\n") == 3);  // 10^38
@@ -77,13 +88,6 @@ void test_input() {
     } catch (const InputError& error) {
         CHECK(error.column() == 4);
         CHECK(std::string(error.what()) == "line 2, column 4: '3x' is not a non-negative integer (digits only)");
-    }
-
-    try {
-        read("1\n1\t2\n");
-        CHECK(false);
-    } catch (const InputError& error) {
-        CHECK(std::string(error.what()).find("not a non-negative integer") != std::string::npos);
     }
 
     CHECK_THROWS(read_instances_from_file("no/such/file.txt"), InputError);

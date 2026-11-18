@@ -1,5 +1,6 @@
 // Reading of the input file: line 1 is the number of sets N, each of the
-// next N lines is one multiset of numbers separated by single spaces.
+// next N lines is one multiset of numbers separated by single spaces. Extra
+// spaces and tabs between the numbers and at the ends of a line are accepted.
 // The limits are those of task.md section 7 (report, Section 1.1).
 #pragma once
 

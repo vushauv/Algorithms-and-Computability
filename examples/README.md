@@ -27,6 +27,7 @@ its results next to the input, for example `01_report_examples_output.txt`
 | `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest allowed) and leading zeros |
 | `09_windows_line_endings.txt` | 2 | CRLF line endings |
 | `10_homenda_example.txt` | 2 | the input of Homenda's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
+| `11_extra_spaces.txt` | 3 | spaces at the ends of the lines, two spaces and tabs between the numbers: accepted and read as single spaces |
 
 The YES sets of `05_large_values.txt` are made balanced by construction; the
 others are random. The answers were checked against brute force
@@ -47,12 +48,9 @@ exits with code 1.
 | `05_too_many_lines.txt` | more sets than announced |
 | `06_empty_line.txt` | an empty line in place of a set |
 | `07_one_element.txt` | a set with one number ($n \ge 2$ is required) |
-| `08_two_spaces.txt` | two spaces between numbers |
-| `09_trailing_space.txt` | a space at the end of a line |
-| `10_negative_number.txt` | a negative number |
-| `11_not_a_digit.txt` | a letter inside a number |
-| `12_tab.txt` | a tab as separator |
-| `13_value_too_large.txt` | a value of $10^{38}$ |
-| `14_sum_too_large.txt` | the sum of a set reaches $2^{128}$ |
-| `15_decimal_point.txt` | a non-integer value |
-| `16_first_line_two_numbers.txt` | more than one number on line 1 |
+| `08_negative_number.txt` | a negative number |
+| `09_not_a_digit.txt` | a letter inside a number |
+| `10_value_too_large.txt` | a value of $10^{38}$ |
+| `11_sum_too_large.txt` | the sum of a set reaches $2^{128}$ |
+| `12_decimal_point.txt` | a non-integer value |
+| `13_first_line_two_numbers.txt` | more than one number on line 1 |
