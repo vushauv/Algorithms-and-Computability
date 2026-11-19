@@ -7,7 +7,7 @@ RUN (from the console; partition.exe needs no installation)
     partition.exe INPUT_FILE [K] [options]
 
     INPUT_FILE  line 1: the number of sets; each next line: one set of
-                non-negative integers below 10^38, separated by single spaces
+                non-negative integers of any size, separated by single spaces
                 (extra spaces and tabs are accepted)
     K           the number of subsets: 2 (the default and the only value)
 
@@ -31,12 +31,24 @@ ALGORITHMS (option --algorithm A, default solve)
     dp     dynamic programming (exact, half sum at most 3*10^8; --t-dp T, --w-dp W)
     kk     Karmarkar-Karp (approximation, any set)
 
+ARITHMETIC (option --arithmetic X, default boost)
+
+    boost   numbers of any size, the library Boost.Multiprecision
+    own     numbers of any size, our own long arithmetic; --base B sets the
+            base of its cells, from 2 to 4294967296 (the default)
+    native  128-bit integers of the processor: numbers below 10^38, the sum
+            of a set below 2^128
+
+    The results are the same in all three; only the running time differs.
+
     Other options: --no-color, --help
 
 EXAMPLES
 
     examples\run_examples.bat runs all sample inputs; examples\README.md says
-    what each one shows; examples\errors\ has one invalid file per error.
+    what each one shows; examples\errors\ has one invalid file per error;
+    examples\native_limits\ has the two files that only --arithmetic native
+    rejects.
 
 EXIT CODES
 
