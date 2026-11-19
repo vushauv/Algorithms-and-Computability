@@ -31,8 +31,13 @@ OPTIONS
                     when the set allows it), bf (brute force, up to 64
                     numbers), mitm (meet in the middle), dp (dynamic
                     programming), kk (Karmarkar-Karp)
-    --arithmetic X  boost (default) or own: numbers of any size;
-                    native: numbers below 10^38, sum below 2^128.
+    --arithmetic X  how the program stores and adds the numbers:
+                      boost   (default) library for numbers of any size
+                      own     our own code for numbers of any size
+                              (--base B: base of its digits, 2 to 4294967296)
+                      native  the processor's 128-bit integers: fastest,
+                              but numbers must be below 10^38 and the sum
+                              of a set below 2^128 (else an error)
                     The results are the same; only the speed differs.
     --no-color      plain text, no colours
     --help          all options
