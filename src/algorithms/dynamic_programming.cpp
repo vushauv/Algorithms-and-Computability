@@ -82,12 +82,12 @@ ExactAnswer dp_partition(std::span<const Value> a) {
                    Value{T / kWordBits + 1} * sizeof(Word) + (Value{T} + 1) * sizeof(Step));
     std::vector<Word> reach(T / kWordBits + 1, 0);
     std::vector<Step> first(T + 1, 0);
-    reach[0] = 1;  // the empty sum
+    reach[0] = 1;
     std::size_t top = 0;  // upper bound on the obtainable sums
     for (std::size_t i = 0; i < n; ++i) {
         const auto ai = static_cast<std::size_t>(a[i]);
         top = std::min(T, top + ai);  // top + ai ≤ 2T, no overflow
-        if (ai > 0) shift_or(reach, first, ai, top, static_cast<Step>(i + 1));  // a zero changes nothing
+        if (ai > 0) shift_or(reach, first, ai, top, static_cast<Step>(i + 1));
         if (test_bit(reach, T)) return balanced_partition(n, read_back(a, first, T));
     }
     return std::nullopt;

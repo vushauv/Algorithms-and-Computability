@@ -28,7 +28,6 @@ Partition karmarkar_karp(std::span<const Value> a) {
     }
     const Value d = H.top().first;
 
-    // Two-colouring of the tree by breadth-first search from vertex 0.
     std::vector<int> colour(n, -1);
     std::queue<std::size_t> queue;
     colour[0] = 0;

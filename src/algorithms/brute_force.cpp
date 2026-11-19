@@ -28,12 +28,12 @@ std::optional<std::vector<std::size_t>> find_subset(std::span<const Value> b, Va
     if (sum == x) return std::vector<std::size_t>{};
     const std::uint64_t end = std::uint64_t{1} << b.size();  // b.size() ≤ 63
     for (std::uint64_t k = 1; k < end; ++k) {
-        const int j = std::countr_zero(k);  // the bit that changes
+        const int j = std::countr_zero(k);
         g ^= std::uint64_t{1} << j;
         if ((g >> j) & 1) {
-            sum += b[j];  // b[j] enters the subset
+            sum += b[j];
         } else {
-            sum -= b[j];  // b[j] leaves it; it was added before, no underflow
+            sum -= b[j];  // b[j] was added before, no underflow
         }
         if (sum == x) return indices_of(g);
     }

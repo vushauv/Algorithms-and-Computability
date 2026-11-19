@@ -37,7 +37,7 @@ Partition balanced_partition(std::size_t n, std::vector<std::size_t> A) {
     std::sort(A.begin(), A.end());
     std::vector<std::size_t> B;
     B.reserve(n - A.size());
-    std::size_t next = 0;  // the next index of A
+    std::size_t next = 0;
     for (std::size_t i = 0; i < n; ++i) {
         if (next < A.size() && A[next] == i) {
             ++next;
