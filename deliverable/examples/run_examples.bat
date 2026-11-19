@@ -1,8 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-rem Runs dist\partition.exe on every sample input, valid ones first. Each run
+rem Runs partition.exe on every sample input, valid ones first. Each run
 rem saves NAME_output.txt next to its input; those files are skipped here.
-set EXE=%~dp0..\dist\partition.exe
+set EXE=%~dp0..\partition.exe
 for %%f in ("%~dp0*.txt") do (
     set "name=%%~nf"
     if /i not "!name:~-7!"=="_output" (

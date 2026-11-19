@@ -3,7 +3,7 @@
 #   make           the program, build/linux/partition
 #   make test      build and run the tests
 #   make windows   static Windows executable, build/windows/partition.exe
-#   make dist      the same, copied to dist/partition.exe (committed for the demo)
+#   make deliverable   the same, copied to deliverable/partition.exe (committed for the demo)
 #   make clean     remove build/
 #
 # The README lists the same compiler commands for building without make.
@@ -16,7 +16,7 @@ BUILD    = build/linux
 PROGRAM  = $(BUILD)/partition
 TESTS    = $(BUILD)/run_tests
 WINDOWS  = build/windows/partition.exe
-DIST     = dist/partition.exe
+DELIVERABLE = deliverable/partition.exe
 
 MAIN_SRC = src/main.cpp
 LIB_SRC  = $(filter-out $(MAIN_SRC),$(wildcard src/*.cpp src/algorithms/*.cpp))
@@ -26,7 +26,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test windows dist clean
+.PHONY: all test windows deliverable clean
 
 all: $(PROGRAM)
 
@@ -46,9 +46,8 @@ windows:
 	mkdir -p build/windows
 	$(MINGW) $(CXXFLAGS) -static -s -Isrc $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
 
-dist: windows
-	mkdir -p dist
-	cp $(WINDOWS) $(DIST)
+deliverable: windows
+	cp $(WINDOWS) $(DELIVERABLE)
 
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp

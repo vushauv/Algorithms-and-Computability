@@ -5,8 +5,8 @@ next line: one multiset of non-negative integers separated by single spaces).
 Run one with
 
 ```sh
-./build/linux/partition examples/01_report_examples.txt 2     # Linux
-dist\partition.exe examples\01_report_examples.txt 2           # Windows
+./build/linux/partition deliverable/examples/01_report_examples.txt 2     # Linux
+partition.exe examples\01_report_examples.txt 2                 # Windows, from deliverable\
 ```
 
 or all of them on Windows with `examples\run_examples.bat`. Each run also saves

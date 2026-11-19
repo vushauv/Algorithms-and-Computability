@@ -11,9 +11,9 @@ RUN (from the console; partition.exe needs no installation)
                 (extra spaces and tabs are accepted)
     K           the number of subsets: 2 (the default and the only value)
 
-    Example, from the main folder of the project:
+    Example, from this folder:
 
-    dist\partition.exe examples\10_homenda_example.txt 2
+    partition.exe examples\10_homenda_example.txt 2
 
 RESULTS
 

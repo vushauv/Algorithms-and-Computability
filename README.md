@@ -19,7 +19,7 @@ Windows executable, MinGW-w64 (`x86_64-w64-mingw32-g++`).
 make             # build/linux/partition
 make test        # build and run the tests (from the repository root)
 make windows     # static build/windows/partition.exe, needs no DLLs
-make dist        # the same, copied to dist/partition.exe
+make deliverable # the same, copied to deliverable/partition.exe
 make clean
 ```
 
@@ -35,7 +35,7 @@ Run it on an input file, optionally followed by the number of subsets `K`
 
 ```sh
 ./build/linux/partition raw_regulations/AaC_example_1.txt 2
-./build/linux/partition --algorithm mitm --n-mitm 30 examples/05_large_values.txt
+./build/linux/partition --algorithm mitm --n-mitm 30 deliverable/examples/05_large_values.txt
 ./build/linux/partition --help
 ```
 
@@ -60,17 +60,18 @@ algorithm could not be run on some set, 4 the results file could not be written.
 
 ### Demo on Windows (no compiler)
 
-`dist/partition.exe` is the prebuilt static executable (`make dist`); it needs
-only the system DLLs. `dist/readme.txt` is the short guide Homenda asked for.
-On the lab machine:
+`deliverable/` is the folder to hand over: `partition.exe` (the prebuilt static
+executable, `make deliverable`; it needs only the system DLLs), `readme.txt`
+(the short guide Homenda asked for) and `examples/`. On the lab machine:
 
 ```bat
-dist\partition.exe examples\10_homenda_example.txt 2
+cd deliverable
+partition.exe examples\10_homenda_example.txt 2
 examples\run_examples.bat
 ```
 
 The sample inputs and their expected results are described in
-`examples/README.md`.
+`deliverable/examples/README.md`.
 
 ## Stage 2 report
 
