@@ -141,6 +141,25 @@ for f in deliverable/examples/[01]*.txt; do
         fi
     done
 done
+# Every algorithm alone, in every arithmetic: the same text and results file
+# (small files, so that brute force can run).
+for f in deliverable/examples/0[1-4]_*.txt deliverable/examples/12_*.txt; do
+    case $f in *_output.txt) continue ;; esac
+    out=${f%.txt}_output.txt
+    for algorithm in bf mitm dp kk; do
+        "$PROGRAM" --no-color --algorithm $algorithm "$f" > "$TMP/reference" 2>&1
+        cp "$out" "$TMP/reference_file"
+        for arithmetic in "native" "own" "own --base 3" "own --base 10"; do
+            # shellcheck disable=SC2086
+            "$PROGRAM" --no-color --algorithm $algorithm --arithmetic $arithmetic "$f" > "$TMP/other" 2>&1
+            if cmp -s "$TMP/reference" "$TMP/other" && cmp -s "$TMP/reference_file" "$out"; then
+                pass
+            else
+                fail "--algorithm $algorithm --arithmetic $arithmetic differs from boost: $f"
+            fi
+        done
+    done
+done
 # Numbers of 50 and 180 digits: YES by meet in the middle, NO, and the file.
 "$PROGRAM" --no-color deliverable/examples/14_beyond_128_bits.txt > "$TMP/beyond" 2>&1
 if [ "$(grep -c 'Answer: YES' "$TMP/beyond")" -eq 4 ] && [ "$(grep -c 'Answer: NO' "$TMP/beyond")" -eq 2 ] \
