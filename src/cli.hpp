@@ -13,11 +13,9 @@
 
 // Default limits of the exact algorithms. Provisional, see task.md section 6.
 inline constexpr std::size_t kDefaultNMitm = 44;
-// Dynamic programming keeps T + 1 bits and T + 1 step numbers of 4 bytes, so
-// about 1.2 GB at T = 3 · 10^8.
+// About 4 bytes per unit of T (the step table), so 1.2 GB at the default.
 inline constexpr std::uint64_t kDefaultTDp = 300'000'000;
-// Bound on n · T for dynamic programming, whose time is O(n · T / 64): about
-// 10 s for the worst case on a 2026 laptop (a NO instance with d > 0).
+// Limit on n · T for DP, whose time is about n · T / 64. Roughly 10 s worst case on a laptop.
 inline constexpr std::uint64_t kDefaultWDp = 1'000'000'000'000;
 
 // Hard cap for meet in the middle: a subset mask has to fit in 64 bits.
@@ -30,8 +28,7 @@ inline constexpr std::size_t kSubsets = 2;
 // What --algorithm picks: SOLVE by default, or one algorithm alone (for timings).
 enum class Algorithm { Solve, BruteForce, MeetInTheMiddle, DynamicProgramming, KarmarkarKarp };
 
-// --arithmetic: the type of the numbers (number.hpp). Boost and Own have no
-// limit on the size of a number; Native is the 128-bit type of the compiler.
+// --arithmetic: the type of the numbers (number.hpp). Native is limited to 128 bits.
 enum class Arithmetic { Boost, Own, Native };
 
 struct Options {

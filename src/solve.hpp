@@ -42,17 +42,15 @@ struct Solution {
     V T;  // S / 2
 };
 
-// The rule when both exact algorithms are in range (provisional, task.md
-// section 6): dynamic programming if T/32 < 2^(n/2), that is Proposition 4.4
-// (T/64 < 2^(n/2)) with the cost of dynamic programming doubled for its table.
-// Asked only for a target in the range of dynamic programming, so 64 bits.
+// Which exact algorithm when both are in range (provisional, task.md section 6): DP if
+// T/32 < 2^(n/2). That is Proposition 4.4 (T/64) with the cost doubled for the step table.
+// Asked only for a target in the range of DP, so 64 bits.
 bool dp_is_cheaper(std::size_t n, std::uint64_t T);
 
-// The exact algorithm that SOLVE runs for a set of n numbers with target T:
-// DynamicProgramming, MeetInTheMiddle, or None if neither is in range.
+// The exact algorithm SOLVE runs: DP, MeetInTheMiddle, or None if neither is in range.
 template <class V>
 Method choose_exact(std::size_t n, const V& T, const Ranges& ranges);
 
-// Requires n ≥ 2 and, for Native, S < 2^128 (both checked by read_instances).
+// Needs n ≥ 2 and, for Native, S < 2^128 (read_instances checks both).
 template <class V>
 Solution<V> solve(std::span<const V> a, const Ranges& ranges);

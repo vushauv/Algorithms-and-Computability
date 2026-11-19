@@ -78,8 +78,7 @@ std::size_t read_set_count(std::istream& in) {
     std::vector<Field> fields = split_fields(line);
     if (fields.size() != 1)
         throw InputError(1, 0, "the first line must contain only the number of sets");
-    // Any length is read, so a count that is zero or does not fit in std::size_t is
-    // the only error: no file can have that many lines.
+    // Only 0 and a count that doesn't fit in size_t are errors: no file has that many lines.
     const BoostInt count = parse_field<BoostInt>(fields[0], 1);
     if (count < 1) throw InputError(1, 1, "the number of sets must be at least 1");
     if (count > std::numeric_limits<std::size_t>::max())
@@ -94,8 +93,8 @@ Instance<V> read_set(const std::string& line, std::size_t line_number) {
         throw InputError(line_number, 0, "empty line; a set needs at least " +
                                              std::to_string(kMinElements) + " numbers");
 
-    // The numbers are parsed before their count is checked, so that "1,2"
-    // is reported as a bad character and not as a set with one element.
+    // Parse the numbers before counting them, so "1,2" is a bad character and not a set
+    // with one element.
     Instance<V> instance{{}, 0, line_number};
     instance.values.reserve(fields.size());
     for (const Field& field : fields) {
@@ -147,7 +146,7 @@ std::vector<Instance<V>> read_instances(std::istream& in) {
 
 template <class V>
 std::vector<Instance<V>> read_instances_from_file(const std::string& path) {
-    // A directory opens without error on Linux and then reads as empty.
+    // On Linux a directory opens fine and reads as empty.
     std::error_code ignored;
     if (std::filesystem::is_directory(path, ignored))
         throw InputError(0, 0, "is a directory, not a file");

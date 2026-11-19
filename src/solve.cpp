@@ -16,7 +16,7 @@ bool dp_is_cheaper(std::size_t n, std::uint64_t T) {
 
 template <class V>
 DpLimit dp_limit(std::size_t n, const V& T, const Ranges& ranges) {
-    // Above kMaxDpTarget dp_partition cannot index its bitset, whatever t_dp says.
+    // Above kMaxDpTarget dp_partition can't index its bitset, whatever t_dp says.
     const std::optional<std::uint64_t> target = to_u64(T);
     if (!target || *target > ranges.t_dp || *target > kMaxDpTarget) return DpLimit::Target;
     // n · T ≤ w_dp, written so that the product cannot overflow; n ≥ 2.

@@ -9,7 +9,7 @@ template <class V>
 Partition<V> karmarkar_karp(std::span<const V> a) {
     const std::size_t n = a.size();
 
-    // Max-heap of the pairs (a[i], i); ties are broken by the index.
+    // Max-heap of (a[i], i); ties go by index.
     using Entry = std::pair<V, std::size_t>;
     std::vector<Entry> entries;
     entries.reserve(n);

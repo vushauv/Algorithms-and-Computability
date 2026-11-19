@@ -1,8 +1,6 @@
-// Reading of the input file: line 1 is the number of sets N, each of the
-// next N lines is one multiset of numbers separated by single spaces. Extra
-// spaces and tabs between the numbers and at the ends of a line are accepted.
-// There is no limit on the number of sets, on the numbers in a set or (except
-// with Native) on their size: task.md section 7.
+// Reads the input file: line 1 is the number of sets, then one set per line.
+// Extra spaces and tabs are accepted. No limit on the number of sets or of numbers in
+// a set, and none on their size except with Native: task.md section 7.
 #pragma once
 
 #include <cstddef>
@@ -37,7 +35,7 @@ private:
 template <class V>
 std::vector<Instance<V>> read_instances(std::istream& in);
 
-// Opens the file and reads it; InputError also when it cannot be opened or
-// is a directory. The messages do not repeat the path; the caller adds it.
+// Reads the whole file. Throws InputError if it can't be opened or is a directory.
+// The messages don't include the path, the caller adds it.
 template <class V>
 std::vector<Instance<V>> read_instances_from_file(const std::string& path);

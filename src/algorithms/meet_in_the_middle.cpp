@@ -13,9 +13,8 @@
 
 namespace {
 
-// The balanced partition whose part A has the sum x in the first h elements
-// and the sum y in the others. x is an entry of LS and y one of RS, so a
-// subset with each sum exists and find_subset finds it.
+// The partition whose A has sum x in the first h elements and sum y in the rest.
+// x comes from LS and y from RS, so both subsets exist and find_subset finds them.
 template <class V>
 Partition<V> recover(std::span<const V> a, std::size_t h, const V& x, const V& y) {
     std::vector<std::size_t> A = *find_subset(a.first(h), x);
@@ -52,7 +51,7 @@ ExactAnswer<V> meet_in_the_middle(std::span<const V> a) {
     const V& T = pre.T;
 
     const std::size_t h = n / 2;
-    // No sum is larger than S, which bounds the bytes of a stored one.
+    // No sum is above S, which bounds the bytes of a stored one.
     require_memory("meet in the middle",
                    ((Native{1} << h) + (Native{1} << (n - h))) * stored_bytes(pre.S));
     std::vector<V> LS = subset_sums(a.first(h));
@@ -60,7 +59,7 @@ ExactAnswer<V> meet_in_the_middle(std::span<const V> a) {
     std::sort(LS.begin(), LS.end());
     std::sort(RS.begin(), RS.end(), std::greater<V>{});
 
-    // Every LS[i] + RS[j] is the sum of a subset of a, so at most S.
+    // Every LS[i] + RS[j] is a subset sum, so at most S.
     std::size_t i = 0;
     std::size_t j = 0;
     while (i < LS.size() && j < RS.size()) {

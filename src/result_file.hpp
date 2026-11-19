@@ -29,11 +29,11 @@ std::string path_for(std::string_view input_path);
 // First line, "N K".
 std::string header(std::size_t sets, std::size_t subsets);
 
-// The lines of one set, from "S a1 ... an" to "D", without a newline at the end.
+// One set, from "S a1 ... an" to "D", no newline at the end.
 template <class V>
 std::string format_set(std::span<const V> a, std::vector<std::vector<V>> subsets);
 
-// The same for the two parts of a partition of a; D is then its discrepancy d.
+// The same for the two parts of a partition; D is its d.
 template <class V>
 std::string format_set(std::span<const V> a, const Partition<V>& partition);
 

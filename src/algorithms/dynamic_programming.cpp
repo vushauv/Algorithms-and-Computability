@@ -45,10 +45,9 @@ void shift_or(std::vector<Word>& reach, std::vector<Step>& first, std::size_t sh
     }
 }
 
-// The subset with the sum T, read back from first. If first[s] = i + 1, the
-// sum s − a[i] was reachable before step i + 1 and a[i] > 0 (a zero sets no
-// bit), so first[s − a[i]] < i + 1: the indices strictly decrease and are
-// distinct, and the sums strictly decrease to 0.
+// The subset with sum T, read back from first. If first[s] = i + 1, then s − a[i] was
+// reachable before step i + 1 and a[i] > 0 (a zero sets no bit), so first[s − a[i]] <
+// i + 1. The indices strictly decrease, so they are distinct, and the sum drops to 0.
 std::vector<std::size_t> read_back(std::span<const std::size_t> a, const std::vector<Step>& first,
                                    std::size_t T) {
     std::vector<std::size_t> A;
@@ -76,8 +75,7 @@ ExactAnswer<V> dp_partition(std::span<const V> a) {
         throw std::invalid_argument("the target is too large for dynamic programming");
     }
 
-    // Every a[i] ≤ T now, so it fits in std::size_t as well; the long numbers
-    // are converted once, the table works on machine words.
+    // Now every a[i] ≤ T, so it fits in size_t. Convert once; the table uses machine words.
     const auto T = static_cast<std::size_t>(*target);
     std::vector<std::size_t> values(n);
     for (std::size_t i = 0; i < n; ++i) values[i] = static_cast<std::size_t>(*to_u64(a[i]));

@@ -29,8 +29,8 @@ void error(std::string_view message);
 // "warning: <message>" on stderr, in yellow when stderr uses colours.
 void warning(std::string_view message);
 
-// "{a, b, c}"; for more than max_shown values the first and last few,
-// with the number of the omitted ones in between.
+// "{a, b, c}". With more than max_shown values: the first and last few, and how many
+// were left out.
 template <class V>
 std::string format_values(std::span<const V> values, std::size_t max_shown = 10);
 

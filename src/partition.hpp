@@ -1,7 +1,6 @@
-// Shared types of the algorithms and the preliminary checks of the exact
-// algorithms (report, Section 1.2). Indices are 0-based in the code, so the
-// element a[i] of the report is a[i - 1] here. V is the type of the numbers
-// (number.hpp).
+// Types shared by the algorithms, and the checks every exact algorithm does first
+// (report, Section 1.2). Indices are 0-based here, so the report's a[i] is a[i - 1].
+// V is the type of the numbers (number.hpp).
 #pragma once
 
 #include <cstddef>
@@ -23,13 +22,12 @@ struct Partition {
     V d;
 };
 
-// The answer of an exact algorithm: a balanced partition (d = 0) when one
-// exists, nothing (NO) when none exists.
+// Result of an exact algorithm: a balanced partition (d = 0), or nothing for NO.
 template <class V>
 using ExactAnswer = std::optional<Partition<V>>;
 
-// The result of the two trivial cases of Section 1.2: a verdict when S is odd
-// (NO) or S = 0 (YES), otherwise no verdict and the target T = S / 2 > 0.
+// Result of the trivial cases (Section 1.2): a verdict if S is odd (NO) or 0 (YES),
+// otherwise no verdict and T = S / 2.
 template <class V>
 struct Preliminary {
     std::optional<Verdict> verdict;
@@ -37,9 +35,8 @@ struct Preliminary {
     V T;
 };
 
-// S = Σ a[i]. Throws std::overflow_error if S does not fit (Native, S ≥ 2^128);
-// read_instances already rejects such sets, so this happens only for data
-// made in code.
+// S = Σ a[i]. Throws std::overflow_error if S ≥ 2^128 (Native only). read_instances
+// already rejects such sets, so only data made in code can hit this.
 template <class V>
 V total_sum(std::span<const V> a);
 
@@ -50,13 +47,11 @@ Preliminary<V> preliminary_checks(std::span<const V> a);
 template <class V>
 std::vector<V> values_at(std::span<const V> a, const std::vector<std::size_t>& indices);
 
-// The answer of a trivial case (pre.verdict is set): NO for an odd S, and for
-// S = 0 the balanced partition {a[0]} against the rest, as n ≥ 2.
+// Answer for a trivial case: NO for an odd S; for S = 0, {a[0]} against the rest.
 template <class V>
 ExactAnswer<V> trivial_answer(const Preliminary<V>& pre, std::size_t n);
 
-// The partition of 0..n−1 into A and its complement B, both sorted, with
-// d = 0. Requires Σ(A) = S/2, which the caller has established.
+// A and its complement B, both sorted, d = 0. The caller has checked that Σ(A) = S/2.
 template <class V>
 Partition<V> balanced_partition(std::size_t n, std::vector<std::size_t> A);
 

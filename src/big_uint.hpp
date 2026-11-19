@@ -28,7 +28,7 @@ public:
     BigUint(std::uint64_t value);  // implicit, so that x == 0 and x = 5 work
 
     BigUint& operator+=(const BigUint& other);
-    // Requires *this ≥ other.
+    // Needs *this ≥ other.
     BigUint& operator-=(const BigUint& other);
     friend BigUint operator+(BigUint a, const BigUint& b) { return a += b; }
     friend BigUint operator-(BigUint a, const BigUint& b) { return a -= b; }
@@ -39,9 +39,9 @@ public:
     bool is_zero() const { return cells_.empty(); }
     bool is_odd() const;
 
-    // this ← this · factor + addend. Requires addend < factor.
+    // this ← this · factor + addend. Needs addend < factor.
     void multiply_add(Cell factor, Cell addend);
-    // this ← ⌊this / divisor⌋, returns the remainder. Requires divisor > 0.
+    // this ← ⌊this / divisor⌋, returns the remainder. Needs divisor > 0.
     Cell divide(Cell divisor);
 
     // The value, or nothing if it is 2^64 or more.
