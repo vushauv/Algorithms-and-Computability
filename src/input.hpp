@@ -1,8 +1,8 @@
 // Reading of the input file: line 1 is the number of sets N, each of the
 // next N lines is one multiset of numbers separated by single spaces. Extra
 // spaces and tabs between the numbers and at the ends of a line are accepted.
-// The limits are those of task.md section 7 (report, Section 1.1); those on
-// the size of a number and of a sum hold only for the Native numbers.
+// There is no limit on the number of sets, on the numbers in a set or (except
+// with Native) on their size: task.md section 7.
 #pragma once
 
 #include <cstddef>
@@ -13,9 +13,7 @@
 
 #include "number.hpp"
 
-inline constexpr std::size_t kMaxSets = 10'000;
 inline constexpr std::size_t kMinElements = 2;
-inline constexpr std::size_t kMaxElements = 1'000'000;
 
 template <class V>
 struct Instance {

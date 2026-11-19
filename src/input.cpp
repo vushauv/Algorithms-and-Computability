@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string_view>
 
 namespace {
@@ -77,10 +78,12 @@ std::size_t read_set_count(std::istream& in) {
     std::vector<Field> fields = split_fields(line);
     if (fields.size() != 1)
         throw InputError(1, 0, "the first line must contain only the number of sets");
-    // In the long arithmetic too: a count of any length is still out of range.
+    // Any length is read, so a count that is zero or does not fit in std::size_t is
+    // the only error: no file can have that many lines.
     const BoostInt count = parse_field<BoostInt>(fields[0], 1);
-    if (count < 1 || count > kMaxSets)
-        throw InputError(1, 1, "the number of sets must be between 1 and " + std::to_string(kMaxSets));
+    if (count < 1) throw InputError(1, 1, "the number of sets must be at least 1");
+    if (count > std::numeric_limits<std::size_t>::max())
+        throw InputError(1, 1, "the number of sets is too large");
     return static_cast<std::size_t>(count);
 }
 
@@ -90,9 +93,6 @@ Instance<V> read_set(const std::string& line, std::size_t line_number) {
     if (fields.empty())
         throw InputError(line_number, 0, "empty line; a set needs at least " +
                                              std::to_string(kMinElements) + " numbers");
-    if (fields.size() > kMaxElements)
-        throw InputError(line_number, 0, "a set may have at most " + std::to_string(kMaxElements) +
-                                             " numbers, found " + std::to_string(fields.size()));
 
     // The numbers are parsed before their count is checked, so that "1,2"
     // is reported as a bad character and not as a set with one element.
