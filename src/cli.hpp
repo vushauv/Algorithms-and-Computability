@@ -7,6 +7,7 @@
 #include <string>
 
 #include "number.hpp"
+#include "solve.hpp"
 
 // Provisional ranges of the exact algorithms (task.md section 6).
 inline constexpr std::size_t kDefaultNMitm = 44;
@@ -37,6 +38,9 @@ struct Options {
     Value t_dp = kDefaultTDp;
     Value w_dp = kDefaultWDp;
     Algorithm algorithm = Algorithm::Solve;
+
+    // The ranges of the exact algorithms that SOLVE and the single runs respect.
+    Ranges ranges() const { return Ranges{n_mitm, t_dp, w_dp}; }
 };
 
 class UsageError : public std::runtime_error {

@@ -3,6 +3,7 @@
 #include <bit>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace {
@@ -18,7 +19,8 @@ std::vector<std::size_t> indices_of(std::uint64_t g) {
 
 std::optional<std::vector<std::size_t>> find_subset(std::span<const Value> b, Value x) {
     if (b.size() > kMaxFindSubsetElements) {
-        throw std::invalid_argument("find_subset needs at most 63 elements");
+        throw std::invalid_argument("find_subset needs at most " +
+                                    std::to_string(kMaxFindSubsetElements) + " elements");
     }
     // Bit i of the mask g puts b[i] in the subset; g = 0 is the empty subset.
     std::uint64_t g = 0;
@@ -41,7 +43,8 @@ std::optional<std::vector<std::size_t>> find_subset(std::span<const Value> b, Va
 ExactAnswer brute_force(std::span<const Value> a) {
     const std::size_t n = a.size();
     if (n > kMaxBruteForceElements) {
-        throw std::invalid_argument("brute force needs at most 64 elements");
+        throw std::invalid_argument("brute force needs at most " +
+                                    std::to_string(kMaxBruteForceElements) + " elements");
     }
 
     const Preliminary pre = preliminary_checks(a);

@@ -104,13 +104,9 @@ std::string method_name(Method method) {
     return "";
 }
 
-Ranges ranges_of(const Options& options) {
-    return Ranges{options.n_mitm, options.t_dp, options.w_dp};
-}
-
 // Why dynamic programming is out of range, for the messages.
 std::string dp_out_of_range(std::size_t n, Value T, const Options& options) {
-    if (dp_limit(n, T, ranges_of(options)) == DpLimit::Target)
+    if (dp_limit(n, T, options.ranges()) == DpLimit::Target)
         return "T = " + to_string(T) + " > T_DP = " + to_string(options.t_dp);
     return "n * T = " + std::to_string(n) + " * " + to_string(T) + " > W_DP = " +
            to_string(options.w_dp);
@@ -153,7 +149,7 @@ void print_solution(const Instance& instance, const Options& options, const Solu
 // Returns the partition for the results file: the balanced one when the
 // answer is YES, otherwise that of Karmarkar-Karp.
 Partition run_solve(const Instance& instance, const Options& options) {
-    const Solution solution = solve(instance.values, ranges_of(options));
+    const Solution solution = solve(instance.values, options.ranges());
     print_solution(instance, options, solution);
     return solution.balanced ? *solution.balanced : solution.partition;
 }
@@ -200,7 +196,7 @@ std::optional<Partition> run_single(std::size_t index, const Instance& instance,
             }
             return run_exact("meet in the middle", a, meet_in_the_middle(a), "(meet in the middle)");
         case Algorithm::DynamicProgramming:
-            if (dp_limit(n, T, ranges_of(options)) != DpLimit::InRange) {
+            if (dp_limit(n, T, options.ranges()) != DpLimit::InRange) {
                 output::warning(set_name(index, instance) + ": dynamic programming skipped, " +
                                 dp_out_of_range(n, T, options));
                 return std::nullopt;

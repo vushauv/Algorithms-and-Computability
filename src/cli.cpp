@@ -3,6 +3,7 @@
 #include <string_view>
 #include <vector>
 
+#include "algorithms/brute_force.hpp"
 #include "algorithms/dynamic_programming.hpp"
 
 namespace {
@@ -110,7 +111,8 @@ std::string usage_text() {
            "  --algorithm A  the algorithm to run on every set:\n"
            "                   solve  the final algorithm (default): Karmarkar-Karp,\n"
            "                          plus an exact algorithm when one is in range\n"
-           "                   bf     brute force alone (exact, at most 64 numbers)\n"
+           "                   bf     brute force alone (exact, at most " +
+           std::to_string(kMaxBruteForceElements) + " numbers)\n"
            "                   mitm   meet in the middle alone (exact, within --n-mitm)\n"
            "                   dp     dynamic programming alone (exact, within --t-dp\n"
            "                          and --w-dp)\n"

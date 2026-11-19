@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 #include "algorithms/brute_force.hpp"
@@ -39,7 +40,8 @@ std::vector<Value> subset_sums(std::span<const Value> b) {
 ExactAnswer meet_in_the_middle(std::span<const Value> a) {
     const std::size_t n = a.size();
     if (n > kMaxMeetInTheMiddleElements) {
-        throw std::invalid_argument("meet in the middle needs at most 124 elements");
+        throw std::invalid_argument("meet in the middle needs at most " +
+                                    std::to_string(kMaxMeetInTheMiddleElements) + " elements");
     }
 
     const Preliminary pre = preliminary_checks(a);
