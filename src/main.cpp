@@ -24,6 +24,7 @@
 #include "cli.hpp"
 #include "input.hpp"
 #include "output.hpp"
+#include "report.hpp"
 #include "result_file.hpp"
 #include "solve.hpp"
 
@@ -44,108 +45,11 @@ std::string set_name(std::size_t index, const Instance& instance) {
     return "set " + std::to_string(index) + " (line " + std::to_string(instance.line) + ")";
 }
 
-void print_instance(std::size_t index, const Instance& instance) {
-    std::cout << paint("Set " + std::to_string(index), Style::Heading)
-              << paint(" (line " + std::to_string(instance.line) + ")", Style::Dim) << ": n = "
-              << instance.values.size() << ", S = " << to_string(instance.sum) << "\n"
-              << "  " << output::format_values(instance.values) << "\n";
-}
-
-void print_part(std::string_view name, std::span<const Value> a,
-                const std::vector<std::size_t>& indices) {
-    const std::vector<Value> values = values_at(a, indices);
-    const Value sum = total_sum(values);
-    std::cout << "    " << name << " = " << output::format_values(values) << ", sum "
-              << to_string(sum) << "\n";
-}
-
-void print_partition(std::span<const Value> a, const Partition& partition) {
-    std::cout << "  Karmarkar-Karp: d = " << to_string(partition.d)
-              << (partition.d == 0 ? " (balanced)" : "") << "\n";
-    print_part("A", a, partition.A);
-    print_part("B", a, partition.B);
-}
-
-// The balanced partition found by an exact algorithm.
-void print_balanced(std::string_view by, std::span<const Value> a, const Partition& partition) {
-    std::cout << "  Balanced partition (" << by << "):\n";
-    print_part("A", a, partition.A);
-    print_part("B", a, partition.B);
-}
-
-void print_answer(Verdict answer, std::string_view reason) {
-    std::string word = "UNKNOWN";
-    Style style = Style::Warning;
-    if (answer == Verdict::Yes) word = "YES", style = Style::Yes;
-    if (answer == Verdict::No) word = "NO", style = Style::No;
-    std::cout << "  Answer: " << paint(word, style) << " " << paint(reason, Style::Dim) << "\n";
-}
-
-// The answer of one exact algorithm run alone, with its partition if YES.
-void print_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
-                 std::string_view reason) {
-    if (answer) print_balanced(name, a, *answer);
-    print_answer(verdict_of(answer), reason);
-}
-
-std::string method_name(Method method) {
-    switch (method) {
-        case Method::KarmarkarKarp:      return "Karmarkar-Karp";
-        case Method::OddSum:             return "odd sum";
-        case Method::DynamicProgramming: return "dynamic programming";
-        case Method::MeetInTheMiddle:    return "meet in the middle";
-        case Method::None:               return "none";
-    }
-    return "";
-}
-
-// Why dynamic programming is out of range, for the messages.
-std::string dp_out_of_range(std::size_t n, Value T, const Options& options) {
-    if (dp_limit(n, T, options.ranges()) == DpLimit::Target)
-        return "T = " + to_string(T) + " > T_DP = " + to_string(options.t_dp);
-    return "n * T = " + std::to_string(n) + " * " + to_string(T) + " > W_DP = " +
-           to_string(options.w_dp);
-}
-
-void print_solution(const Instance& instance, const Options& options, const Solution& solution) {
-    print_partition(instance.values, solution.partition);
-
-    const std::string d = to_string(solution.partition.d);
-    switch (solution.decided_by) {
-        case Method::KarmarkarKarp:
-            print_answer(solution.answer, "(the partition above is balanced)");
-            return;
-        case Method::OddSum:
-            print_answer(solution.answer, "(the sum S is odd)");
-            return;
-        case Method::DynamicProgramming:
-        case Method::MeetInTheMiddle: {
-            const std::string by = "(" + method_name(solution.decided_by) + ", T = " +
-                                   to_string(solution.T) + ")";
-            if (solution.answer == Verdict::Yes) {
-                print_balanced(method_name(solution.decided_by), instance.values, *solution.balanced);
-                print_answer(solution.answer, by + "; Karmarkar-Karp missed it by d = " + d);
-            } else {
-                print_answer(solution.answer, by + "; no balanced partition exists");
-            }
-            return;
-        }
-        case Method::None: {
-            const std::size_t n = instance.values.size();
-            print_answer(solution.answer, "(n = " + std::to_string(n) + " > N_MITM = " +
-                                              std::to_string(options.n_mitm) + " and " +
-                                              dp_out_of_range(n, solution.T, options) +
-                                              "; only the approximation, d = " + d + ")");
-            return;
-        }
-    }
-}
-
 // Returns the partition for the results file: the balanced one when the
 // answer is YES, otherwise that of Karmarkar-Karp.
 Partition run_solve(const Instance& instance, const Options& options) {
     const Solution solution = solve(instance.values, options.ranges());
-    print_solution(instance, options, solution);
+    report::print_solution(instance, options.ranges(), solution);
     return solution.balanced ? *solution.balanced : solution.partition;
 }
 
@@ -153,7 +57,7 @@ Partition run_solve(const Instance& instance, const Options& options) {
 // partition for the results file.
 ExactAnswer run_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
                       std::string_view reason) {
-    print_exact(name, a, answer, reason);
+    report::print_exact(name, a, answer, reason);
     return answer;
 }
 
@@ -173,7 +77,7 @@ std::optional<Partition> run_single(std::size_t index, const Instance& instance,
             break;
         case Algorithm::KarmarkarKarp: {
             Partition partition = karmarkar_karp(a);
-            print_partition(a, partition);
+            report::print_partition(a, partition);
             return partition;
         }
         case Algorithm::BruteForce:
@@ -193,7 +97,7 @@ std::optional<Partition> run_single(std::size_t index, const Instance& instance,
         case Algorithm::DynamicProgramming:
             if (dp_limit(n, T, options.ranges()) != DpLimit::InRange) {
                 output::warning(set_name(index, instance) + ": dynamic programming skipped, " +
-                                dp_out_of_range(n, T, options));
+                                report::dp_out_of_range(n, T, options.ranges()));
                 return std::nullopt;
             }
             return run_exact("dynamic programming", a, dp_partition(a),
@@ -208,7 +112,7 @@ std::optional<Partition> run_single(std::size_t index, const Instance& instance,
 Partition fallback_partition(std::span<const Value> a) {
     Partition partition = karmarkar_karp(a);
     std::cout << "  " << paint("For the results file:", Style::Dim) << "\n";
-    print_partition(a, partition);
+    report::print_partition(a, partition);
     return partition;
 }
 
@@ -247,7 +151,7 @@ int main(int argc, char** argv) {
     int exit_code = 0;
     for (std::size_t i = 0; i < instances.size(); ++i) {
         if (i > 0) std::cout << "\n";
-        print_instance(i + 1, instances[i]);
+        report::print_instance(i + 1, instances[i]);
         std::optional<Partition> found;
         try {
             if (options.algorithm == Algorithm::Solve) {
