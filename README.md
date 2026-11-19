@@ -13,7 +13,9 @@ balanced partition.
 ## Program
 
 Requirements: GCC 13 or Clang 16 (C++20 and `unsigned __int128`); for the
-Windows executable, MinGW-w64 (`x86_64-w64-mingw32-g++`).
+Windows executable, MinGW-w64 (`x86_64-w64-mingw32-g++`). The one dependency,
+Boost.Multiprecision (header-only), is in `third_party/` and needs no
+installation.
 
 ```sh
 make             # build/linux/partition
@@ -26,8 +28,8 @@ make clean
 The same without `make`, from the repository root:
 
 ```sh
-g++ -std=c++20 -O2 -Isrc src/*.cpp src/algorithms/*.cpp -o partition
-x86_64-w64-mingw32-g++ -std=c++20 -O2 -static -s -Isrc src/*.cpp src/algorithms/*.cpp -o partition.exe
+g++ -std=c++20 -O2 -Isrc -isystem third_party -DBOOST_MP_STANDALONE src/*.cpp src/algorithms/*.cpp -o partition
+x86_64-w64-mingw32-g++ -std=c++20 -O2 -static -s -Isrc -isystem third_party -DBOOST_MP_STANDALONE src/*.cpp src/algorithms/*.cpp -o partition.exe
 ```
 
 Run it on an input file, optionally followed by the number of subsets `K`
@@ -52,11 +54,29 @@ Karmarkar-Karp partition. These files are not committed (`.gitignore`).
 Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
 meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
 default $3 \cdot 10^8$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
-time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone. `make test`
-also runs `tests/cli_test.sh`, which checks the exit codes, the results file
+time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone;
+`--arithmetic boost|own|native` and `--base B`, the arithmetic of the numbers
+(below). `make test` also runs `tests/cli_test.sh`, which checks the exit codes, the results file
 and that the text is the same with and without colours.
 Exit codes: 0 success, 1 invalid input file, 2 invalid command line, 3 an
 algorithm could not be run on some set, 4 the results file could not be written.
+
+### Arithmetic of the numbers
+
+The numbers of the input may have any number of digits. The algorithms are
+templates over the type of the numbers (`src/number.hpp`), and
+`--arithmetic` chooses it, so that Stage 4 can compare the cost of one
+machine operation with that of long arithmetic:
+
+| `--arithmetic` | Type | Limits |
+| --- | --- | --- |
+| `boost` (default) | `cpp_int` of Boost.Multiprecision, cells of one machine word | none |
+| `own` | `BigUint` (`src/big_uint.hpp`), our own long arithmetic; `--base B` sets the base of its cells, from 2 to $2^{32}$ (the default) | none |
+| `native` | `unsigned __int128`, two machine instructions per addition | values below $10^{38}$, the sum of a set below $2^{128}$ |
+
+The console output and the results file are the same in every arithmetic and
+base (`tests/cli_test.sh` checks it on the sample inputs). Dynamic programming
+works on machine words in all of them: its target is at most `--t-dp`.
 
 ### Demo on Windows (no compiler)
 
