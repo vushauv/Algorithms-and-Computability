@@ -53,13 +53,8 @@ void print_instance(std::size_t index, const Instance& instance) {
 
 void print_part(std::string_view name, std::span<const Value> a,
                 const std::vector<std::size_t>& indices) {
-    std::vector<Value> values;
-    values.reserve(indices.size());
-    Value sum = 0;
-    for (std::size_t i : indices) {
-        values.push_back(a[i]);
-        sum += a[i];  // at most S < 2^128
-    }
+    const std::vector<Value> values = values_at(a, indices);
+    const Value sum = total_sum(values);
     std::cout << "    " << name << " = " << output::format_values(values) << ", sum "
               << to_string(sum) << "\n";
 }

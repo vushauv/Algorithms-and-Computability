@@ -39,6 +39,9 @@ Value total_sum(std::span<const Value> a);
 
 Preliminary preliminary_checks(std::span<const Value> a);
 
+// The elements a[i] for the indices, in the order of the indices.
+std::vector<Value> values_at(std::span<const Value> a, const std::vector<std::size_t>& indices);
+
 // The answer of a trivial case (pre.verdict is set): NO for an odd S, and for
 // S = 0 the balanced partition {a[0]} against the rest, as n ≥ 2.
 ExactAnswer trivial_answer(const Preliminary& pre, std::size_t n);

@@ -14,6 +14,13 @@ Value total_sum(std::span<const Value> a) {
     return S;
 }
 
+std::vector<Value> values_at(std::span<const Value> a, const std::vector<std::size_t>& indices) {
+    std::vector<Value> values;
+    values.reserve(indices.size());
+    for (std::size_t i : indices) values.push_back(a[i]);
+    return values;
+}
+
 Preliminary preliminary_checks(std::span<const Value> a) {
     const Value S = total_sum(a);
     if (S % 2 == 1) return {Verdict::No, S, 0};

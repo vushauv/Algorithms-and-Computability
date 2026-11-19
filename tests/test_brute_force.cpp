@@ -23,6 +23,9 @@ void test_brute_force() {
     const Value all_ones = ~Value{0};
     CHECK_THROWS(total_sum(V{all_ones, 1}), std::overflow_error);
 
+    CHECK(values_at(V{5, 6, 7, 8}, I{3, 0}) == (V{8, 5}));
+    CHECK(values_at(V{5, 6}, I{}).empty());
+
     // The partition of 0..n−1 into A and its complement.
     const Partition p = balanced_partition(5, I{3, 0});
     CHECK(p.A == (I{0, 3}) && p.B == (I{1, 2, 4}) && p.d == 0);

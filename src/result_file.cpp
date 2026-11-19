@@ -15,19 +15,6 @@ std::string spaced(std::span<const Value> values) {
     return text;
 }
 
-Value sum_of(std::span<const Value> values) {
-    Value sum = 0;
-    for (Value v : values) sum += v;  // at most S < 2^128
-    return sum;
-}
-
-std::vector<Value> values_at(std::span<const Value> a, const std::vector<std::size_t>& indices) {
-    std::vector<Value> values;
-    values.reserve(indices.size());
-    for (std::size_t i : indices) values.push_back(a[i]);
-    return values;
-}
-
 }  // namespace
 
 std::string path_for(std::string_view input_path) {
@@ -53,11 +40,11 @@ std::string format_set(std::span<const Value> a, std::vector<std::vector<Value>>
         return std::ranges::lexicographical_compare(y, x);
     });
 
-    std::string text = to_string(sum_of(a)) + spaced(a);
+    std::string text = to_string(total_sum(a)) + spaced(a);
     Value smallest = 0;
     Value largest = 0;
     for (std::size_t i = 0; i < subsets.size(); ++i) {
-        const Value sum = sum_of(subsets[i]);
+        const Value sum = total_sum(subsets[i]);
         if (i == 0 || sum < smallest) smallest = sum;
         if (i == 0 || sum > largest) largest = sum;
         text += "\n" + to_string(sum) + spaced(subsets[i]);
