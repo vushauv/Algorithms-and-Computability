@@ -11,6 +11,9 @@
 CXX      = g++
 MINGW    = x86_64-w64-mingw32-g++
 CXXFLAGS = -std=c++20 -O2 -Wall -Wextra -Wpedantic
+# Boost.Multiprecision (header-only, third_party/README.md); -isystem keeps
+# the warnings to our own code.
+INCLUDES = -Isrc -isystem third_party -DBOOST_MP_STANDALONE
 
 BUILD    = build/linux
 PROGRAM  = $(BUILD)/partition
@@ -44,7 +47,7 @@ test: $(TESTS) $(PROGRAM)
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
 windows:
 	mkdir -p build/windows
-	$(MINGW) $(CXXFLAGS) -static -s -Isrc $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
+	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
 
 dist: windows
 	mkdir -p dist
@@ -53,7 +56,7 @@ dist: windows
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -Isrc -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 clean:
 	rm -rf build

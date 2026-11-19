@@ -19,7 +19,9 @@ inline constexpr std::size_t kMaxFindSubsetElements = 63;
 // sum. Time O(2^m), memory O(1) beyond the result. Requires b.size() ≤ 63 (the
 // mask is a 64-bit word); throws std::invalid_argument otherwise.
 // Brute force and the recovery of meet in the middle (Section 3) use it.
-std::optional<std::vector<std::size_t>> find_subset(std::span<const Value> b, Value x);
+template <class V>
+std::optional<std::vector<std::size_t>> find_subset(std::span<const V> b, const V& x);
 
 // Requires n ≥ 2. Throws std::invalid_argument if n > kMaxBruteForceElements.
-ExactAnswer brute_force(std::span<const Value> a);
+template <class V>
+ExactAnswer<V> brute_force(std::span<const V> a);

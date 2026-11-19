@@ -7,12 +7,14 @@
 
 namespace {
 
-Value parse_number_option(std::string_view name, std::string_view text) {
-    ParsedValue parsed = parse_value(text);
-    if (parsed.status != ParseStatus::Ok)
-        throw UsageError(std::string(name) + " expects a non-negative integer below 10^38, got '" +
+std::uint64_t parse_number_option(std::string_view name, std::string_view text) {
+    const ParsedValue<Native> parsed = parse_value<Native>(text);
+    const std::optional<std::uint64_t> value =
+        parsed.status == ParseStatus::Ok ? to_u64(parsed.value) : std::nullopt;
+    if (!value)
+        throw UsageError(std::string(name) + " expects a non-negative integer below 2^64, got '" +
                          std::string(text) + "'");
-    return parsed.value;
+    return *value;
 }
 
 Algorithm parse_algorithm(std::string_view text) {
@@ -25,12 +27,20 @@ Algorithm parse_algorithm(std::string_view text) {
                      "'");
 }
 
+Arithmetic parse_arithmetic(std::string_view text) {
+    if (text == "boost") return Arithmetic::Boost;
+    if (text == "own") return Arithmetic::Own;
+    if (text == "native") return Arithmetic::Native;
+    throw UsageError("--arithmetic expects boost, own or native, got '" + std::string(text) + "'");
+}
+
 }  // namespace
 
 Options parse_options(int argc, char** argv) {
     Options options;
     std::vector<std::string_view> args(argv + 1, argv + argc);
     std::vector<std::string_view> positional;  // FILE and K
+    bool base_given = false;
 
     for (std::size_t i = 0; i < args.size(); ++i) {
         std::string_view arg = args[i];
@@ -44,20 +54,28 @@ Options parse_options(int argc, char** argv) {
         } else if (arg == "--no-color") {
             options.no_color = true;
         } else if (arg == "--n-mitm") {
-            Value n = parse_number_option(arg, value_of_option());
+            const std::uint64_t n = parse_number_option(arg, value_of_option());
             if (n > kMaxNMitm)
                 throw UsageError("--n-mitm must be at most " + std::to_string(kMaxNMitm));
             options.n_mitm = static_cast<std::size_t>(n);
         } else if (arg == "--t-dp") {
-            Value t = parse_number_option(arg, value_of_option());
+            const std::uint64_t t = parse_number_option(arg, value_of_option());
             // Above it the bitset cannot be indexed (dynamic_programming.hpp).
             if (t > kMaxDpTarget)
-                throw UsageError("--t-dp must be at most " + to_string(kMaxDpTarget));
+                throw UsageError("--t-dp must be at most " + std::to_string(kMaxDpTarget));
             options.t_dp = t;
         } else if (arg == "--w-dp") {
             options.w_dp = parse_number_option(arg, value_of_option());
         } else if (arg == "--algorithm") {
             options.algorithm = parse_algorithm(value_of_option());
+        } else if (arg == "--arithmetic") {
+            options.arithmetic = parse_arithmetic(value_of_option());
+        } else if (arg == "--base") {
+            options.base = parse_number_option(arg, value_of_option());
+            if (options.base < BigUint::kMinBase || options.base > BigUint::kMaxBase)
+                throw UsageError("--base must be between " + std::to_string(BigUint::kMinBase) +
+                                 " and " + std::to_string(BigUint::kMaxBase));
+            base_given = true;
         } else if (arg.size() > 1 && arg[0] == '-') {
             throw UsageError("unknown option '" + std::string(arg) + "'");
         } else {
@@ -65,13 +83,15 @@ Options parse_options(int argc, char** argv) {
         }
     }
 
+    if (base_given && options.arithmetic != Arithmetic::Own)
+        throw UsageError("--base needs --arithmetic own");
     if (positional.empty() && !options.help) throw UsageError("no input file given");
     if (positional.size() > 2)
         throw UsageError("expected FILE and K, got " + std::to_string(positional.size()) +
                          " arguments");
     if (!positional.empty()) options.path = positional[0];
     if (positional.size() == 2) {
-        ParsedValue k = parse_value(positional[1]);
+        const ParsedValue<Native> k = parse_value<Native>(positional[1]);
         if (k.status != ParseStatus::Ok || k.value != kSubsets)
             throw UsageError("K, the number of subsets, must be " + std::to_string(kSubsets) +
                              ", got '" + std::string(positional[1]) + "'");
@@ -86,8 +106,8 @@ std::string usage_text() {
            "with equal sums, and prints such a split when one is found.\n"
            "\n"
            "FILE: line 1 is the number of sets, each next line is one set of\n"
-           "non-negative integers (below 10^38) separated by single spaces\n"
-           "(extra spaces and tabs are accepted).\n"
+           "non-negative integers of any size separated by single spaces (extra\n"
+           "spaces and tabs are accepted).\n"
            "K:    the number of subsets, 2 (the default and the only value accepted).\n"
            "\n"
            "The results are also saved next to FILE, with _output.txt in place of\n"
@@ -103,10 +123,10 @@ std::string usage_text() {
            "                 (default " + std::to_string(kDefaultNMitm) + ", at most " +
            std::to_string(kMaxNMitm) + ")\n"
            "  --t-dp T       dynamic programming only for half sums of at most T\n"
-           "                 (default " + to_string(kDefaultTDp) + ", at most " +
-           to_string(kMaxDpTarget) + ")\n"
+           "                 (default " + std::to_string(kDefaultTDp) + ", at most " +
+           std::to_string(kMaxDpTarget) + ")\n"
            "  --w-dp W       dynamic programming only when n * T is at most W, which\n"
-           "                 bounds its time (default " + to_string(kDefaultWDp) + ")\n"
+           "                 bounds its time (default " + std::to_string(kDefaultWDp) + ")\n"
            "  --algorithm A  the algorithm to run on every set:\n"
            "                   solve  the final algorithm (default): Karmarkar-Karp,\n"
            "                          plus an exact algorithm when one is in range\n"
@@ -115,6 +135,14 @@ std::string usage_text() {
            "                   dp     dynamic programming alone (exact, within --t-dp\n"
            "                          and --w-dp)\n"
            "                   kk     Karmarkar-Karp alone (approximation)\n"
+           "  --arithmetic X the arithmetic of the numbers:\n"
+           "                   boost   numbers of any size, Boost cpp_int (default)\n"
+           "                   own     numbers of any size, our own long arithmetic\n"
+           "                   native  128-bit integers of the processor: numbers\n"
+           "                           below 10^38, the sum of a set below 2^128\n"
+           "  --base B       the base of the own arithmetic, from " + std::to_string(BigUint::kMinBase) +
+           " to " + std::to_string(BigUint::kMaxBase) + "\n"
+           "                 (the default); needs --arithmetic own\n"
            "  -h, --help     this text\n"
            "\n"
            "Exit codes: 0 success, 1 invalid input file, 2 invalid command line,\n"

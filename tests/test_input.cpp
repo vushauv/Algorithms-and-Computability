@@ -1,15 +1,16 @@
 #include "check.hpp"
 #include "input.hpp"
 #include "tests.hpp"
+#include "value.hpp"
 
 #include <sstream>
 #include <string>
 
 namespace {
 
-std::vector<Instance> read(const std::string& text) {
+std::vector<Instance<Value>> read(const std::string& text) {
     std::istringstream in(text);
-    return read_instances(in);
+    return read_instances<Value>(in);
 }
 
 // The line of the InputError thrown for the text, or -1 if none is thrown.
@@ -55,11 +56,11 @@ void test_input() {
     }
 
     const std::string max38(38, '9');
-    CHECK(read("1\n" + max38 + " " + max38 + "\n")[0].sum == 2 * (kValueLimit - 1));
+    CHECK(read("1\n" + max38 + " " + max38 + "\n")[0].sum == 2 * (kNativeLimit - 1));
 
     // The example files of the course.
-    CHECK(read_instances_from_file("raw_regulations/AaC_example_1.txt").size() == 2);
-    auto big = read_instances_from_file("raw_regulations/AaC_example_2.txt");
+    CHECK(read_instances_from_file<Value>("raw_regulations/AaC_example_1.txt").size() == 2);
+    auto big = read_instances_from_file<Value>("raw_regulations/AaC_example_2.txt");
     CHECK(big.size() == 1);
     CHECK(to_string(big[0].values[0]) == "3141592653589793238462643");
 
@@ -91,9 +92,9 @@ void test_input() {
         CHECK(std::string(error.what()) == "line 2, column 4: '3x' is not a non-negative integer (digits only)");
     }
 
-    CHECK_THROWS(read_instances_from_file("no/such/file.txt"), InputError);
+    CHECK_THROWS(read_instances_from_file<Value>("no/such/file.txt"), InputError);
     try {
-        read_instances_from_file("raw_regulations");
+        read_instances_from_file<Value>("raw_regulations");
         CHECK(false);
     } catch (const InputError& error) {
         CHECK(std::string(error.what()) == "is a directory, not a file");

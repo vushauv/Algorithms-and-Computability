@@ -32,6 +32,7 @@ void warning(std::string_view message);
 
 // "{a, b, c}"; for more than max_shown values the first and last few,
 // with the number of the omitted ones in between.
-std::string format_values(std::span<const Value> values, std::size_t max_shown = 10);
+template <class V>
+std::string format_values(std::span<const V> values, std::size_t max_shown = 10);
 
 }  // namespace output

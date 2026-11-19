@@ -40,31 +40,35 @@ bool no_color_requested(int argc, char** argv) {
     return false;
 }
 
-std::string set_name(std::size_t index, const Instance& instance) {
+template <class V>
+std::string set_name(std::size_t index, const Instance<V>& instance) {
     return "set " + std::to_string(index) + " (line " + std::to_string(instance.line) + ")";
 }
 
-void print_instance(std::size_t index, const Instance& instance) {
+template <class V>
+void print_instance(std::size_t index, const Instance<V>& instance) {
     std::cout << paint("Set " + std::to_string(index), Style::Heading)
               << paint(" (line " + std::to_string(instance.line) + ")", Style::Dim) << ": n = "
               << instance.values.size() << ", S = " << to_string(instance.sum) << "\n"
-              << "  " << output::format_values(instance.values) << "\n";
+              << "  " << output::format_values<V>(instance.values) << "\n";
 }
 
-void print_part(std::string_view name, std::span<const Value> a,
+template <class V>
+void print_part(std::string_view name, std::span<const V> a,
                 const std::vector<std::size_t>& indices) {
-    std::vector<Value> values;
+    std::vector<V> values;
     values.reserve(indices.size());
-    Value sum = 0;
+    V sum = 0;
     for (std::size_t i : indices) {
         values.push_back(a[i]);
-        sum += a[i];  // at most S < 2^128
+        sum += a[i];  // at most S
     }
-    std::cout << "    " << name << " = " << output::format_values(values) << ", sum "
+    std::cout << "    " << name << " = " << output::format_values<V>(values) << ", sum "
               << to_string(sum) << "\n";
 }
 
-void print_partition(std::span<const Value> a, const Partition& partition) {
+template <class V>
+void print_partition(std::span<const V> a, const Partition<V>& partition) {
     std::cout << "  Karmarkar-Karp: d = " << to_string(partition.d)
               << (partition.d == 0 ? " (balanced)" : "") << "\n";
     print_part("A", a, partition.A);
@@ -72,7 +76,9 @@ void print_partition(std::span<const Value> a, const Partition& partition) {
 }
 
 // The balanced partition found by an exact algorithm.
-void print_balanced(std::string_view by, std::span<const Value> a, const Partition& partition) {
+template <class V>
+void print_balanced(std::string_view by, std::span<const V> a,
+                    const Partition<V>& partition) {
     std::cout << "  Balanced partition (" << by << "):\n";
     print_part("A", a, partition.A);
     print_part("B", a, partition.B);
@@ -87,7 +93,8 @@ void print_answer(Verdict answer, std::string_view reason) {
 }
 
 // The answer of one exact algorithm run alone, with its partition if YES.
-void print_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
+template <class V>
+void print_exact(std::string_view name, std::span<const V> a, const ExactAnswer<V>& answer,
                  std::string_view reason) {
     if (answer) print_balanced(name, a, *answer);
     print_answer(verdict_of(answer), reason);
@@ -109,15 +116,19 @@ Ranges ranges_of(const Options& options) {
 }
 
 // Why dynamic programming is out of range, for the messages.
-std::string dp_out_of_range(std::size_t n, Value T, const Options& options) {
+template <class V>
+std::string dp_out_of_range(std::size_t n, const V& T, const Options& options) {
     if (dp_limit(n, T, ranges_of(options)) == DpLimit::Target)
-        return "T = " + to_string(T) + " > T_DP = " + to_string(options.t_dp);
+        return "T = " + to_string(T) + " > T_DP = " + std::to_string(options.t_dp);
     return "n * T = " + std::to_string(n) + " * " + to_string(T) + " > W_DP = " +
-           to_string(options.w_dp);
+           std::to_string(options.w_dp);
 }
 
-void print_solution(const Instance& instance, const Options& options, const Solution& solution) {
-    print_partition(instance.values, solution.partition);
+template <class V>
+void print_solution(const Instance<V>& instance, const Options& options,
+                    const Solution<V>& solution) {
+    const std::span<const V> a = instance.values;
+    print_partition(a, solution.partition);
 
     const std::string d = to_string(solution.partition.d);
     switch (solution.decided_by) {
@@ -132,7 +143,7 @@ void print_solution(const Instance& instance, const Options& options, const Solu
             const std::string by = "(" + method_name(solution.decided_by) + ", T = " +
                                    to_string(solution.T) + ")";
             if (solution.answer == Verdict::Yes) {
-                print_balanced(method_name(solution.decided_by), instance.values, *solution.balanced);
+                print_balanced(method_name(solution.decided_by), a, *solution.balanced);
                 print_answer(solution.answer, by + "; Karmarkar-Karp missed it by d = " + d);
             } else {
                 print_answer(solution.answer, by + "; no balanced partition exists");
@@ -140,7 +151,7 @@ void print_solution(const Instance& instance, const Options& options, const Solu
             return;
         }
         case Method::None: {
-            const std::size_t n = instance.values.size();
+            const std::size_t n = a.size();
             print_answer(solution.answer, "(n = " + std::to_string(n) + " > N_MITM = " +
                                               std::to_string(options.n_mitm) + " and " +
                                               dp_out_of_range(n, solution.T, options) +
@@ -152,16 +163,18 @@ void print_solution(const Instance& instance, const Options& options, const Solu
 
 // Returns the partition for the results file: the balanced one when the
 // answer is YES, otherwise that of Karmarkar-Karp.
-Partition run_solve(const Instance& instance, const Options& options) {
-    const Solution solution = solve(instance.values, ranges_of(options));
+template <class V>
+Partition<V> run_solve(const Instance<V>& instance, const Options& options) {
+    const Solution<V> solution = solve<V>(instance.values, ranges_of(options));
     print_solution(instance, options, solution);
     return solution.balanced ? *solution.balanced : solution.partition;
 }
 
 // The answer of an exact algorithm run alone, printed; returned as the
 // partition for the results file.
-ExactAnswer run_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
-                      std::string_view reason) {
+template <class V>
+ExactAnswer<V> run_exact(std::string_view name, std::span<const V> a,
+                         const ExactAnswer<V>& answer, std::string_view reason) {
     print_exact(name, a, answer, reason);
     return answer;
 }
@@ -171,17 +184,18 @@ ExactAnswer run_exact(std::string_view name, std::span<const Value> a, const Exa
 // with a warning instead of exhausting the memory; raise them to go further.
 // Returns the partition for the results file, nothing if the algorithm found
 // none.
-std::optional<Partition> run_single(std::size_t index, const Instance& instance,
-                                    const Options& options) {
-    const std::span<const Value> a = instance.values;
+template <class V>
+std::optional<Partition<V>> run_single(std::size_t index, const Instance<V>& instance,
+                                       const Options& options) {
+    const std::span<const V> a = instance.values;
     const std::size_t n = a.size();
-    const Value T = instance.sum / 2;
+    const V T = half(instance.sum);
 
     switch (options.algorithm) {
         case Algorithm::Solve:
             break;
         case Algorithm::KarmarkarKarp: {
-            Partition partition = karmarkar_karp(a);
+            Partition<V> partition = karmarkar_karp(a);
             print_partition(a, partition);
             return partition;
         }
@@ -214,11 +228,64 @@ std::optional<Partition> run_single(std::size_t index, const Instance& instance,
 // The partition for the results file when the run found none: an exact
 // algorithm alone answered NO, was skipped or failed. Every set in the file
 // needs a partition, and Karmarkar-Karp gives one for every input.
-Partition fallback_partition(std::span<const Value> a) {
-    Partition partition = karmarkar_karp(a);
+template <class V>
+Partition<V> fallback_partition(std::span<const V> a) {
+    Partition<V> partition = karmarkar_karp(a);
     std::cout << "  " << paint("For the results file:", Style::Dim) << "\n";
     print_partition(a, partition);
     return partition;
+}
+
+// Reads the file, runs every set in the arithmetic V and writes the results
+// file; returns the exit code.
+template <class V>
+int run(const Options& options) {
+    std::vector<Instance<V>> instances;
+    try {
+        instances = read_instances_from_file<V>(options.path);
+    } catch (const InputError& error) {
+        output::error(options.path + ": " + error.what());
+        return 1;
+    }
+
+    // The results file is written after all the sets are solved and printed, so
+    // that an unwritable directory (a read-only stick) loses no console output.
+    const std::string results_path = result_file::path_for(options.path);
+    std::string results = result_file::header(instances.size(), options.subsets);
+
+    int exit_code = 0;
+    for (std::size_t i = 0; i < instances.size(); ++i) {
+        if (i > 0) std::cout << "\n";
+        print_instance(i + 1, instances[i]);
+        std::optional<Partition<V>> found;
+        try {
+            if (options.algorithm == Algorithm::Solve) {
+                found = run_solve(instances[i], options);
+            } else {
+                found = run_single(i + 1, instances[i], options);
+            }
+        } catch (const std::bad_alloc&) {
+            output::error(set_name(i + 1, instances[i]) + ": not enough memory");
+            exit_code = 3;
+        } catch (const std::exception& error) {
+            output::error(set_name(i + 1, instances[i]) + ": " + error.what());
+            exit_code = 3;
+        }
+        const std::span<const V> a = instances[i].values;
+        if (!found) found = fallback_partition(a);
+        results += "\n\n" + result_file::format_set(a, *found);
+    }
+
+    std::ofstream file(results_path, std::ios::binary);  // "\n" also on Windows
+    file << results;
+    file.close();
+    if (!file) {
+        std::cout << "\n";
+        output::error("cannot write the results file " + results_path);
+        return 4;  // after all the console output; takes precedence over 3
+    }
+    std::cout << "\nResults saved to " << results_path << "\n";
+    return exit_code;
 }
 
 }  // namespace
@@ -240,49 +307,14 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    std::vector<Instance> instances;
-    try {
-        instances = read_instances_from_file(options.path);
-    } catch (const InputError& error) {
-        output::error(options.path + ": " + error.what());
-        return 1;
+    switch (options.arithmetic) {
+        case Arithmetic::Native:
+            return run<Native>(options);
+        case Arithmetic::Own:
+            BigUint::set_base(options.base);
+            return run<BigUint>(options);
+        case Arithmetic::Boost:
+            break;
     }
-
-    // The results file is written after all the sets are solved and printed, so
-    // that an unwritable directory (a read-only stick) loses no console output.
-    const std::string results_path = result_file::path_for(options.path);
-    std::string results = result_file::header(instances.size(), options.subsets);
-
-    int exit_code = 0;
-    for (std::size_t i = 0; i < instances.size(); ++i) {
-        if (i > 0) std::cout << "\n";
-        print_instance(i + 1, instances[i]);
-        std::optional<Partition> found;
-        try {
-            if (options.algorithm == Algorithm::Solve) {
-                found = run_solve(instances[i], options);
-            } else {
-                found = run_single(i + 1, instances[i], options);
-            }
-        } catch (const std::bad_alloc&) {
-            output::error(set_name(i + 1, instances[i]) + ": not enough memory");
-            exit_code = 3;
-        } catch (const std::exception& error) {
-            output::error(set_name(i + 1, instances[i]) + ": " + error.what());
-            exit_code = 3;
-        }
-        if (!found) found = fallback_partition(instances[i].values);
-        results += "\n\n" + result_file::format_set(instances[i].values, *found);
-    }
-
-    std::ofstream file(results_path, std::ios::binary);  // "\n" also on Windows
-    file << results;
-    file.close();
-    if (!file) {
-        std::cout << "\n";
-        output::error("cannot write the results file " + results_path);
-        return 4;  // after all the console output; takes precedence over 3
-    }
-    std::cout << "\nResults saved to " << results_path << "\n";
-    return exit_code;
+    return run<BoostInt>(options);
 }

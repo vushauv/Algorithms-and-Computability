@@ -18,10 +18,10 @@ std::uint64_t physical_memory_bytes() {
     return 0;
 }
 
-void require_memory(std::string_view algorithm, Value bytes) {
+void require_memory(std::string_view algorithm, Native bytes) {
     const std::uint64_t physical = physical_memory_bytes();
     if (physical == 0 || bytes <= physical) return;
-    constexpr Value kMiB = Value{1} << 20;
+    constexpr Native kMiB = Native{1} << 20;
     throw std::runtime_error(std::string(algorithm) + " needs " + to_string((bytes + kMiB - 1) / kMiB) +
                              " MiB, the machine has " + to_string(physical / kMiB) + " MiB");
 }

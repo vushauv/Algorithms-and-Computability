@@ -8,7 +8,7 @@
 #include <random>
 #include <vector>
 
-#include "number.hpp"
+#include "value.hpp"
 
 namespace random_sets {
 
@@ -31,7 +31,7 @@ inline std::vector<Value> small_values(std::size_t n, std::uint64_t max_value) {
 
 // n values below 10^25, about the 25 digits of AaC_example_2.txt.
 inline std::vector<Value> large_values(std::size_t n) {
-    const Value limit = parse_value("10000000000000000000000000").value;  // 10^25
+    const Value limit = parse_value<Value>("10000000000000000000000000").value;  // 10^25
     std::vector<Value> a(n);
     for (Value& x : a) {
         const Value high = engine()();

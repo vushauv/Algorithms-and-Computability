@@ -85,7 +85,8 @@ void warning(std::string_view message) {
     std::cerr << wrap("warning:", Style::Warning, stderr_color) << " " << message << "\n";
 }
 
-std::string format_values(std::span<const Value> values, std::size_t max_shown) {
+template <class V>
+std::string format_values(std::span<const V> values, std::size_t max_shown) {
     const std::size_t n = values.size();
     const std::size_t head = n <= max_shown ? n : max_shown - max_shown / 4;
     const std::size_t tail = n <= max_shown ? 0 : max_shown / 4;
@@ -99,5 +100,9 @@ std::string format_values(std::span<const Value> values, std::size_t max_shown) 
     for (std::size_t i = n - tail; i < n; ++i) text += ", " + to_string(values[i]);
     return text + "}";
 }
+
+#define INSTANTIATE(V) template std::string format_values(std::span<const V>, std::size_t);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE
 
 }  // namespace output

@@ -1,6 +1,7 @@
 #include "check.hpp"
 #include "result_file.hpp"
 #include "tests.hpp"
+#include "value.hpp"
 
 #include <algorithm>
 #include <functional>
@@ -15,7 +16,7 @@
 
 namespace {
 
-constexpr Value kAnyWork = ~Value{0};
+constexpr std::uint64_t kAnyWork = ~std::uint64_t{0};
 
 Value total(std::span<const Value> values) {
     Value sum = 0;
@@ -64,7 +65,7 @@ std::vector<Value> numbers_of(const std::string& line) {
     while (start <= line.size()) {
         std::size_t end = line.find(' ', start);
         if (end == std::string::npos) end = line.size();
-        numbers.push_back(parse_value(line.substr(start, end - start)).value);
+        numbers.push_back(parse_value<Value>(line.substr(start, end - start)).value);
         start = end + 1;
     }
     return numbers;
@@ -74,7 +75,7 @@ std::vector<Value> numbers_of(const std::string& line) {
 // the partition p: the set in input order, each subset with its sum and its
 // numbers non-increasing, the subsets lexicographically non-increasing,
 // together the multiset a, and the difference of the two sums d.
-bool follows_format(std::span<const Value> a, const Partition& p, const std::string& block) {
+bool follows_format(std::span<const Value> a, const Partition<Value>& p, const std::string& block) {
     const std::vector<std::string> lines = lines_of(block);
     if (lines.size() != 4) return false;
 
@@ -118,26 +119,26 @@ void test_result_file() {
     std::vector<Value> second{7, 8, 9, 10, 11, 2, 3, 4, 6, 1};
     const std::string text =
         result_file::header(2, 5) + "\n\n" +
-        result_file::format_set(first, {{1, 4, 5}, {2, 1, 4, 5}, {1, 4, 1, 5}, {2, 7, 8}, {6, 1, 6, 3}}) +
-        "\n\n" + result_file::format_set(second, {{4, 6, 7}, {3, 8}, {11}, {1, 10}, {2, 9}});
+        result_file::format_set<Value>(first, {{1, 4, 5}, {2, 1, 4, 5}, {1, 4, 1, 5}, {2, 7, 8}, {6, 1, 6, 3}}) +
+        "\n\n" + result_file::format_set<Value>(second, {{4, 6, 7}, {3, 8}, {11}, {1, 10}, {2, 9}});
     CHECK(text == kHomendaExample);
 
     // Two subsets: the one with the larger first number comes first, not the
     // one with the larger sum.
     std::vector<Value> a{3, 1, 4, 2};
-    CHECK(result_file::format_set(a, Partition{{1, 2}, {0, 3}, 0}) == "10 3 1 4 2\n5 4 1\n5 3 2\n0");
+    CHECK(result_file::format_set<Value>(a, Partition<Value>{{1, 2}, {0, 3}, 0}) == "10 3 1 4 2\n5 4 1\n5 3 2\n0");
     std::vector<Value> b{2, 3, 7};
-    CHECK(result_file::format_set(b, Partition{{0, 1}, {2}, 2}) == "12 2 3 7\n7 7\n5 3 2\n2");
+    CHECK(result_file::format_set<Value>(b, Partition<Value>{{0, 1}, {2}, 2}) == "12 2 3 7\n7 7\n5 3 2\n2");
     // Equal subsets, zeros, and a value of 38 digits.
     std::vector<Value> ones{1, 1, 1, 1};
-    CHECK(result_file::format_set(ones, Partition{{0, 2}, {1, 3}, 0}) == "4 1 1 1 1\n2 1 1\n2 1 1\n0");
+    CHECK(result_file::format_set<Value>(ones, Partition<Value>{{0, 2}, {1, 3}, 0}) == "4 1 1 1 1\n2 1 1\n2 1 1\n0");
     std::vector<Value> zeros{0, 0};
-    CHECK(result_file::format_set(zeros, Partition{{0}, {1}, 0}) == "0 0 0\n0 0\n0 0\n0");
-    std::vector<Value> large{kValueLimit - 1, 5};
-    const std::string big = to_string(kValueLimit - 1);  // 38 nines
-    CHECK(result_file::format_set(large, Partition{{1}, {0}, kValueLimit - 6}) ==
+    CHECK(result_file::format_set<Value>(zeros, Partition<Value>{{0}, {1}, 0}) == "0 0 0\n0 0\n0 0\n0");
+    std::vector<Value> large{kNativeLimit - 1, 5};
+    const std::string big = to_string(kNativeLimit - 1);  // 38 nines
+    CHECK(result_file::format_set<Value>(large, Partition<Value>{{1}, {0}, kNativeLimit - 6}) ==
           "1" + std::string(37, '0') + "4 " + big + " 5\n" + big + " " + big + "\n5 5\n" +
-              to_string(kValueLimit - 6));
+              to_string(kNativeLimit - 6));
     CHECK(result_file::header(3, 2) == "3 2");
 
     // The partitions of SOLVE and of Karmarkar-Karp on random sets, with
@@ -146,10 +147,10 @@ void test_result_file() {
         const std::size_t n = random_sets::size_between(2, 16);
         const std::vector<Value> set =
             round % 2 == 0 ? random_sets::small_values(n, 20) : random_sets::large_values(n);
-        const Solution solution = solve(set, Ranges{44, 1'000'000, kAnyWork});
-        const Partition& chosen = solution.balanced ? *solution.balanced : solution.partition;
-        CHECK(follows_format(set, chosen, result_file::format_set(set, chosen)));
-        const Partition kk = karmarkar_karp(set);
-        CHECK(follows_format(set, kk, result_file::format_set(set, kk)));
+        const Solution<Value> solution = solve<Value>(set, Ranges{44, 1'000'000, kAnyWork});
+        const Partition<Value>& chosen = solution.balanced ? *solution.balanced : solution.partition;
+        CHECK(follows_format(set, chosen, result_file::format_set<Value>(set, chosen)));
+        const Partition<Value> kk = karmarkar_karp<Value>(set);
+        CHECK(follows_format(set, kk, result_file::format_set<Value>(set, kk)));
     }
 }

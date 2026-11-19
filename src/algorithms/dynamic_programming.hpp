@@ -13,7 +13,7 @@
 
 // T must index the bitset, and top + a[i] ≤ 2T must not overflow. The memory
 // bound is much lower and is the caller's business (the threshold T_DP).
-inline constexpr Value kMaxDpTarget = std::numeric_limits<std::size_t>::max() / 2;
+inline constexpr std::uint64_t kMaxDpTarget = std::numeric_limits<std::size_t>::max() / 2;
 
 // The steps 1..n are stored in 32 bits; the input has at most 10^6 elements.
 inline constexpr std::size_t kMaxDpElements = std::numeric_limits<std::uint32_t>::max() - 1;
@@ -21,4 +21,5 @@ inline constexpr std::size_t kMaxDpElements = std::numeric_limits<std::uint32_t>
 // Requires n ≥ 2. Throws std::invalid_argument if T > kMaxDpTarget or
 // n > kMaxDpElements; does not throw when the answer follows from the checks
 // of Sections 1.2 and 4.1.
-ExactAnswer dp_partition(std::span<const Value> a);
+template <class V>
+ExactAnswer<V> dp_partition(std::span<const V> a);

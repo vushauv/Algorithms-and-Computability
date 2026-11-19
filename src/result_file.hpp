@@ -32,9 +32,11 @@ std::string path_for(std::string_view input_path);
 std::string header(std::size_t sets, std::size_t subsets);
 
 // The lines of one set, from "S a1 ... an" to "D", without a newline at the end.
-std::string format_set(std::span<const Value> a, std::vector<std::vector<Value>> subsets);
+template <class V>
+std::string format_set(std::span<const V> a, std::vector<std::vector<V>> subsets);
 
 // The same for the two parts of a partition of a; D is then its discrepancy d.
-std::string format_set(std::span<const Value> a, const Partition& partition);
+template <class V>
+std::string format_set(std::span<const V> a, const Partition<V>& partition);
 
 }  // namespace result_file

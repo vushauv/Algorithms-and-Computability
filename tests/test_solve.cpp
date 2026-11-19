@@ -4,6 +4,7 @@
 #include "random_sets.hpp"
 #include "solve.hpp"
 #include "tests.hpp"
+#include "value.hpp"
 
 #include <vector>
 
@@ -12,11 +13,11 @@
 namespace {
 
 // No bound on the work n · T of dynamic programming.
-constexpr Value kAnyWork = ~Value{0};
+constexpr std::uint64_t kAnyWork = ~std::uint64_t{0};
 
 // Theorem 6.1: the partition of Karmarkar-Karp is valid, and a balanced
 // partition comes with the answer YES and only with it.
-bool is_valid_solution(const std::vector<Value>& a, const Solution& s) {
+bool is_valid_solution(const std::vector<Value>& a, const Solution<Value>& s) {
     if (!partition_check::is_partition(a, s.partition)) return false;
     if (s.answer == Verdict::Unknown) return !s.balanced;
     return partition_check::is_answer(a, s.balanced, s.answer);
@@ -30,46 +31,46 @@ void test_solve() {
     const Ranges no_exact{0, 0, kAnyWork};
 
     // The examples of Section 6.3.
-    const Solution balanced = solve(V{3, 1, 4, 2}, defaults);
+    const Solution<Value> balanced = solve<Value>(V{3, 1, 4, 2}, defaults);
     CHECK(balanced.answer == Verdict::Yes);
     CHECK(balanced.decided_by == Method::KarmarkarKarp);
     CHECK(balanced.partition.d == 0);
     CHECK(is_valid_solution(V{3, 1, 4, 2}, balanced));
     CHECK(balanced.balanced->A == balanced.partition.A);  // the same partition
 
-    const Solution odd = solve(V{2, 3, 4}, defaults);
+    const Solution<Value> odd = solve<Value>(V{2, 3, 4}, defaults);
     CHECK(odd.answer == Verdict::No);
     CHECK(odd.decided_by == Method::OddSum);
     CHECK(odd.partition.d == 1);
     CHECK(is_valid_solution(V{2, 3, 4}, odd));
 
     const V missed{5, 6, 7, 8, 10};
-    const Solution by_dp = solve(missed, defaults);
+    const Solution<Value> by_dp = solve<Value>(missed, defaults);
     CHECK(by_dp.answer == Verdict::Yes);
     CHECK(by_dp.decided_by == Method::DynamicProgramming);  // T/32 < 2^(5/2)
     CHECK(by_dp.partition.d == 2);
     CHECK(by_dp.S == 36 && by_dp.T == 18);
     CHECK(is_valid_solution(missed, by_dp));  // {5, 6, 7} against {8, 10}
 
-    const Solution by_mitm = solve(missed, Ranges{44, 17, kAnyWork});
+    const Solution<Value> by_mitm = solve<Value>(missed, Ranges{44, 17, kAnyWork});
     CHECK(by_mitm.answer == Verdict::Yes);
     CHECK(by_mitm.decided_by == Method::MeetInTheMiddle);
     CHECK(is_valid_solution(missed, by_mitm));
 
-    const Solution unknown = solve(missed, Ranges{4, 17, kAnyWork});
+    const Solution<Value> unknown = solve<Value>(missed, Ranges{4, 17, kAnyWork});
     CHECK(unknown.answer == Verdict::Unknown);
     CHECK(unknown.decided_by == Method::None);
     CHECK(unknown.partition.d == 2);
     CHECK(is_valid_solution(missed, unknown));
 
     // Even sum, d > 0, no balanced partition: the exact algorithm says NO.
-    CHECK(solve(V{1, 1, 4}, defaults).answer == Verdict::No);
-    CHECK(solve(V{1, 1, 4}, defaults).decided_by == Method::DynamicProgramming);
-    CHECK(solve(V{1, 1, 4}, Ranges{44, 0, kAnyWork}).decided_by == Method::MeetInTheMiddle);
-    CHECK(solve(V{1, 1, 4}, no_exact).answer == Verdict::Unknown);
+    CHECK(solve<Value>(V{1, 1, 4}, defaults).answer == Verdict::No);
+    CHECK(solve<Value>(V{1, 1, 4}, defaults).decided_by == Method::DynamicProgramming);
+    CHECK(solve<Value>(V{1, 1, 4}, Ranges{44, 0, kAnyWork}).decided_by == Method::MeetInTheMiddle);
+    CHECK(solve<Value>(V{1, 1, 4}, no_exact).answer == Verdict::Unknown);
 
     // All zeros: d = 0, YES whatever the ranges (Section 6.1, step 1).
-    CHECK(solve(V{0, 0, 0}, no_exact).answer == Verdict::Yes);
+    CHECK(solve<Value>(V{0, 0, 0}, no_exact).answer == Verdict::Yes);
 
     // The rule: DP iff T/32 < 2^(n/2) (Proposition 4.4 with the cost doubled).
     CHECK(dp_is_cheaper(2, 63));      // 63/32 < 2
@@ -78,27 +79,30 @@ void test_solve() {
     CHECK(!dp_is_cheaper(20, 32768));
     CHECK(dp_is_cheaper(3, 90));      // 2.8125 < 2^1.5 = 2.8284
     CHECK(!dp_is_cheaper(3, 91));     // 2.84375
-    CHECK(choose_exact(10, 100, Ranges{9, 99, kAnyWork}) == Method::None);
-    CHECK(choose_exact(10, 100, Ranges{10, 99, kAnyWork}) == Method::MeetInTheMiddle);
-    CHECK(choose_exact(10, 100, Ranges{9, 100, kAnyWork}) == Method::DynamicProgramming);
-    CHECK(choose_exact(40, Value{1} << 100, Ranges{44, ~Value{0}, kAnyWork}) == Method::MeetInTheMiddle);
-    CHECK(choose_exact(100, Value{1} << 100, Ranges{44, ~Value{0}, kAnyWork}) == Method::None);  // > kMaxDpTarget
+    CHECK(choose_exact<Value>(10, 100, Ranges{9, 99, kAnyWork}) == Method::None);
+    CHECK(choose_exact<Value>(10, 100, Ranges{10, 99, kAnyWork}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact<Value>(10, 100, Ranges{9, 100, kAnyWork}) == Method::DynamicProgramming);
+    CHECK(choose_exact<Value>(40, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact<Value>(100, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::None);  // > kMaxDpTarget
 
     // The work bound n · T ≤ w_dp, exactly at the limit and one above it.
-    CHECK(dp_limit(10, 100, Ranges{0, 100, 1000}) == DpLimit::InRange);
-    CHECK(dp_limit(10, 100, Ranges{0, 100, 999}) == DpLimit::Work);
-    CHECK(dp_limit(10, 101, Ranges{0, 100, kAnyWork}) == DpLimit::Target);
-    CHECK(dp_limit(3, 7, Ranges{0, 100, 21}) == DpLimit::InRange);  // 21 / 3 = 7
-    CHECK(dp_limit(3, 7, Ranges{0, 100, 20}) == DpLimit::Work);     // 20 / 3 = 6
-    // No overflow of n · T: T near the cap and the largest n of the input.
-    CHECK(dp_limit(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::InRange);
-    CHECK(dp_limit(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, 1'000'000}) == DpLimit::Work);
-    CHECK(choose_exact(10, 100, Ranges{10, 100, 999}) == Method::MeetInTheMiddle);
-    CHECK(choose_exact(10, 100, Ranges{9, 100, 999}) == Method::None);
-    const Solution by_work = solve(missed, Ranges{44, 18, 5 * 18 - 1});  // n · T = 90
+    CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 1000}) == DpLimit::InRange);
+    CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 999}) == DpLimit::Work);
+    CHECK(dp_limit<Value>(10, 101, Ranges{0, 100, kAnyWork}) == DpLimit::Target);
+    CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 21}) == DpLimit::InRange);  // 21 / 3 = 7
+    CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 20}) == DpLimit::Work);     // 20 / 3 = 6
+    // No overflow of n · T: T at the cap, where 2 · T is the largest bound
+    // on the work (2^64 − 2), and the largest n of the input, far above it.
+    CHECK(dp_limit<Value>(2, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::InRange);
+    CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Work);
+    CHECK(dp_limit<Value>(2, Value{1} << 64, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Target);
+    CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, 1'000'000}) == DpLimit::Work);
+    CHECK(choose_exact<Value>(10, 100, Ranges{10, 100, 999}) == Method::MeetInTheMiddle);
+    CHECK(choose_exact<Value>(10, 100, Ranges{9, 100, 999}) == Method::None);
+    const Solution<Value> by_work = solve<Value>(missed, Ranges{44, 18, 5 * 18 - 1});  // n · T = 90
     CHECK(by_work.decided_by == Method::MeetInTheMiddle);
     CHECK(by_work.answer == Verdict::Yes);
-    CHECK(solve(missed, Ranges{44, 18, 5 * 18}).decided_by == Method::DynamicProgramming);
+    CHECK(solve<Value>(missed, Ranges{44, 18, 5 * 18}).decided_by == Method::DynamicProgramming);
 
     // Random small sets: the answer agrees with brute force for every choice of
     // the exact algorithm, and UNKNOWN comes only when none is in range.
@@ -108,9 +112,9 @@ void test_solve() {
     for (int round = 0; round < 300; ++round) {
         const std::size_t n = random_sets::size_between(2, 14);
         const V a = random_sets::small_values(n, round % 3 == 0 ? 5 : 1000);
-        const Verdict expected = verdict_of(brute_force(a));
+        const Verdict expected = verdict_of(brute_force<Value>(a));
         for (const Ranges& ranges : choices) {
-            const Solution s = solve(a, ranges);
+            const Solution<Value> s = solve<Value>(a, ranges);
             CHECK(is_valid_solution(a, s));
             if (s.decided_by == Method::None) {
                 CHECK(s.answer == Verdict::Unknown);
@@ -124,7 +128,7 @@ void test_solve() {
     // 25-digit values: meet in the middle decides, DP is out of range.
     for (int round = 0; round < 20; ++round) {
         const V yes = random_sets::large_yes_instance(16);
-        const Solution s = solve(yes, defaults);
+        const Solution<Value> s = solve<Value>(yes, defaults);
         CHECK(s.answer == Verdict::Yes);
         CHECK(is_valid_solution(yes, s));
         CHECK(s.decided_by == Method::KarmarkarKarp || s.decided_by == Method::MeetInTheMiddle);

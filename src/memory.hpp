@@ -17,4 +17,4 @@ std::uint64_t physical_memory_bytes();
 
 // Throws std::runtime_error if the table of the algorithm needs more bytes
 // than the physical memory has.
-void require_memory(std::string_view algorithm, Value bytes);
+void require_memory(std::string_view algorithm, Native bytes);
