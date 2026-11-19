@@ -28,7 +28,7 @@ constexpr int kStdout = 1;
 constexpr int kStderr = 2;
 
 #ifdef _WIN32
-// Windows 10 and later understand ANSI codes once the console is asked to.
+// Windows 10+ understands ANSI codes once we ask the console to.
 bool terminal_with_color(int fd) {
     if (!_isatty(fd)) return false;
     HANDLE handle = GetStdHandle(fd == kStdout ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);

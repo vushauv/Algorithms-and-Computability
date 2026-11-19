@@ -8,14 +8,14 @@
 Partition karmarkar_karp(std::span<const Value> a) {
     const std::size_t n = a.size();
 
-    // Max-heap of the pairs (a[i], i); ties are broken by the index.
+    // Max-heap of (a[i], i); ties go by index.
     using Entry = std::pair<Value, std::size_t>;
     std::vector<Entry> entries;
     entries.reserve(n);
     for (std::size_t i = 0; i < n; ++i) entries.emplace_back(a[i], i);
     std::priority_queue<Entry> H(std::less<Entry>{}, std::move(entries));
 
-    // The edges of E as adjacency lists: u and v are in opposite parts.
+    // Edges as adjacency lists; the two ends of an edge go to opposite parts.
     std::vector<std::vector<std::size_t>> E(n);
     while (H.size() > 1) {
         const auto [x, u] = H.top();

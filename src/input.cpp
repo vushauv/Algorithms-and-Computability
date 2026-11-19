@@ -15,15 +15,14 @@ std::string location(std::size_t line, std::size_t column) {
     return text + ": ";
 }
 
-// Reads the next line without its line ending (\n or \r\n). A file converted
-// twice can end its lines with \r\r\n, so every \r at the end is dropped.
+// Next line without its line ending. A file converted twice can end in \r\r\n, so all
+// trailing \r are dropped.
 bool next_line(std::istream& in, std::string& line) {
     if (!std::getline(in, line)) return false;
     while (!line.empty() && line.back() == '\r') line.pop_back();
     return true;
 }
 
-// A number of a line with its column.
 struct Field {
     std::string_view text;
     std::size_t column;
@@ -33,9 +32,8 @@ bool is_blank(char c) {
     return c == ' ' || c == '\t';
 }
 
-// The numbers of a line. A single space separates them in the format of the
-// assignment; extra spaces and tabs, also at either end of the line, are
-// skipped, so that a stray space does not reject the whole file.
+// Splits a line into numbers. Extra spaces and tabs, also at the ends, are skipped so a
+// stray space doesn't reject the whole file.
 std::vector<Field> split_fields(std::string_view line) {
     std::vector<Field> fields;
     std::size_t i = 0;
@@ -72,7 +70,7 @@ Value parse_field(const Field& field, std::size_t line_number) {
 std::size_t read_set_count(std::istream& in) {
     std::string line;
     if (!next_line(in, line)) throw InputError(0, 0, "the file is empty");
-    // Some Windows editors start a UTF-8 file with a byte order mark.
+    // Some Windows editors add a UTF-8 byte order mark.
     if (line.starts_with(kUtf8Bom)) line.erase(0, kUtf8Bom.size());
     std::vector<Field> fields = split_fields(line);
     if (fields.size() != 1)
@@ -92,8 +90,8 @@ Instance read_set(const std::string& line, std::size_t line_number) {
         throw InputError(line_number, 0, "a set may have at most " + std::to_string(kMaxElements) +
                                              " numbers, found " + std::to_string(fields.size()));
 
-    // The numbers are parsed before their count is checked, so that "1,2"
-    // is reported as a bad character and not as a set with one element.
+    // Parse the numbers before counting them, so "1,2" is a bad character and not a set
+    // with one element.
     Instance instance{{}, 0, line_number};
     instance.values.reserve(fields.size());
     for (const Field& field : fields) {
@@ -130,7 +128,7 @@ std::vector<Instance> read_instances(std::istream& in) {
         instances.push_back(read_set(line, line_number));
     }
 
-    // Empty and blank lines at the end are tolerated, anything else is not.
+    // Blank lines at the end are fine, anything else is an error.
     while (next_line(in, line)) {
         ++line_number;
         if (!split_fields(line).empty())
@@ -141,11 +139,11 @@ std::vector<Instance> read_instances(std::istream& in) {
 }
 
 std::vector<Instance> read_instances_from_file(const std::string& path) {
-    // A directory opens without error on Linux and then reads as empty.
+    // On Linux a directory opens fine and reads as empty.
     std::error_code ignored;
     if (std::filesystem::is_directory(path, ignored))
         throw InputError(0, 0, "is a directory, not a file");
-    std::ifstream file(path, std::ios::binary);  // binary: \r\n is handled by next_line
+    std::ifstream file(path, std::ios::binary);  // binary, next_line handles \r\n
     if (!file) throw InputError(0, 0, "cannot open the file");
     return read_instances(file);
 }

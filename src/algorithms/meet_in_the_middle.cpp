@@ -13,9 +13,8 @@
 
 namespace {
 
-// The balanced partition whose part A has the sum x in the first h elements
-// and the sum y in the others. x is an entry of LS and y one of RS, so a
-// subset with each sum exists and find_subset finds it.
+// The partition whose A has sum x in the first h elements and sum y in the rest.
+// x comes from LS and y from RS, so both subsets exist and find_subset finds them.
 Partition recover(std::span<const Value> a, std::size_t h, Value x, Value y) {
     std::vector<std::size_t> A = *find_subset(a.first(h), x);
     const std::vector<std::size_t> right = *find_subset(a.subspan(h), y);
@@ -56,7 +55,7 @@ ExactAnswer meet_in_the_middle(std::span<const Value> a) {
     std::sort(LS.begin(), LS.end());
     std::sort(RS.begin(), RS.end(), std::greater<Value>{});
 
-    // Every LS[i] + RS[j] is the sum of a subset of a, so at most S < 2^128.
+    // Every LS[i] + RS[j] is a subset sum, so at most S < 2^128.
     std::size_t i = 0;
     std::size_t j = 0;
     while (i < LS.size() && j < RS.size()) {

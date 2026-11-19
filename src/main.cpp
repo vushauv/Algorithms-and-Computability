@@ -1,10 +1,8 @@
-// Partition problem: reads the sets of the input file and runs SOLVE (report,
-// Section 6.2) on each, or the one algorithm chosen with --algorithm, prints
-// the results and saves them in the results file (result_file.hpp).
+// Reads the sets from the input file, runs SOLVE (report, Section 6.2) or the single
+// algorithm from --algorithm on each, prints the results and saves the results file.
 //
-// Exit codes: 0 success, 1 invalid input file, 2 invalid command line,
-// 3 an algorithm could not be run on some set (the other sets are still run),
-// 4 the results file could not be written.
+// Exit codes: 0 ok, 1 bad input file, 2 bad command line, 3 an algorithm couldn't run
+// on some set (the other sets still run), 4 the results file couldn't be written.
 
 #include <exception>
 #include <fstream>
@@ -24,17 +22,16 @@
 
 namespace {
 
-// --no-color must hold also for the message about an invalid command line,
-// which is printed before the options are known.
+// --no-color has to work for the error about a bad command line too, and that one is
+// printed before the options are parsed.
 bool no_color_requested(int argc, char** argv) {
     for (int i = 1; i < argc; ++i)
         if (std::string_view(argv[i]) == "--no-color") return true;
     return false;
 }
 
-// Writes the results file; false if it cannot be written.
 bool save_results(const std::string& path, const std::string& text) {
-    std::ofstream file(path, std::ios::binary);  // "\n" also on Windows
+    std::ofstream file(path, std::ios::binary);  // binary, so "\n" stays "\n" on Windows
     file << text;
     file.close();
     return static_cast<bool>(file);
@@ -67,8 +64,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // The results file is written after all the sets are solved and printed, so
-    // that an unwritable directory (a read-only stick) loses no console output.
+    // Save the results file only after all sets are printed, so a read-only directory
+    // (a USB stick) doesn't lose the console output.
     const std::string results_path = result_file::path_for(options.path);
     std::string results = result_file::header(instances.size(), options.subsets);
 
@@ -93,7 +90,7 @@ int main(int argc, char** argv) {
     if (!save_results(results_path, results)) {
         std::cout << "\n";
         output::error("cannot write the results file " + results_path);
-        return 4;  // after all the console output; takes precedence over 3
+        return 4;  // after the console output; wins over 3
     }
     std::cout << "\nResults saved to " << results_path << "\n";
     return exit_code;

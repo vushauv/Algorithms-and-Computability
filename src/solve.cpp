@@ -10,12 +10,12 @@
 bool dp_is_cheaper(std::size_t n, Value T) {
     // In floating point: 2^(n/2) is irrational for odd n, and T² may overflow.
     const long double t = static_cast<long double>(T);
-    // t / 64 words per pass (Proposition 4.4) times 2 for the first-reach table.
+    // t/64 words per pass (Proposition 4.4), doubled for the step table.
     return t / 32 < std::exp2(static_cast<long double>(n) / 2);
 }
 
 DpLimit dp_limit(std::size_t n, Value T, const Ranges& ranges) {
-    // Above kMaxDpTarget dp_partition cannot index its bitset, whatever t_dp says.
+    // Above kMaxDpTarget dp_partition can't index its bitset, whatever t_dp says.
     if (T > ranges.t_dp || T > kMaxDpTarget) return DpLimit::Target;
     // n · T ≤ w_dp, written so that the product cannot overflow; n ≥ 2.
     if (T > ranges.w_dp / n) return DpLimit::Work;

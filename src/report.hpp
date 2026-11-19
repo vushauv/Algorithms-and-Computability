@@ -1,7 +1,5 @@
-// The console report of a run: the set read, the partitions and the answer of
-// each algorithm. Text and colours only; the algorithms are run by main.cpp.
-// The colours come from the output module, so the text is the same with and
-// without them.
+// What the program prints for each set: the set, the partitions, the answer.
+// Text only, the colours come from output. The algorithms are run by run.cpp.
 #pragma once
 
 #include <cstddef>
@@ -15,22 +13,22 @@
 
 namespace report {
 
-// "Set i (line l): n = ..., S = ..." and the numbers of the set.
+// Header of a set ("Set 1 (line 2): n = ..., S = ...") and its numbers.
 void print_instance(std::size_t index, const Instance& instance);
 
-// The partition of Karmarkar-Karp with its discrepancy d.
+// The Karmarkar-Karp partition and its d.
 void print_partition(std::span<const Value> a, const Partition& partition);
 
-// The answer of one exact algorithm run alone, with its partition if YES.
+// The answer of one exact algorithm run alone, and its partition if YES.
 void print_exact(std::string_view name, std::span<const Value> a, const ExactAnswer& answer,
                  std::string_view reason);
 
-// The result of SOLVE: the partition of Karmarkar-Karp, the balanced partition
-// of the exact algorithm if there is one, and the answer with its reason.
+// The result of SOLVE: the Karmarkar-Karp partition, the exact algorithm's partition if
+// there is one, and the answer with its reason.
 void print_solution(const Instance& instance, const Ranges& ranges, const Solution& solution);
 
-// Why dynamic programming is out of range for n numbers with target T:
-// "T = ... > T_DP = ..." or "n * T = ... > W_DP = ...". Requires that it is.
+// Why DP is out of range: "T = ... > T_DP = ..." or "n * T = ... > W_DP = ...".
+// Call it only when DP is out of range.
 std::string dp_out_of_range(std::size_t n, Value T, const Ranges& ranges);
 
 }  // namespace report

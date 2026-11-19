@@ -8,7 +8,6 @@
 
 namespace {
 
-// The indices of the bits of g that are set, ascending.
 std::vector<std::size_t> indices_of(std::uint64_t g) {
     std::vector<std::size_t> indices;
     for (; g != 0; g &= g - 1) indices.push_back(static_cast<std::size_t>(std::countr_zero(g)));

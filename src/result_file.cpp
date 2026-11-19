@@ -8,7 +8,7 @@ namespace result_file {
 
 namespace {
 
-// The numbers separated by single spaces, each preceded by one.
+// Each number with a space in front of it.
 std::string spaced(std::span<const Value> values) {
     std::string text;
     for (Value v : values) text += " " + to_string(v);
@@ -34,8 +34,8 @@ std::string header(std::size_t sets, std::size_t subsets) {
 
 std::string format_set(std::span<const Value> a, std::vector<std::vector<Value>> subsets) {
     for (std::vector<Value>& subset : subsets) std::ranges::sort(subset, std::greater<>());
-    // Larger content first: the first larger number decides, and of two lines
-    // where one continues the other, the longer one is larger.
+    // Larger line first: the first larger number decides; if one line continues the other,
+    // the longer one wins.
     std::ranges::sort(subsets, [](const std::vector<Value>& x, const std::vector<Value>& y) {
         return std::ranges::lexicographical_compare(y, x);
     });
