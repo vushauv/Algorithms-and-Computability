@@ -2,8 +2,8 @@
 
 | Command | What it runs | Time once built |
 | --- | --- | --- |
-| `make test` | all unit tests (`run_tests`) and all program checks (`cli_test.sh`) | about 35 s on the development laptop |
-| `make test-quick` | the same without the slow checks | about 3 s |
+| `make test` | all unit tests (`run_tests`) and all program checks (`cli_test.sh`) | about 37 s on the development laptop |
+| `make test-quick` | the same without the slow checks | about 5 s |
 
 **Warning: keep `make test` under 90 s and `make test-quick` under 15 s.**
 The times above are for a build that is already done. A clean build takes

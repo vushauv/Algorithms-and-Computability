@@ -19,8 +19,8 @@ installation.
 
 ```sh
 make             # build/linux/partition
-make test        # build and run the tests (from the repository root; about 35 s once built)
-make test-quick  # the same without the slow checks (about 3 s); see tests/README.md
+make test        # build and run the tests (from the repository root; about 37 s once built)
+make test-quick  # the same without the slow checks (about 5 s); see tests/README.md
 make windows     # static build/windows/partition.exe, needs no DLLs
 make deliverable # the same, copied to deliverable/partition.exe
 make clean
