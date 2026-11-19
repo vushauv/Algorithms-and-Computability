@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <span>
 
 #include "partition.hpp"
@@ -11,14 +12,15 @@
 // meet in the middle if n ≤ n_mitm.
 struct Ranges {
     std::size_t n_mitm;
-    Value t_dp;
-    Value w_dp;
+    std::uint64_t t_dp;
+    std::uint64_t w_dp;
 };
 
 // Why DP is out of range: Target if T > t_dp (or kMaxDpTarget), Work if n · T > w_dp.
 enum class DpLimit { InRange, Target, Work };
 
-DpLimit dp_limit(std::size_t n, Value T, const Ranges& ranges);
+template <class V>
+DpLimit dp_limit(std::size_t n, const V& T, const Ranges& ranges);
 
 // What decided SOLVE's answer.
 enum class Method {
@@ -29,22 +31,28 @@ enum class Method {
     None                 // no exact algorithm in range, the answer is UNKNOWN (step 4)
 };
 
+template <class V>
 struct Solution {
     Verdict answer;
     Method decided_by;
-    Partition partition;   // Karmarkar-Karp, with its d
-    ExactAnswer balanced;  // set iff the answer is YES: the partition above when d = 0,
-                           // otherwise the exact algorithm's
-    Value S;
-    Value T;
+    Partition<V> partition;   // of Karmarkar-Karp, with its discrepancy d
+    ExactAnswer<V> balanced;  // present iff the answer is YES: the partition above
+                              // when d = 0, otherwise that of the exact algorithm
+    V S;
+    V T;  // S / 2
 };
 
-// Which exact algorithm when both are in range (provisional, task.md section 6): DP if
-// T/32 < 2^(n/2). That is Proposition 4.4 (T/64) with the cost doubled for the step table.
-bool dp_is_cheaper(std::size_t n, Value T);
+// The rule when both exact algorithms are in range (provisional, task.md
+// section 6): dynamic programming if T/32 < 2^(n/2), that is Proposition 4.4
+// (T/64 < 2^(n/2)) with the cost of dynamic programming doubled for its table.
+// Asked only for a target in the range of dynamic programming, so 64 bits.
+bool dp_is_cheaper(std::size_t n, std::uint64_t T);
 
-// The exact algorithm SOLVE runs: DP, MeetInTheMiddle, or None if neither is in range.
-Method choose_exact(std::size_t n, Value T, const Ranges& ranges);
+// The exact algorithm that SOLVE runs for a set of n numbers with target T:
+// DynamicProgramming, MeetInTheMiddle, or None if neither is in range.
+template <class V>
+Method choose_exact(std::size_t n, const V& T, const Ranges& ranges);
 
-// Needs n ≥ 2 and S < 2^128 (read_instances checks both).
-Solution solve(std::span<const Value> a, const Ranges& ranges);
+// Requires n ≥ 2 and, for Native, S < 2^128 (both checked by read_instances).
+template <class V>
+Solution<V> solve(std::span<const V> a, const Ranges& ranges);

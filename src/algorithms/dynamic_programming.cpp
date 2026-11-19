@@ -45,47 +45,57 @@ void shift_or(std::vector<Word>& reach, std::vector<Step>& first, std::size_t sh
     }
 }
 
-// The subset with sum T, read back from first. If first[s] = i + 1, then s − a[i] was
-// reachable before step i + 1 and a[i] > 0 (a zero sets no bit), so first[s − a[i]] <
-// i + 1. The indices strictly decrease, so they are distinct, and the sum drops to 0.
-std::vector<std::size_t> read_back(std::span<const Value> a, const std::vector<Step>& first,
+// The subset with the sum T, read back from first. If first[s] = i + 1, the
+// sum s − a[i] was reachable before step i + 1 and a[i] > 0 (a zero sets no
+// bit), so first[s − a[i]] < i + 1: the indices strictly decrease and are
+// distinct, and the sums strictly decrease to 0.
+std::vector<std::size_t> read_back(std::span<const std::size_t> a, const std::vector<Step>& first,
                                    std::size_t T) {
     std::vector<std::size_t> A;
     for (std::size_t s = T; s > 0;) {
         const std::size_t i = first[s] - 1;
         A.push_back(i);
-        s -= static_cast<std::size_t>(a[i]);
+        s -= a[i];
     }
     return A;
 }
 
 }  // namespace
 
-ExactAnswer dp_partition(std::span<const Value> a) {
+template <class V>
+ExactAnswer<V> dp_partition(std::span<const V> a) {
     const std::size_t n = a.size();
     if (n > kMaxDpElements) {
         throw std::invalid_argument("dynamic programming needs fewer than 2^32 - 1 elements");
     }
-    const Preliminary pre = preliminary_checks(a);
+    const Preliminary<V> pre = preliminary_checks(a);
     if (pre.verdict) return trivial_answer(pre, n);
     if (*std::max_element(a.begin(), a.end()) > pre.T) return std::nullopt;  // Section 4.1
-    if (pre.T > kMaxDpTarget) {
+    const std::optional<std::uint64_t> target = to_u64(pre.T);
+    if (!target || *target > kMaxDpTarget) {
         throw std::invalid_argument("the target is too large for dynamic programming");
     }
 
-    // Now every a[i] ≤ T, so it fits in size_t.
-    const auto T = static_cast<std::size_t>(pre.T);
+    // Every a[i] ≤ T now, so it fits in std::size_t as well; the long numbers
+    // are converted once, the table works on machine words.
+    const auto T = static_cast<std::size_t>(*target);
+    std::vector<std::size_t> values(n);
+    for (std::size_t i = 0; i < n; ++i) values[i] = static_cast<std::size_t>(*to_u64(a[i]));
     require_memory("dynamic programming",
-                   Value{T / kWordBits + 1} * sizeof(Word) + (Value{T} + 1) * sizeof(Step));
+                   Native{T / kWordBits + 1} * sizeof(Word) + (Native{T} + 1) * sizeof(Step));
     std::vector<Word> reach(T / kWordBits + 1, 0);
     std::vector<Step> first(T + 1, 0);
     reach[0] = 1;
     std::size_t top = 0;  // no reachable sum is above this
     for (std::size_t i = 0; i < n; ++i) {
-        const auto ai = static_cast<std::size_t>(a[i]);
+        const std::size_t ai = values[i];
         top = std::min(T, top + ai);  // top + ai ≤ 2T, no overflow
-        if (ai > 0) shift_or(reach, first, ai, top, static_cast<Step>(i + 1));
-        if (test_bit(reach, T)) return balanced_partition(n, read_back(a, first, T));
+        if (ai > 0) shift_or(reach, first, ai, top, static_cast<Step>(i + 1));  // a zero changes nothing
+        if (test_bit(reach, T)) return balanced_partition<V>(n, read_back(values, first, T));
     }
     return std::nullopt;
 }
+
+#define INSTANTIATE(V) template ExactAnswer<V> dp_partition(std::span<const V>);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE

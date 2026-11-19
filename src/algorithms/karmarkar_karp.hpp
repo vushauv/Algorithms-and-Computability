@@ -6,6 +6,7 @@
 
 #include "partition.hpp"
 
-// Needs n ≥ 2. Returns non-empty, sorted index sets A and B that cover 0..n−1, and
-// d = |Σ(A) − Σ(B)| (Theorem 5.2).
-Partition karmarkar_karp(std::span<const Value> a);
+// Requires n ≥ 2. Returns two non-empty index sets A and B (each sorted) that
+// cover 0..n−1, and d = |Σ(A) − Σ(B)| (Theorem 5.2).
+template <class V>
+Partition<V> karmarkar_karp(std::span<const V> a);

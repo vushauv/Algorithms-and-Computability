@@ -39,8 +39,19 @@ expect 0 --algorithm mitm --n-mitm 4 deliverable/examples/02_yes.txt
 expect 0 --algorithm dp --w-dp 1 deliverable/examples/02_yes.txt
 expect 0 deliverable/examples/02_yes.txt 2
 
-# 1: invalid input files.
-for f in deliverable/examples/errors/*.txt; do expect 1 "$f"; done
+# 1: invalid input files, in every arithmetic.
+for f in deliverable/examples/errors/*.txt; do
+    expect 1 "$f"
+    expect 1 --arithmetic own "$f"
+    expect 1 --arithmetic native "$f"
+done
+# The limits of the native 128-bit numbers: errors there, valid sets otherwise.
+for f in deliverable/examples/native_limits/*.txt; do
+    expect 1 --arithmetic native "$f"
+    expect 0 "$f"
+    expect 0 --arithmetic own --base 10 "$f"
+done
+expect 1 --arithmetic native deliverable/examples/14_beyond_128_bits.txt
 expect 1 "$TMP/no_such_file.txt"
 expect 1 examples
 
@@ -52,6 +63,11 @@ expect 2 --n-mitm 65 deliverable/examples/02_yes.txt
 expect 2 --t-dp 9223372036854775808 deliverable/examples/02_yes.txt
 expect 2 --w-dp -1 deliverable/examples/02_yes.txt
 expect 2 --algorithm all deliverable/examples/02_yes.txt
+expect 2 --arithmetic gmp deliverable/examples/02_yes.txt
+expect 2 --base 10 deliverable/examples/02_yes.txt
+expect 2 --arithmetic native --base 10 deliverable/examples/02_yes.txt
+expect 2 --arithmetic own --base 1 deliverable/examples/02_yes.txt
+expect 2 --arithmetic own --base 4294967297 deliverable/examples/02_yes.txt
 expect 2 deliverable/examples/02_yes.txt 5
 expect 2 deliverable/examples/02_yes.txt 2 2
 
@@ -104,6 +120,35 @@ if [ -e deliverable/examples/errors/07_one_element_output.txt ]; then
     fail "a results file for an invalid input file"
 else
     pass
+fi
+
+# The arithmetics: the same text and the same results file, whatever the type
+# of the numbers and the base of our own one. Native joins where it can read
+# the file (not beyond 128 bits).
+for f in deliverable/examples/[01]*.txt; do
+    case $f in *_output.txt) continue ;; esac
+    out=${f%.txt}_output.txt
+    "$PROGRAM" --no-color "$f" > "$TMP/reference" 2>&1
+    cp "$out" "$TMP/reference_file"
+    for arithmetic in "native" "own" "own --base 2" "own --base 10" "own --base 1000000000"; do
+        case "$arithmetic:$f" in native:*beyond_128_bits*) continue ;; esac
+        # shellcheck disable=SC2086  # the words of $arithmetic are separate arguments
+        "$PROGRAM" --no-color --arithmetic $arithmetic "$f" > "$TMP/other" 2>&1
+        if cmp -s "$TMP/reference" "$TMP/other" && cmp -s "$TMP/reference_file" "$out"; then
+            pass
+        else
+            fail "--arithmetic $arithmetic differs from boost: $f"
+        fi
+    done
+done
+# Numbers of 50 and 180 digits: YES by meet in the middle, NO, and the file.
+"$PROGRAM" --no-color deliverable/examples/14_beyond_128_bits.txt > "$TMP/beyond" 2>&1
+if [ "$(grep -c 'Answer: YES' "$TMP/beyond")" -eq 4 ] && [ "$(grep -c 'Answer: NO' "$TMP/beyond")" -eq 2 ] \
+    && grep -q 'Answer: YES (meet in the middle' "$TMP/beyond" \
+    && [ "$(sed -n '3p' deliverable/examples/14_beyond_128_bits_output.txt)" = "2$(printf '%038d' 0) 1$(printf '%038d' 0) 1$(printf '%038d' 0)" ]; then
+    pass
+else
+    fail "the answers of 14_beyond_128_bits.txt"
 fi
 
 # The work bound: n * T > W_DP and n > N_MITM gives UNKNOWN with the reason.

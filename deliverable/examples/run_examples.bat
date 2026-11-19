@@ -15,4 +15,9 @@ for %%f in ("%~dp0errors\*.txt") do (
     echo ===== errors\%%~nxf
     "%EXE%" "%%f" 2
 )
+rem The two files that only the 128-bit arithmetic rejects.
+for %%f in ("%~dp0native_limits\*.txt") do (
+    echo ===== native_limits\%%~nxf --arithmetic native
+    "%EXE%" --arithmetic native "%%f" 2
+)
 pause

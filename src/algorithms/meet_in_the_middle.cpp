@@ -13,21 +13,24 @@
 
 namespace {
 
-// The partition whose A has sum x in the first h elements and sum y in the rest.
-// x comes from LS and y from RS, so both subsets exist and find_subset finds them.
-Partition recover(std::span<const Value> a, std::size_t h, Value x, Value y) {
+// The balanced partition whose part A has the sum x in the first h elements
+// and the sum y in the others. x is an entry of LS and y one of RS, so a
+// subset with each sum exists and find_subset finds it.
+template <class V>
+Partition<V> recover(std::span<const V> a, std::size_t h, const V& x, const V& y) {
     std::vector<std::size_t> A = *find_subset(a.first(h), x);
     const std::vector<std::size_t> right = *find_subset(a.subspan(h), y);
     for (std::size_t i : right) A.push_back(h + i);
-    return balanced_partition(a.size(), std::move(A));
+    return balanced_partition<V>(a.size(), std::move(A));
 }
 
 }  // namespace
 
-std::vector<Value> subset_sums(std::span<const Value> b) {
+template <class V>
+std::vector<V> subset_sums(std::span<const V> b) {
     const std::size_t m = b.size();
     const std::uint64_t count = std::uint64_t{1} << m;
-    std::vector<Value> sums(count);
+    std::vector<V> sums(count);
     sums[0] = 0;
     for (std::uint64_t mask = 1; mask < count; ++mask) {
         const int k = std::countr_zero(mask);  // lowest set bit, Section 2.1
@@ -36,30 +39,32 @@ std::vector<Value> subset_sums(std::span<const Value> b) {
     return sums;
 }
 
-ExactAnswer meet_in_the_middle(std::span<const Value> a) {
+template <class V>
+ExactAnswer<V> meet_in_the_middle(std::span<const V> a) {
     const std::size_t n = a.size();
     if (n > kMaxMeetInTheMiddleElements) {
         throw std::invalid_argument("meet in the middle needs at most " +
                                     std::to_string(kMaxMeetInTheMiddleElements) + " elements");
     }
 
-    const Preliminary pre = preliminary_checks(a);
+    const Preliminary<V> pre = preliminary_checks(a);
     if (pre.verdict) return trivial_answer(pre, n);
-    const Value T = pre.T;
+    const V& T = pre.T;
 
     const std::size_t h = n / 2;
+    // No sum is larger than S, which bounds the bytes of a stored one.
     require_memory("meet in the middle",
-                   ((Value{1} << h) + (Value{1} << (n - h))) * sizeof(Value));
-    std::vector<Value> LS = subset_sums(a.first(h));
-    std::vector<Value> RS = subset_sums(a.subspan(h));
+                   ((Native{1} << h) + (Native{1} << (n - h))) * stored_bytes(pre.S));
+    std::vector<V> LS = subset_sums(a.first(h));
+    std::vector<V> RS = subset_sums(a.subspan(h));
     std::sort(LS.begin(), LS.end());
-    std::sort(RS.begin(), RS.end(), std::greater<Value>{});
+    std::sort(RS.begin(), RS.end(), std::greater<V>{});
 
-    // Every LS[i] + RS[j] is a subset sum, so at most S < 2^128.
+    // Every LS[i] + RS[j] is the sum of a subset of a, so at most S.
     std::size_t i = 0;
     std::size_t j = 0;
     while (i < LS.size() && j < RS.size()) {
-        const Value s = LS[i] + RS[j];
+        const V s = LS[i] + RS[j];
         if (s == T) return recover(a, h, LS[i], RS[j]);
         if (s < T) {
             ++i;
@@ -69,3 +74,9 @@ ExactAnswer meet_in_the_middle(std::span<const Value> a) {
     }
     return std::nullopt;
 }
+
+#define INSTANTIATE(V)                                     \
+    template std::vector<V> subset_sums(std::span<const V>); \
+    template ExactAnswer<V> meet_in_the_middle(std::span<const V>);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE

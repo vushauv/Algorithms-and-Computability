@@ -8,10 +8,11 @@ namespace result_file {
 
 namespace {
 
-// Each number with a space in front of it.
-std::string spaced(std::span<const Value> values) {
+// The numbers separated by single spaces, each preceded by one.
+template <class V>
+std::string spaced(std::span<const V> values) {
     std::string text;
-    for (Value v : values) text += " " + to_string(v);
+    for (const V& v : values) text += " " + to_string(v);
     return text;
 }
 
@@ -32,28 +33,36 @@ std::string header(std::size_t sets, std::size_t subsets) {
     return std::to_string(sets) + " " + std::to_string(subsets);
 }
 
-std::string format_set(std::span<const Value> a, std::vector<std::vector<Value>> subsets) {
-    for (std::vector<Value>& subset : subsets) std::ranges::sort(subset, std::greater<>());
-    // Larger line first: the first larger number decides; if one line continues the other,
-    // the longer one wins.
-    std::ranges::sort(subsets, [](const std::vector<Value>& x, const std::vector<Value>& y) {
+template <class V>
+std::string format_set(std::span<const V> a, std::vector<std::vector<V>> subsets) {
+    for (std::vector<V>& subset : subsets) std::ranges::sort(subset, std::greater<>());
+    // Larger content first: the first larger number decides, and of two lines
+    // where one continues the other, the longer one is larger.
+    std::ranges::sort(subsets, [](const std::vector<V>& x, const std::vector<V>& y) {
         return std::ranges::lexicographical_compare(y, x);
     });
 
     std::string text = to_string(total_sum(a)) + spaced(a);
-    Value smallest = 0;
-    Value largest = 0;
+    V smallest = 0;
+    V largest = 0;
     for (std::size_t i = 0; i < subsets.size(); ++i) {
-        const Value sum = total_sum(subsets[i]);
+        const V sum = total_sum(std::span<const V>(subsets[i]));
         if (i == 0 || sum < smallest) smallest = sum;
         if (i == 0 || sum > largest) largest = sum;
-        text += "\n" + to_string(sum) + spaced(subsets[i]);
+        text += "\n" + to_string(sum) + spaced(std::span<const V>(subsets[i]));
     }
-    return text + "\n" + to_string(largest - smallest);
+    return text + "\n" + to_string(V(largest - smallest));
 }
 
-std::string format_set(std::span<const Value> a, const Partition& partition) {
-    return format_set(a, {values_at(a, partition.A), values_at(a, partition.B)});
+template <class V>
+std::string format_set(std::span<const V> a, const Partition<V>& partition) {
+    return format_set<V>(a, {values_at(a, partition.A), values_at(a, partition.B)});
 }
+
+#define INSTANTIATE(V)                                                               \
+    template std::string format_set(std::span<const V>, std::vector<std::vector<V>>); \
+    template std::string format_set(std::span<const V>, const Partition<V>&);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE
 
 }  // namespace result_file

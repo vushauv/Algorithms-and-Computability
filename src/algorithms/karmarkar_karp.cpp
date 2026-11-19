@@ -5,11 +5,12 @@
 #include <utility>
 #include <vector>
 
-Partition karmarkar_karp(std::span<const Value> a) {
+template <class V>
+Partition<V> karmarkar_karp(std::span<const V> a) {
     const std::size_t n = a.size();
 
-    // Max-heap of (a[i], i); ties go by index.
-    using Entry = std::pair<Value, std::size_t>;
+    // Max-heap of the pairs (a[i], i); ties are broken by the index.
+    using Entry = std::pair<V, std::size_t>;
     std::vector<Entry> entries;
     entries.reserve(n);
     for (std::size_t i = 0; i < n; ++i) entries.emplace_back(a[i], i);
@@ -26,7 +27,7 @@ Partition karmarkar_karp(std::span<const Value> a) {
         E[u].push_back(v);
         E[v].push_back(u);
     }
-    const Value d = H.top().first;
+    const V d = H.top().first;
 
     std::vector<int> colour(n, -1);
     std::queue<std::size_t> queue;
@@ -43,9 +44,13 @@ Partition karmarkar_karp(std::span<const Value> a) {
         }
     }
 
-    Partition result{{}, {}, d};
+    Partition<V> result{{}, {}, d};
     for (std::size_t i = 0; i < n; ++i) {
         (colour[i] == 0 ? result.A : result.B).push_back(i);
     }
     return result;
 }
+
+#define INSTANTIATE(V) template Partition<V> karmarkar_karp(std::span<const V>);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE

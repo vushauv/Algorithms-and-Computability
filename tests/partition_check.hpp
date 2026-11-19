@@ -6,16 +6,17 @@
 #include <vector>
 
 #include "partition.hpp"
+#include "value.hpp"
 
 namespace partition_check {
 
 inline Value sum_of(const std::vector<Value>& a, const std::vector<std::size_t>& indices) {
-    return total_sum(values_at(a, indices));
+    return total_sum<Value>(values_at<Value>(a, indices));
 }
 
 // A and B are non-empty, disjoint and cover 0..n−1, and d is the difference
 // of their sums (Section 1.2).
-inline bool is_partition(const std::vector<Value>& a, const Partition& p) {
+inline bool is_partition(const std::vector<Value>& a, const Partition<Value>& p) {
     if (p.A.empty() || p.B.empty()) return false;
     std::vector<std::size_t> all = p.A;
     all.insert(all.end(), p.B.begin(), p.B.end());
@@ -31,7 +32,7 @@ inline bool is_partition(const std::vector<Value>& a, const Partition& p) {
 
 // The answer of an exact algorithm is the expected verdict, and a YES comes
 // with a balanced partition: a valid one with d = 0.
-inline bool is_answer(const std::vector<Value>& a, const ExactAnswer& answer, Verdict expected) {
+inline bool is_answer(const std::vector<Value>& a, const ExactAnswer<Value>& answer, Verdict expected) {
     if (verdict_of(answer) != expected) return false;
     return !answer || (answer->d == 0 && is_partition(a, *answer));
 }

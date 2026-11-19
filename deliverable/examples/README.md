@@ -24,12 +24,13 @@ its results next to the input, for example `01_report_examples_output.txt`
 | `05_large_values.txt` | 6 | 25-digit values: YES and NO pairs with $n = 12, 24, 40$, decided by meet in the middle |
 | `06_many_small_numbers.txt` | 4 | $n = 200$, $5000$ and $101$ small values, in the range of dynamic programming |
 | `07_unknown.txt` | 2 | $n = 100$ and $1000$ values of 25 digits: no exact algorithm is in range, the answer is UNKNOWN with the Karmarkar-Karp partition |
-| `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest allowed) and leading zeros |
+| `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest that `--arithmetic native` allows) and leading zeros |
 | `09_windows_line_endings.txt` | 2 | CRLF line endings |
 | `10_homenda_example.txt` | 2 | the input of Homenda's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
 | `11_extra_spaces.txt` | 3 | spaces at the ends of the lines, two spaces and tabs between the numbers: accepted and read as single spaces |
 | `12_homenda_example_1.txt` | 2 | Homenda's input example `raw_regulations/AaC_example_1.txt`, copied unchanged: small numbers, YES and NO with an odd sum |
 | `13_homenda_example_2.txt` | 1 | Homenda's input example `raw_regulations/AaC_example_2.txt`, copied unchanged: one set of 25-digit values, NO with an odd sum |
+| `14_beyond_128_bits.txt` | 6 | numbers of 39, 50 and 180 digits, which need the long arithmetic: $10^{38}$ twice; a sum above $2^{128}$; YES that Karmarkar-Karp misses, found by meet in the middle; NO with an even and with an odd sum; YES with 180 digits |
 
 The YES sets of `05_large_values.txt` are made balanced by construction; the
 others are random. The answers were checked against brute force
@@ -52,7 +53,16 @@ exits with code 1.
 | `07_one_element.txt` | a set with one number ($n \ge 2$ is required) |
 | `08_negative_number.txt` | a negative number |
 | `09_not_a_digit.txt` | a letter inside a number |
-| `10_value_too_large.txt` | a value of $10^{38}$ |
-| `11_sum_too_large.txt` | the sum of a set reaches $2^{128}$ |
-| `12_decimal_point.txt` | a non-integer value |
-| `13_first_line_two_numbers.txt` | more than one number on line 1 |
+| `10_decimal_point.txt` | a non-integer value |
+| `11_first_line_two_numbers.txt` | more than one number on line 1 |
+
+## Limits of the native arithmetic (`native_limits/`)
+
+Valid inputs for the default arithmetic and for `--arithmetic own`, which
+have no limit on the size of a number. With `--arithmetic native` (128-bit
+integers) each one is an error with exit code 1.
+
+| File | Error with `--arithmetic native` |
+| --- | --- |
+| `01_value_too_large.txt` | a value of $10^{38}$ |
+| `02_sum_too_large.txt` | the sum of a set reaches $2^{128}$ |
