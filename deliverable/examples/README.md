@@ -31,6 +31,12 @@ its results next to the input, for example `01_report_examples_output.txt`
 | `12_homenda_example_1.txt` | 2 | Homenda's input example `raw_regulations/AaC_example_1.txt`, copied unchanged: small numbers, YES and NO with an odd sum |
 | `13_homenda_example_2.txt` | 1 | Homenda's input example `raw_regulations/AaC_example_2.txt`, copied unchanged: one set of 25-digit values, NO with an odd sum |
 | `14_beyond_128_bits.txt` | 6 | numbers of 39, 50 and 180 digits, which need the long arithmetic: $10^{38}$ twice; a sum above $2^{128}$; YES that Karmarkar-Karp misses, found by meet in the middle; NO with an even and with an odd sum; YES with 180 digits |
+| `15_many_sets.txt` | 500 | 500 sets of 2 to 6 numbers below 1000: the list of sets, the answers and the results file at the scale of a long file |
+| `16_huge_numbers.txt` | 1 | 20 numbers of 1000 digits, every one twice: YES, found by Karmarkar-Karp; needs the long arithmetic |
+
+`15_many_sets.txt` and `16_huge_numbers.txt` are made by `tests/generate.sh`
+(`sets 500`, `huge 1000`) in the repository; the tests use it for much larger
+files (10000 sets, 100000 numbers, numbers of 3000 digits).
 
 The YES sets of `05_large_values.txt` are made balanced by construction; the
 others are random. The answers were checked against brute force

@@ -1,7 +1,8 @@
 # Partition problem: build of the program and the tests.
 #
 #   make           the program, build/linux/partition
-#   make test      build and run the tests
+#   make test      build and run the tests (at most 90 s once built; tests/README.md)
+#   make test-quick   the tests without the slow checks (about 15 s once built)
 #   make windows   static Windows executable, build/windows/partition.exe
 #   make deliverable   the same, copied to deliverable/partition.exe (committed for the demo)
 #   make clean     remove build/
@@ -29,7 +30,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test windows deliverable clean
+.PHONY: all test test-quick windows deliverable clean
 
 all: $(PROGRAM)
 
@@ -42,6 +43,11 @@ $(TESTS): $(TEST_OBJ) $(LIB_OBJ)
 test: $(TESTS) $(PROGRAM)
 	./$(TESTS)
 	sh tests/cli_test.sh $(PROGRAM)
+
+# The same without the slow checks (about 15 s once built; see tests/README.md).
+test-quick: $(TESTS) $(PROGRAM)
+	./$(TESTS) quick
+	sh tests/cli_test.sh $(PROGRAM) quick
 
 # One compiler call from the sources; -static so that no DLL beyond the
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.

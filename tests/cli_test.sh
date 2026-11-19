@@ -8,12 +8,19 @@
 # The program saves a results file next to its input, so the sample inputs are
 # copied to a temporary directory and run there.
 
+#
+# With the argument "quick" after the program (make test-quick) the slow
+# checks are left out: the samples with large values in the comparison of the
+# arithmetics, most of the terminal runs, the generated files of the scale test.
+
 PROGRAM=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+QUICK=$2
 passed=0
 failed=0
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 ESC=$(printf '\033')
+ROOT=$(pwd)
 cp -R deliverable raw_regulations "$TMP"/
 cd "$TMP" || exit 1
 
@@ -52,6 +59,7 @@ for f in deliverable/examples/native_limits/*.txt; do
     expect 0 --arithmetic own --base 10 "$f"
 done
 expect 1 --arithmetic native deliverable/examples/14_beyond_128_bits.txt
+expect 1 --arithmetic native deliverable/examples/16_huge_numbers.txt
 expect 1 "$TMP/no_such_file.txt"
 expect 1 examples
 
@@ -127,11 +135,16 @@ fi
 # the file (not beyond 128 bits).
 for f in deliverable/examples/[01]*.txt; do
     case $f in *_output.txt) continue ;; esac
+    [ -n "$QUICK" ] && case $f in *05_large* | *14_beyond*) continue ;; esac
     out=${f%.txt}_output.txt
     "$PROGRAM" --no-color "$f" > "$TMP/reference" 2>&1
     cp "$out" "$TMP/reference_file"
-    for arithmetic in "native" "own" "own --base 2" "own --base 10" "own --base 1000000000"; do
-        case "$arithmetic:$f" in native:*beyond_128_bits*) continue ;; esac
+    arithmetics="native;own;own --base 2;own --base 10;own --base 1000000000"
+    [ -n "$QUICK" ] && arithmetics="native;own --base 10"
+    IFS=';'
+    for arithmetic in $arithmetics; do
+        unset IFS
+        case "$arithmetic:$f" in native:*beyond_128_bits* | native:*huge_numbers*) continue ;; esac
         # shellcheck disable=SC2086  # the words of $arithmetic are separate arguments
         "$PROGRAM" --no-color --arithmetic $arithmetic "$f" > "$TMP/other" 2>&1
         if cmp -s "$TMP/reference" "$TMP/other" && cmp -s "$TMP/reference_file" "$out"; then
@@ -187,6 +200,7 @@ done
 if command -v script >/dev/null 2>&1; then
     for f in deliverable/examples/0*.txt deliverable/examples/errors/07_one_element.txt; do
         case $f in *_output.txt) continue ;; esac  # results of the runs above
+        [ -n "$QUICK" ] && case $f in *02_yes* | *errors*) ;; *) continue ;; esac
         env -u NO_COLOR script -qec "'$PROGRAM' '$f'" /dev/null > "$TMP/tty" 2>&1
         if grep -q "$ESC" "$TMP/tty"; then pass; else fail "no colours on a terminal: $f"; fi
         sed "s/$ESC\[[0-9;]*m//g" "$TMP/tty" | tr -d '\r' > "$TMP/stripped"
@@ -200,6 +214,36 @@ if command -v script >/dev/null 2>&1; then
     done
 else
     echo "cli_test: script(1) not found, terminal checks skipped" >&2
+fi
+
+# Size, with files made by tests/generate.sh: 10^4 sets, 10^5 numbers, numbers of
+# 3000 digits. Every one is YES by construction (a set repeated twice); the
+# console text and the results file are the same in every arithmetic.
+if [ -z "$QUICK" ]; then
+    GENERATE=$ROOT/tests/generate.sh
+    sh "$GENERATE" sets 10000 > "$TMP/scale_sets.txt"
+    sh "$GENERATE" numbers 100000 3 > "$TMP/scale_numbers.txt"
+    sh "$GENERATE" huge 3000 > "$TMP/scale_huge.txt"
+    for f in "$TMP"/scale_*.txt; do
+        out=${f%.txt}_output.txt
+        expect 0 --no-color "$f"
+        "$PROGRAM" --no-color "$f" > "$TMP/reference" 2>&1
+        cp "$out" "$TMP/reference_file"
+        for arithmetic in "own" "own --base 10" "native"; do
+            case "$arithmetic:$f" in native:*scale_huge*) continue ;; esac
+            # shellcheck disable=SC2086
+            "$PROGRAM" --no-color --arithmetic $arithmetic "$f" > "$TMP/other" 2>&1
+            if cmp -s "$TMP/reference" "$TMP/other" && cmp -s "$TMP/reference_file" "$out"; then
+                pass
+            else
+                fail "--arithmetic $arithmetic differs from boost: $f"
+            fi
+        done
+    done
+    for f in scale_numbers scale_huge; do
+        if "$PROGRAM" --no-color "$TMP/$f.txt" | grep -q 'Answer: YES'; then pass; else fail "$f is YES"; fi
+    done
+    if [ "$(sed -n '1p' "$TMP/scale_sets_output.txt")" = "10000 2" ]; then pass; else fail "results file of 10^4 sets"; fi
 fi
 
 echo "$passed program checks passed, $failed failed"
