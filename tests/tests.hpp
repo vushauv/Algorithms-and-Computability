@@ -12,3 +12,4 @@ void test_dynamic_programming();
 void test_solve();
 void test_result_file();
 void test_arithmetics();
+void test_scale();

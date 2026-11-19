@@ -13,6 +13,7 @@ int main() {
     test_solve();
     test_result_file();
     test_arithmetics();
+    test_scale();
 
     std::cout << check::passed << " checks passed, " << check::failed << " failed\n";
     return check::failed == 0 ? 0 : 1;
