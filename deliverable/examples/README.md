@@ -21,13 +21,15 @@ its results next to the input, for example `01_report_examples_output.txt`
 | `02_yes.txt` | 6 | YES instances, from $n = 2$ up; the last one is YES with $d = 2$ |
 | `03_no.txt` | 6 | NO instances: odd sums, $\max a_i > T$, even sums without a balanced partition |
 | `04_duplicates_and_zeros.txt` | 8 | only zeros, zeros among other values, many equal values |
-| `05_large_values.txt` | 7 | 25-digit values: the second example of the assignment, then YES and NO pairs with $n = 12, 24, 40$, decided by meet in the middle |
+| `05_large_values.txt` | 6 | 25-digit values: YES and NO pairs with $n = 12, 24, 40$, decided by meet in the middle |
 | `06_many_small_numbers.txt` | 4 | $n = 200$, $5000$ and $101$ small values, in the range of dynamic programming |
 | `07_unknown.txt` | 2 | $n = 100$ and $1000$ values of 25 digits: no exact algorithm is in range, the answer is UNKNOWN with the Karmarkar-Karp partition |
 | `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest allowed) and leading zeros |
 | `09_windows_line_endings.txt` | 2 | CRLF line endings |
 | `10_homenda_example.txt` | 2 | the input of Homenda's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
 | `11_extra_spaces.txt` | 3 | spaces at the ends of the lines, two spaces and tabs between the numbers: accepted and read as single spaces |
+| `12_homenda_example_1.txt` | 2 | Homenda's input example `raw_regulations/AaC_example_1.txt`, copied unchanged: small numbers, YES and NO with an odd sum |
+| `13_homenda_example_2.txt` | 1 | Homenda's input example `raw_regulations/AaC_example_2.txt`, copied unchanged: one set of 25-digit values, NO with an odd sum |
 
 The YES sets of `05_large_values.txt` are made balanced by construction; the
 others are random. The answers were checked against brute force
