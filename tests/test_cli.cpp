@@ -1,11 +1,10 @@
+#include "algorithms/dynamic_programming.hpp"
 #include "check.hpp"
 #include "cli.hpp"
 #include "output.hpp"
 #include "tests.hpp"
 
 #include <string>
-
-#include "algorithms/dynamic_programming.hpp"
 #include <vector>
 
 namespace {

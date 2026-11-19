@@ -1,5 +1,8 @@
+#include "algorithms/karmarkar_karp.hpp"
 #include "check.hpp"
+#include "random_sets.hpp"
 #include "result_file.hpp"
+#include "solve.hpp"
 #include "tests.hpp"
 
 #include <algorithm>
@@ -8,10 +11,6 @@
 #include <span>
 #include <string>
 #include <vector>
-
-#include "algorithms/karmarkar_karp.hpp"
-#include "random_sets.hpp"
-#include "solve.hpp"
 
 namespace {
 

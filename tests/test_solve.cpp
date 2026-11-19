@@ -1,4 +1,5 @@
 #include "algorithms/brute_force.hpp"
+#include "algorithms/dynamic_programming.hpp"
 #include "check.hpp"
 #include "partition_check.hpp"
 #include "random_sets.hpp"
@@ -6,8 +7,6 @@
 #include "tests.hpp"
 
 #include <vector>
-
-#include "algorithms/dynamic_programming.hpp"
 
 namespace {
 

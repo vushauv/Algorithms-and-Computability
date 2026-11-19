@@ -10,9 +10,7 @@
 namespace partition_check {
 
 inline Value sum_of(const std::vector<Value>& a, const std::vector<std::size_t>& indices) {
-    Value sum = 0;
-    for (std::size_t i : indices) sum += a[i];
-    return sum;
+    return total_sum(values_at(a, indices));
 }
 
 // A and B are non-empty, disjoint and cover 0..n−1, and d is the difference
