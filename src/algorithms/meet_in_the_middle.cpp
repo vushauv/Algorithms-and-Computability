@@ -32,7 +32,7 @@ std::vector<V> subset_sums(std::span<const V> b) {
     std::vector<V> sums(count);
     sums[0] = 0;
     for (std::uint64_t mask = 1; mask < count; ++mask) {
-        const int k = std::countr_zero(mask);  // lowest set bit, Section 2.1
+        const int k = std::countr_zero(mask);  // lowest set bit
         sums[mask] = sums[mask ^ (std::uint64_t{1} << k)] + b[k];
     }
     return sums;

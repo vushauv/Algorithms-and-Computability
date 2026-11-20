@@ -1,6 +1,6 @@
 // The numbers of the input, in three arithmetics chosen with --arithmetic:
 //
-//   Native    unsigned 128-bit integers of the compiler (report, Section 1.4):
+//   Native    unsigned 128-bit integers of the compiler:
 //             every value below 10^38, every sum below 2^128;
 //   BoostInt  cpp_int of Boost.Multiprecision, of any size;
 //   BigUint   our own long arithmetic of any size, with the base of --base.

@@ -14,7 +14,7 @@ namespace {
 // No bound on the work n * T of dynamic programming.
 constexpr std::uint64_t kAnyWork = ~std::uint64_t{0};
 
-// Theorem 6.1: the partition of Karmarkar-Karp is valid, and a balanced
+// The partition of Karmarkar-Karp is valid, and a balanced
 // partition comes with the answer YES and only with it.
 bool is_valid_solution(const std::vector<Value>& a, const Solution<Value>& s) {
     if (!partition_check::is_partition(a, s.partition)) return false;
@@ -29,7 +29,7 @@ void test_solve() {
     const Ranges defaults{44, 300'000'000, kAnyWork};
     const Ranges no_exact{0, 0, kAnyWork};
 
-    // The examples of Section 6.3.
+    // Small worked examples.
     const Solution<Value> balanced = solve<Value>(V{3, 1, 4, 2}, defaults);
     CHECK(balanced.answer == Verdict::Yes);
     CHECK(balanced.decided_by == Method::KarmarkarKarp);
@@ -68,10 +68,10 @@ void test_solve() {
     CHECK(solve<Value>(V{1, 1, 4}, Ranges{44, 0, kAnyWork}).decided_by == Method::MeetInTheMiddle);
     CHECK(solve<Value>(V{1, 1, 4}, no_exact).answer == Verdict::Unknown);
 
-    // All zeros: d = 0, YES whatever the ranges (Section 6.1, step 1).
+    // All zeros: d = 0, YES whatever the ranges.
     CHECK(solve<Value>(V{0, 0, 0}, no_exact).answer == Verdict::Yes);
 
-    // The rule: DP iff T/32 < 2^(n/2) (Proposition 4.4 with the cost doubled).
+    // The rule: DP iff T/32 < 2^(n/2) (the bitset cost doubled for the step table).
     CHECK(dp_is_cheaper(2, 63));      // 63/32 < 2
     CHECK(!dp_is_cheaper(2, 64));     // 64/32 = 2
     CHECK(dp_is_cheaper(20, 32767));  // 1023.97 < 1024

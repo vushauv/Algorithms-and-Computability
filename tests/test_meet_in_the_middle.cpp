@@ -17,12 +17,12 @@ using partition_check::answers;
 void test_meet_in_the_middle() {
     using V = std::vector<Value>;
 
-    // SUBSET-SUMS, the table of Section 3.3.
+    // SUBSET-SUMS on a small example.
     CHECK(subset_sums<Value>(V{3, 1}) == (V{0, 3, 1, 4}));
     CHECK(subset_sums<Value>(V{4, 2}) == (V{0, 4, 2, 6}));
     CHECK(subset_sums<Value>(V{}) == (V{0}));
 
-    // The examples of Section 3.3.
+    // Small worked examples.
     CHECK(answers(meet_in_the_middle<Value>, V{3, 1, 4, 2}, Verdict::Yes));
     CHECK(answers(meet_in_the_middle<Value>, V{2, 3, 7}, Verdict::No));
     CHECK(answers(meet_in_the_middle<Value>, V{2, 3, 4}, Verdict::No));  // odd sum

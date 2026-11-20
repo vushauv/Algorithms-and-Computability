@@ -15,7 +15,7 @@ void test_brute_force() {
     using V = std::vector<Value>;
     using I = std::vector<std::size_t>;
 
-    // Preliminary checks (Section 1.2).
+    // Preliminary checks.
     CHECK(total_sum<Value>(V{3, 1, 4, 2}) == 10);
     CHECK(preliminary_checks<Value>(V{2, 3, 4}).verdict == Verdict::No);   // S = 9 is odd
     CHECK(preliminary_checks<Value>(V{0, 0}).verdict == Verdict::Yes);     // S = 0
@@ -57,7 +57,7 @@ void test_brute_force() {
     CHECK_THROWS(find_subset<Value>(V(64, 0), 1), std::invalid_argument);
     CHECK_THROWS(find_subset<Value>(V(1000, 1), 3), std::invalid_argument);
 
-    // The examples of Section 2.3: the mask 110 stands for A = {a[1], a[2]}.
+    // Small worked examples: the mask 110 stands for A = {a[1], a[2]}.
     CHECK(answers(brute_force<Value>, V{3, 1, 4, 2}, Verdict::Yes));
     CHECK(brute_force<Value>(V{3, 1, 4, 2})->A == (I{1, 2}));
     CHECK(answers(brute_force<Value>, V{2, 3, 7}, Verdict::No));
@@ -71,8 +71,8 @@ void test_brute_force() {
     CHECK(answers(brute_force<Value>, V{0, 5}, Verdict::No));
     CHECK(answers(brute_force<Value>, V{0, 5, 5}, Verdict::Yes));
     CHECK(answers(brute_force<Value>, V{2, 3, 4}, Verdict::No));             // odd sum
-    CHECK(answers(brute_force<Value>, V{2, 2, 3, 5}, Verdict::No));          // Section 4.4
-    CHECK(answers(brute_force<Value>, V{5, 6, 7, 8, 10}, Verdict::Yes));     // Section 5.3
+    CHECK(answers(brute_force<Value>, V{2, 2, 3, 5}, Verdict::No));
+    CHECK(answers(brute_force<Value>, V{5, 6, 7, 8, 10}, Verdict::Yes));
     CHECK(answers(brute_force<Value>, V{1, 1, 1, 1, 1, 1, 6}, Verdict::Yes));  // the last element alone
     CHECK(answers(brute_force<Value>, V{10, 1, 1}, Verdict::No));            // one element larger than T
 

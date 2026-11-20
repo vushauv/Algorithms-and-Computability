@@ -1,4 +1,4 @@
-// SOLVE, the final algorithm (report, Section 6.2): Karmarkar-Karp always, plus an exact
+// SOLVE, the final algorithm: Karmarkar-Karp always, plus an exact
 // algorithm when one is in range. Brute force is never used.
 #pragma once
 
@@ -22,11 +22,11 @@ DpLimit dp_limit(std::size_t n, const V& T, const Ranges& ranges);
 
 // What decided SOLVE's answer.
 enum class Method {
-    KarmarkarKarp,       // d = 0, the partition is balanced (step 1)
-    OddSum,              // S is odd (step 2)
-    DynamicProgramming,  // step 3
-    MeetInTheMiddle,     // step 3
-    None                 // no exact algorithm in range, the answer is UNKNOWN (step 4)
+    KarmarkarKarp,       // d = 0, the partition is balanced
+    OddSum,              // S is odd
+    DynamicProgramming,
+    MeetInTheMiddle,
+    None                 // no exact algorithm in range, the answer is UNKNOWN
 };
 
 template <class V>

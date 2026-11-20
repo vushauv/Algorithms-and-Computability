@@ -1,5 +1,5 @@
-// Types shared by the algorithms, and the checks every exact algorithm does first
-// (report, Section 1.2). Indices are 0-based here, so the report's a[i] is a[i - 1].
+// Types shared by the algorithms, and the checks every exact algorithm does first.
+// Indices are 0-based.
 // V is the type of the numbers (number.hpp).
 #pragma once
 
@@ -11,7 +11,7 @@
 #include "number.hpp"
 
 // Answer to the decision problem. Unknown only comes from SOLVE, when no exact
-// algorithm is in range (report, Section 6.2).
+// algorithm is in range.
 enum class Verdict { No, Yes, Unknown };
 
 // A partition into the index sets A and B with discrepancy d = |sum(A) - sum(B)|.
@@ -26,7 +26,7 @@ struct Partition {
 template <class V>
 using ExactAnswer = std::optional<Partition<V>>;
 
-// Result of the trivial cases (Section 1.2): a verdict if S is odd (NO) or 0 (YES),
+// Result of the trivial cases: a verdict if S is odd (NO) or 0 (YES),
 // otherwise no verdict and T = S / 2.
 template <class V>
 struct Preliminary {

@@ -1,4 +1,4 @@
-// MEET-IN-THE-MIDDLE of Horowitz and Sahni (report, Section 3.2): a balanced partition
+// MEET-IN-THE-MIDDLE of Horowitz and Sahni: a balanced partition
 // or NO. Time O(n * 2^(n/2)), memory 2^(n/2) sums per half.
 #pragma once
 
