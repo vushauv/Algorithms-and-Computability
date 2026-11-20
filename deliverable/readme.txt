@@ -46,3 +46,11 @@ EXIT CODES
 
     0 success, 1 invalid input file, 2 invalid command line,
     3 an algorithm could not run on some set, 4 results file not written
+
+SOURCES
+
+    source\ holds the C++20 sources (src\), Boost.Multiprecision
+    (third_party\, header-only) and a Makefile. In source\ run:
+      make           Linux program, build/linux/partition
+      make windows   static Windows executable (MinGW-w64)
+    The Makefile lists the same commands for building without make.
