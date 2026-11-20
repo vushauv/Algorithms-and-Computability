@@ -49,8 +49,6 @@ int process(const Options& options) {
         return 1;
     }
 
-    // Save the results file only after all sets are printed, so a read-only directory
-    // (a USB stick) doesn't lose the console output.
     const std::string results_path = result_file::path_for(options.path);
     std::string results = result_file::header(instances.size(), options.subsets);
 
