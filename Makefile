@@ -4,7 +4,10 @@
 #   make test      build and run the tests (at most 90 s once built; tests/README.md)
 #   make test-quick   the tests without the slow checks (about 15 s once built)
 #   make windows   static Windows executable, build/windows/partition.exe
-#   make deliverable   the same, copied to deliverable/partition.exe (committed for the demo)
+#   make deliverable   the same, copied to deliverable/partition.exe (committed for the demo),
+#                  and the sources copied to deliverable/source/ (deliverable-source)
+#   make deliverable-source   only the sources: src/ and third_party/ copied to
+#                  deliverable/source/, next to its own Makefile (kept by hand)
 #   make clean     remove build/
 #
 # The README lists the same compiler commands for building without make.
@@ -21,6 +24,7 @@ PROGRAM  = $(BUILD)/partition
 TESTS    = $(BUILD)/run_tests
 WINDOWS  = build/windows/partition.exe
 DELIVERABLE = deliverable/partition.exe
+DELIVERABLE_SOURCE = deliverable/source
 
 MAIN_SRC = src/main.cpp
 LIB_SRC  = $(filter-out $(MAIN_SRC),$(wildcard src/*.cpp src/algorithms/*.cpp))
@@ -30,7 +34,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test test-quick windows deliverable clean
+.PHONY: all test test-quick windows deliverable deliverable-source clean
 
 all: $(PROGRAM)
 
@@ -55,8 +59,13 @@ windows:
 	mkdir -p build/windows
 	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
 
-deliverable: windows
+deliverable: windows deliverable-source
 	cp $(WINDOWS) $(DELIVERABLE)
+
+# Removed first, so that a file deleted from src/ does not stay in the copy.
+deliverable-source:
+	rm -rf $(DELIVERABLE_SOURCE)/src $(DELIVERABLE_SOURCE)/third_party
+	cp -R src third_party $(DELIVERABLE_SOURCE)/
 
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp

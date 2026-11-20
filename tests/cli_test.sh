@@ -38,7 +38,7 @@ expect() {
 
 # 0: valid files, help, a skipped exact algorithm (a warning, not an error), K = 2.
 for f in deliverable/examples/*.txt raw_regulations/AaC_example_*.txt; do
-    case $f in *_output.txt) continue ;; esac  # results left by earlier runs
+    case $f in *_output.txt|*/readme.txt) continue ;; esac  # results of earlier runs, the description
     expect 0 "$f"
 done
 expect 0 --help
@@ -122,6 +122,23 @@ if cmp -s "$TMP/expected.txt" deliverable/examples/01_report_examples_output.txt
     pass
 else
     fail "the results file of 01_report_examples.txt"
+fi
+# --quiet: nothing on stdout, the same results file; errors still on stderr.
+cp deliverable/examples/01_report_examples_output.txt "$TMP/loud_output.txt"
+rm deliverable/examples/01_report_examples_output.txt
+if [ -z "$("$PROGRAM" --quiet deliverable/examples/01_report_examples.txt)" ] &&
+    cmp -s "$TMP/loud_output.txt" deliverable/examples/01_report_examples_output.txt; then
+    pass
+else
+    fail "--quiet prints something or changes the results file"
+fi
+expect 0 -q deliverable/examples/01_report_examples.txt
+expect 1 --quiet deliverable/examples/errors/07_one_element.txt
+if "$PROGRAM" --quiet deliverable/examples/errors/07_one_element.txt 2>&1 >/dev/null |
+    grep -q 'error:'; then
+    pass
+else
+    fail "--quiet hides an error"
 fi
 "$PROGRAM" deliverable/examples/errors/07_one_element.txt >/dev/null 2>&1
 if [ -e deliverable/examples/errors/07_one_element_output.txt ]; then

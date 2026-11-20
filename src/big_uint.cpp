@@ -82,8 +82,6 @@ void BigUint::multiply_add(Cell factor, Cell addend) {
 }
 
 BigUint::Cell BigUint::divide(Cell divisor) {
-    // remainder < divisor, so remainder · base + cell < divisor · base ≤ 2^64
-    // and the quotient cell is below the base.
     std::uint64_t remainder = 0;
     for (std::size_t i = cells_.size(); i-- > 0;) {
         const std::uint64_t current = remainder * base_ + cells_[i];

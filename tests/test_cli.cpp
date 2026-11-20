@@ -23,6 +23,9 @@ void test_cli() {
     Options defaults = parse({"in.txt"});
     CHECK(defaults.path == "in.txt");
     CHECK(!defaults.no_color);
+    CHECK(!defaults.quiet);
+    CHECK(parse({"--quiet", "in.txt"}).quiet);
+    CHECK(parse({"in.txt", "-q"}).quiet);
     CHECK(defaults.n_mitm == kDefaultNMitm);
     CHECK(defaults.t_dp == kDefaultTDp);
     CHECK(defaults.algorithm == Algorithm::Solve);

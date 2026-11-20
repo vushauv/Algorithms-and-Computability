@@ -10,16 +10,16 @@ RUN (from the console, in this folder; no installation needed)
                 non-negative integers of any size, separated by spaces
     K           the number of subsets: 2 (the default and the only value)
 
-    Example:    partition.exe examples\10_homenda_example.txt 2
+    Example:    partition.exe examples\10_course_example.txt 2
 
     All sample inputs at once: examples\run_examples.bat
-    (examples\README.md says what each file shows).
+    (examples\readme.txt says what each file shows).
 
 RESULTS
 
     Printed in the console and saved next to the input file, with
     _output.txt in place of .txt:
-    examples\10_homenda_example.txt -> examples\10_homenda_example_output.txt
+    examples\10_course_example.txt -> examples\10_course_example_output.txt
 
     For every set: its sum and numbers, the two subsets with their sums, and
     the difference of the two sums (0 for an equal split). If no equal split
@@ -40,9 +40,19 @@ OPTIONS
                               of a set below 2^128 (else an error)
                     The results are the same; only the speed differs.
     --no-color      plain text, no colours
+    --quiet, -q     print nothing besides errors and warnings (the results
+                    file is still saved)
     --help          all options
 
 EXIT CODES
 
     0 success, 1 invalid input file, 2 invalid command line,
     3 an algorithm could not run on some set, 4 results file not written
+
+SOURCES
+
+    source\ holds the C++20 sources (src\), Boost.Multiprecision
+    (third_party\, header-only) and a Makefile. In source\ run:
+      make           Linux program, build/linux/partition
+      make windows   static Windows executable (MinGW-w64)
+    The Makefile lists the same commands for building without make.

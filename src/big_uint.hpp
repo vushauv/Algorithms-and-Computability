@@ -1,7 +1,7 @@
 // Our own long arithmetic: a non-negative integer of any size, stored as cells
 // in a base that is chosen at run time (--base). With the base 2^32 a cell is
-// a machine word, with 10 a decimal digit, with 2 a bit; the experiments of
-// Stage 4 compare them. Only what the algorithms need is here: addition,
+// a machine word, with 10 a decimal digit, with 2 a bit;
+// Only what the algorithms need is here: addition,
 // subtraction, comparison, parity, halving, and the conversions.
 #pragma once
 
@@ -18,9 +18,7 @@ public:
     static constexpr std::uint64_t kMinBase = 2;
     static constexpr std::uint64_t kMaxBase = std::uint64_t{1} << 32;  // a cell is below the base
 
-    // The base of every BigUint. Set it before the first value is made: the
-    // cells of an existing value are not converted. Throws
-    // std::invalid_argument outside kMinBase..kMaxBase.
+    // The base of every BigUint. Set it before the first value is made.
     static void set_base(std::uint64_t base);
     static std::uint64_t base() { return base_; }
 
@@ -28,7 +26,7 @@ public:
     BigUint(std::uint64_t value);  // implicit, so that x == 0 and x = 5 work
 
     BigUint& operator+=(const BigUint& other);
-    // Needs *this ≥ other.
+    
     BigUint& operator-=(const BigUint& other);
     friend BigUint operator+(BigUint a, const BigUint& b) { return a += b; }
     friend BigUint operator-(BigUint a, const BigUint& b) { return a -= b; }

@@ -8,15 +8,13 @@
 
 #include "partition.hpp"
 
-// Limits of the exact algorithms (report, Section 1.4): DP if T ≤ t_dp and n · T ≤ w_dp,
-// meet in the middle if n ≤ n_mitm.
+// Limits of the exact algorithms
 struct Ranges {
     std::size_t n_mitm;
     std::uint64_t t_dp;
     std::uint64_t w_dp;
 };
 
-// Why DP is out of range: Target if T > t_dp (or kMaxDpTarget), Work if n · T > w_dp.
 enum class DpLimit { InRange, Target, Work };
 
 template <class V>
@@ -42,8 +40,7 @@ struct Solution {
     V T;  // S / 2
 };
 
-// Which exact algorithm when both are in range (provisional, task.md section 6): DP if
-// T/32 < 2^(n/2). That is Proposition 4.4 (T/64) with the cost doubled for the step table.
+
 // Asked only for a target in the range of DP, so 64 bits.
 bool dp_is_cheaper(std::size_t n, std::uint64_t T);
 

@@ -44,7 +44,7 @@ Run it on an input file, optionally followed by the number of subsets `K`
 
 The results are printed and also saved next to the input, with `_output.txt`
 in place of `.txt` (`AaC_example_1.txt` gives `AaC_example_1_output.txt`), in
-Homenda's format (`raw_regulations/email_27.10.26.txt`, corrected on 28.10
+the course's format (`raw_regulations/email_27.10.26.txt`, corrected on 28.10
 and 29.10): the
 line `N 2`, then for every set, after a blank line, its sum and numbers, the
 two subsets with their sums (numbers largest first, the subsets in
@@ -52,7 +52,8 @@ lexicographically non-increasing order) and the difference of the two sums.
 The subsets are the balanced partition when one is found, otherwise the
 Karmarkar-Karp partition. These files are not committed (`.gitignore`).
 
-Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
+Options: `--no-color`; `--quiet` (`-q`), nothing on the console but errors and
+warnings, the results file is still saved; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
 meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
 default $3 \cdot 10^8$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
 time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone;
@@ -83,16 +84,16 @@ works on machine words in all of them: its target is at most `--t-dp`.
 
 `deliverable/` is the folder to hand over: `partition.exe` (the prebuilt static
 executable, `make deliverable`; it needs only the system DLLs), `readme.txt`
-(the short guide Homenda asked for) and `examples/`. On the lab machine:
+(the short guide the course asks for) and `examples/`. On the lab machine:
 
 ```bat
 cd deliverable
-partition.exe examples\10_homenda_example.txt 2
+partition.exe examples\10_course_example.txt 2
 examples\run_examples.bat
 ```
 
 The sample inputs and their expected results are described in
-`deliverable/examples/README.md`.
+`deliverable/examples/readme.txt`.
 
 ## Stage 2 report
 
