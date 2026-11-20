@@ -8,9 +8,9 @@ we expect) are in `benchmark_plan.md`; this document replaces its sections 4
 The framework is three small pieces:
 
 ```
-bench/generate.py   (Python, fixed seed)  ->  bench/inputs/*/*.txt   (not committed)
-bench/bench.cpp     (C++, everything hardcoded)  ->  docs/stage4/data/*.tsv
-bench/plots/*.py    (Python, later)  ->  docs/stage4/figures/*.pdf
+generate(.exe)   bench/generate.cpp, fixed seed  ->  inputs/<experiment>/*.txt
+bench(.exe)      bench/bench.cpp, all hardcoded  ->  results/<experiment>.tsv
+plots            bench/plots/*.py (Python, later) ->  figures
 ```
 
 ## 0. What the instructor asks for
@@ -33,34 +33,50 @@ How the framework answers this:
 
 - **Average:** each input file holds several random sets of one size; the
   time of a size is the mean over its sets.
-- **Repeatable:** the inputs come from a script with a fixed seed and are in
+- **Repeatable:** the inputs come from a program with a fixed seed and are in
   the course's input format, so they can also be run with `partition` or
   `partition.exe`; the result files record the commit, the compiler and the
   machine.
 - **Same inputs in every arithmetic:** the bench program reads each file
   once per arithmetic.
 
-## 1. The generator: `bench/generate.py`
+## 1. The generator: `bench/generate.cpp`
 
-A Python 3 script, standard library only. `python3 bench/generate.py`
-writes all input files of section 4 to `bench/inputs/` (one directory per
-experiment). Running it twice gives the same files byte for byte.
+A C++ program, built like `bench` (section 5.1) for Linux and Windows. It
+has no options: run in a directory, it writes all input files of section 4
+to `inputs/` there (one subdirectory per experiment, created if missing).
+Running it twice, or on another system, gives the same files byte for byte.
 
-- **Seed:** one constant at the top of the script, `SEED = 20261204`. Each
-  file uses its own generator `random.Random(f"{SEED}/{experiment}/{name}")`,
-  so a file does not change when another experiment is added or changed.
-  Use only `randrange`, `getrandbits` and `shuffle` of that object (their
-  output for a given seed is the same in every Python 3 version since 3.2).
+- **Engine:** `std::mt19937_64`, whose output for a given seed is fixed by
+  the C++ standard. **Do not use `std::uniform_int_distribution`** or any
+  other `std::` distribution, nor `std::shuffle`: their algorithms are left
+  to the implementation, so GCC (Linux), MinGW and other compilers could
+  give different files. Write the few needed helpers by hand: a number
+  below $m$ by rejection (draw $x$, retry while
+  $x \ge m \lfloor 2^{64}/m floor$, return $x mod m$), and a
+  Fisher-Yates shuffle with it.
+- **Seed:** one constant, `kSeed = 20261204`. Each file has its own engine,
+  seeded with a hash of `kSeed`, the experiment and the file name (FNV-1a
+  over the string `"20261204/E2/trap_n30"`, for example), so a file does
+  not change when another experiment is added or changed.
+- **Numbers as strings:** a number of $D$ digits is written digit by digit
+  (first digit 1 to 9, the others 0 to 9), so any length works. Where the
+  generator needs arithmetic (`trap`: $4 r_i$; `yes`: the replaced number)
+  it uses `BoostInt` of `number.hpp` and `to_string`.
 - **Format:** the course's input format: the number of sets on line 1,
-  then one set per line, numbers separated by single spaces, `\n` line ends.
-- **File names:** `bench/inputs/<experiment>/<name>.txt` with the parameters
-  in the name, e.g. `E2/trap_n30.txt`, `A1/random_d1000.txt`,
+  then one set per line, numbers separated by single spaces, `\n` line ends
+  (files opened in binary mode, so Windows writes no `\r`).
+- **File names:** `inputs/<experiment>/<name>.txt` with the parameters in
+  the name, e.g. `E2/trap_n30.txt`, `A1/random_d1000.txt`,
   `E5/n32_T1e7.txt`.
 - **Not committed:** `bench/inputs/` goes into `.gitignore`. Files of
-  numbers with thousands of digits are large, and the script recreates them
-  in seconds.
+  numbers with thousands of digits are large, and the generator recreates
+  them in seconds.
+- **Shared list of experiments:** the files to generate and the runs of
+  `bench` come from one header, `bench/experiments.hpp` (section 2.1), so
+  the two programs cannot disagree.
 
-Families of sets (one function each in the script):
+Families of sets (one function each in the generator):
 
 | Family | Parameters | Definition | Answer |
 | --- | --- | --- | --- |
@@ -73,17 +89,17 @@ Families of sets (one function each in the script):
 ## 2. The bench program: `bench/bench.cpp`
 
 One C++ file (helpers in `bench/` if it grows), no command-line options:
-**every parameter is a constant in the code**. `make bench` builds it as
-`build/linux/bench` against the same objects as the program, and runs it.
+**every parameter is a constant in the code**. Run in a directory, it reads
+`inputs/` there and writes `results/` (section 5.1).
 
 ### 2.1 The experiment table
 
-At the top of `bench.cpp`, a table with one entry per experiment of
-section 4:
+In `bench/experiments.hpp`, shared with the generator, a table with one
+entry per experiment of section 4:
 
 ```cpp
 struct Experiment {
-    std::string name;                       // "E2", also the directory in bench/inputs/
+    std::string name;                       // "E2", also the directory in inputs/
     Algorithm algorithm;                    // the enum of cli.hpp
     std::vector<std::string> files;         // in increasing size
     std::vector<ArithmeticRun> arithmetics; // e.g. {Native}, {Boost}, {Own, base 10}
@@ -91,8 +107,9 @@ struct Experiment {
 };
 ```
 
-Changing an experiment means changing this table and the matching list in
-`generate.py`; nothing else.
+Each file entry also holds what the generator needs (family, $n$, $D$ or
+$T$ or $M$, number of sets). Changing an experiment means changing this
+table; nothing else.
 
 ### 2.2 What it does
 
@@ -160,8 +177,9 @@ file lists or use fewer sets per file.
 
 ## 3. The result files
 
-One file per experiment, `docs/stage4/data/<experiment>.tsv`, overwritten
-by each run, committed (they are the data of the report).
+One file per experiment, `results/<experiment>.tsv` in the directory where
+`bench` runs, overwritten by each run. In the repository this is
+`bench/results/`, committed (the data of the report).
 
 Tab-separated, one header line, **one row per timed run of a set**; no
 averaging in C++, the plot scripts compute means and spreads. First, lines
@@ -175,9 +193,12 @@ starting with `#`:
 # generator seed: 20261204
 ```
 
-The commit and flags are passed by the `Makefile` (`-DBENCH_COMMIT=...`).
-The machine is described by `docs/stage4/data/machine.txt`, written by
-`make bench` with `lscpu`, `free -h`, `uname -a` and `g++ --version`.
+The commit and flags are compiled in by the `Makefile`
+(`-DBENCH_COMMIT=...`). `bench` also writes `results/machine.txt` with what
+it can find out itself: the system (`_WIN32` or `uname`), the number of
+threads (`std::thread::hardware_concurrency`), the compiler and the date.
+The CPU model and the memory are added to it by hand (on Linux `lscpu`
+and `free -h`; on Windows *System Information*).
 
 Columns:
 
@@ -187,7 +208,7 @@ Columns:
 | `algorithm` | `mitm` | `bf`, `mitm`, `dp`, `kk`, `solve` |
 | `arithmetic` | `own` | `native`, `boost`, `own` |
 | `base` | `10` | base of `own`, `NA` for the others |
-| `file` | `trap_n30.txt` | input file, in `bench/inputs/<experiment>/` |
+| `file` | `trap_n30.txt` | input file, in `inputs/<experiment>/` |
 | `set` | `3` | the set in the file, from 1 |
 | `n` | `30` | numbers in the set |
 | `digits` | `25` | digits of the largest number |
@@ -254,34 +275,59 @@ balanced partition).
 
 ## 5. Repeating the measurements
 
-These steps go into `bench/README.md` and into the report:
+No compiler, Python or other tool is needed to produce the data: only the
+two executables. These steps go into `bench/README.md` and into the report.
+
+On Linux, from the repository:
 
 ```
-python3 bench/generate.py      # inputs, fixed seed
-make bench                     # builds and runs bench (-O2), writes docs/stage4/data/
+make bench          # builds build/linux/generate and build/linux/bench, runs both in bench/
+```
+
+On any machine with the prebuilt Windows executables, in an empty
+directory:
+
+```
+generate.exe        # writes inputs\
+bench.exe           # reads inputs\, writes results\
 ```
 
 - One machine for all final data, plugged in, nothing else running; it is
-  described in `docs/stage4/data/machine.txt`.
+  described in `results/machine.txt`.
 - The same commit for all data; it is in every result file.
 - Any single file can be rerun with the program:
-  `build/linux/partition --algorithm mitm --arithmetic own --base 10 bench/inputs/E2/trap_n30.txt`.
+  `partition --algorithm mitm --arithmetic own --base 10 inputs/E2/trap_n30.txt`.
+
+### 5.1 Build
+
+`Makefile` targets, next to the existing ones:
+
+| Target | Builds |
+| --- | --- |
+| `make bench-build` | `build/linux/generate`, `build/linux/bench` (`-O2`, the same flags and objects as the program) |
+| `make bench` | the above, then runs both in `bench/` |
+| `make bench-windows` | `build/windows/generate.exe`, `build/windows/bench.exe`, static, like `make windows` |
+
+The two programs are not part of `make test` or of `deliverable/`.
 
 ## 6. Order of work (suggested PRs into `dev`)
 
-1. `bench/generate.py`, `.gitignore` for `bench/inputs/`.
-2. `bench/bench.cpp`, `make bench`, `bench/README.md`; a quick check with
-   a few small files before the full run.
-3. A full run on the chosen machine; `docs/stage4/data/` committed.
+1. `bench/experiments.hpp`, `bench/generate.cpp`, `make bench-build`,
+   `.gitignore` for `bench/inputs/`; a unit test that the same seed gives
+   the same file and that `trap` and `yes` have their known answers.
+2. `bench/bench.cpp`, `make bench`, `make bench-windows`,
+   `bench/README.md`; a quick check with a few small files before the
+   full run.
+3. A full run on the chosen machine; `bench/results/` committed.
 
 The plot scripts (Python, pandas and matplotlib, `bench/plots/`) come after,
-from the committed data.
+from the committed data; they only draw, they produce no data.
 
 ## 7. Open points
 
-- The machine for the final run (chosen later; `machine.txt` records it).
+- The machine for the final run (chosen later; `results/machine.txt` records it).
 - Peak memory is not measured: one process runs everything, and its peak
   memory is a high-water mark over all files. The graphs compare with the
   report's memory formulas instead. If measured memory is wanted for meet
   in the middle and dynamic programming, run a few files with
-  `/usr/bin/time -v build/linux/partition --algorithm ...`.
+  `/usr/bin/time -v partition --algorithm ...` on Linux.
