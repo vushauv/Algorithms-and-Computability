@@ -13,8 +13,8 @@ using partition_check::answers;
 
 namespace {
 
-// Theorem 5.2: A and B are non-empty, disjoint and cover 0..n−1, and d is the
-// difference of their sums. Also d ≤ max a[i] (Proposition 5.3) and d has the
+// A and B are non-empty, disjoint and cover 0..n-1, and d is the
+// difference of their sums. Also d <= max a[i] and d has the
 // parity of S.
 bool is_valid_result(const std::vector<Value>& a, const Partition<Value>& p) {
     const Value S = partition_check::sum_of(a, p.A) + partition_check::sum_of(a, p.B);
@@ -27,7 +27,7 @@ bool is_valid_result(const std::vector<Value>& a, const Partition<Value>& p) {
 void test_karmarkar_karp() {
     using V = std::vector<Value>;
 
-    // The examples of Section 5.3.
+    // Small worked examples.
     const V optimum{3, 1, 4, 2};
     const Partition<Value> p1 = karmarkar_karp<Value>(optimum);
     CHECK(p1.d == 0);
@@ -45,7 +45,7 @@ void test_karmarkar_karp() {
     CHECK(karmarkar_karp<Value>(V{0, 0, 0}).d == 0);
     CHECK(is_valid_result(V{0, 0, 0}, karmarkar_karp<Value>(V{0, 0, 0})));
     CHECK(karmarkar_karp<Value>(V{4, 4, 4, 4}).d == 0);
-    CHECK(karmarkar_karp<Value>(V{2, 3, 4}).d == 1);   // Section 6.3
+    CHECK(karmarkar_karp<Value>(V{2, 3, 4}).d == 1);
     const Value all_ones = ~Value{0};
     CHECK(karmarkar_karp<Value>(V{all_ones / 2, all_ones / 2}).d == 0);
 

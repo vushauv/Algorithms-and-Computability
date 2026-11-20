@@ -8,9 +8,9 @@
 #include "algorithms/meet_in_the_middle.hpp"
 
 bool dp_is_cheaper(std::size_t n, std::uint64_t T) {
-    // In floating point: 2^(n/2) is irrational for odd n, and T² may overflow.
+    // In floating point: 2^(n/2) is irrational for odd n, and T^2 may overflow.
     const long double t = static_cast<long double>(T);
-    // t/64 words per pass (Proposition 4.4), doubled for the step table.
+    // t/64 words per pass, doubled for the step table.
     return t / 32 < std::exp2(static_cast<long double>(n) / 2);
 }
 
@@ -19,7 +19,7 @@ DpLimit dp_limit(std::size_t n, const V& T, const Ranges& ranges) {
     // Above kMaxDpTarget dp_partition can't index its bitset, whatever t_dp says.
     const std::optional<std::uint64_t> target = to_u64(T);
     if (!target || *target > ranges.t_dp || *target > kMaxDpTarget) return DpLimit::Target;
-    // n · T ≤ w_dp, written so that the product cannot overflow; n ≥ 2.
+    // n * T <= w_dp, written so that the product cannot overflow; n >= 2.
     if (*target > ranges.w_dp / n) return DpLimit::Work;
     return DpLimit::InRange;
 }

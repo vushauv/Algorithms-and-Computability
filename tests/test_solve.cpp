@@ -11,10 +11,10 @@
 
 namespace {
 
-// No bound on the work n · T of dynamic programming.
+// No bound on the work n * T of dynamic programming.
 constexpr std::uint64_t kAnyWork = ~std::uint64_t{0};
 
-// Theorem 6.1: the partition of Karmarkar-Karp is valid, and a balanced
+// The partition of Karmarkar-Karp is valid, and a balanced
 // partition comes with the answer YES and only with it.
 bool is_valid_solution(const std::vector<Value>& a, const Solution<Value>& s) {
     if (!partition_check::is_partition(a, s.partition)) return false;
@@ -29,7 +29,7 @@ void test_solve() {
     const Ranges defaults{44, 300'000'000, kAnyWork};
     const Ranges no_exact{0, 0, kAnyWork};
 
-    // The examples of Section 6.3.
+    // Small worked examples.
     const Solution<Value> balanced = solve<Value>(V{3, 1, 4, 2}, defaults);
     CHECK(balanced.answer == Verdict::Yes);
     CHECK(balanced.decided_by == Method::KarmarkarKarp);
@@ -68,10 +68,10 @@ void test_solve() {
     CHECK(solve<Value>(V{1, 1, 4}, Ranges{44, 0, kAnyWork}).decided_by == Method::MeetInTheMiddle);
     CHECK(solve<Value>(V{1, 1, 4}, no_exact).answer == Verdict::Unknown);
 
-    // All zeros: d = 0, YES whatever the ranges (Section 6.1, step 1).
+    // All zeros: d = 0, YES whatever the ranges.
     CHECK(solve<Value>(V{0, 0, 0}, no_exact).answer == Verdict::Yes);
 
-    // The rule: DP iff T/32 < 2^(n/2) (Proposition 4.4 with the cost doubled).
+    // The rule: DP iff T/32 < 2^(n/2) (the bitset cost doubled for the step table).
     CHECK(dp_is_cheaper(2, 63));      // 63/32 < 2
     CHECK(!dp_is_cheaper(2, 64));     // 64/32 = 2
     CHECK(dp_is_cheaper(20, 32767));  // 1023.97 < 1024
@@ -84,21 +84,21 @@ void test_solve() {
     CHECK(choose_exact<Value>(40, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::MeetInTheMiddle);
     CHECK(choose_exact<Value>(100, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::None);  // > kMaxDpTarget
 
-    // The work bound n · T ≤ w_dp, exactly at the limit and one above it.
+    // The work bound n * T <= w_dp, exactly at the limit and one above it.
     CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 1000}) == DpLimit::InRange);
     CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 999}) == DpLimit::Work);
     CHECK(dp_limit<Value>(10, 101, Ranges{0, 100, kAnyWork}) == DpLimit::Target);
     CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 21}) == DpLimit::InRange);  // 21 / 3 = 7
     CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 20}) == DpLimit::Work);     // 20 / 3 = 6
-    // No overflow of n · T: T at the cap, where 2 · T is the largest bound
-    // on the work (2^64 − 2), and the largest n of the input, far above it.
+    // No overflow of n * T: T at the cap, where 2 * T is the largest bound
+    // on the work (2^64 - 2), and the largest n of the input, far above it.
     CHECK(dp_limit<Value>(2, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::InRange);
     CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Work);
     CHECK(dp_limit<Value>(2, Value{1} << 64, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Target);
     CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, 1'000'000}) == DpLimit::Work);
     CHECK(choose_exact<Value>(10, 100, Ranges{10, 100, 999}) == Method::MeetInTheMiddle);
     CHECK(choose_exact<Value>(10, 100, Ranges{9, 100, 999}) == Method::None);
-    const Solution<Value> by_work = solve<Value>(missed, Ranges{44, 18, 5 * 18 - 1});  // n · T = 90
+    const Solution<Value> by_work = solve<Value>(missed, Ranges{44, 18, 5 * 18 - 1});  // n * T = 90
     CHECK(by_work.decided_by == Method::MeetInTheMiddle);
     CHECK(by_work.answer == Verdict::Yes);
     CHECK(solve<Value>(missed, Ranges{44, 18, 5 * 18}).decided_by == Method::DynamicProgramming);

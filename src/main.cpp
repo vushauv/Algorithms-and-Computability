@@ -1,4 +1,4 @@
-// Reads the sets from the input file, runs SOLVE (report, Section 6.2) or the single
+// Reads the sets from the input file, runs SOLVE or the single
 // algorithm from --algorithm on each, prints the results and saves the results file.
 //
 // Exit codes: 0 ok, 1 bad input file, 2 bad command line, 3 an algorithm couldn't run

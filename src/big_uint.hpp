@@ -1,8 +1,7 @@
 // Our own long arithmetic: a non-negative integer of any size, stored as cells
 // in a base that is chosen at run time (--base). With the base 2^32 a cell is
-// a machine word, with 10 a decimal digit, with 2 a bit;
-// Only what the algorithms need is here: addition,
-// subtraction, comparison, parity, halving, and the conversions.
+// a machine word, with 10 a decimal digit, with 2 a bit. Only what the algorithms
+// need is here: addition, subtraction, comparison, parity, halving, and the conversions.
 #pragma once
 
 #include <compare>
@@ -26,7 +25,6 @@ public:
     BigUint(std::uint64_t value);  // implicit, so that x == 0 and x = 5 work
 
     BigUint& operator+=(const BigUint& other);
-    
     BigUint& operator-=(const BigUint& other);
     friend BigUint operator+(BigUint a, const BigUint& b) { return a += b; }
     friend BigUint operator-(BigUint a, const BigUint& b) { return a -= b; }
@@ -37,9 +35,9 @@ public:
     bool is_zero() const { return cells_.empty(); }
     bool is_odd() const;
 
-    // this ← this · factor + addend. Needs addend < factor.
+    // this = this * factor + addend. Needs addend < factor.
     void multiply_add(Cell factor, Cell addend);
-    // this ← ⌊this / divisor⌋, returns the remainder. Needs divisor > 0.
+    // this = this / divisor (rounded down), returns the remainder. Needs divisor > 0.
     Cell divide(Cell divisor);
 
     // The value, or nothing if it is 2^64 or more.

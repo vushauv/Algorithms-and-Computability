@@ -26,7 +26,7 @@ std::optional<std::vector<std::size_t>> find_subset(std::span<const V> b, const 
     std::uint64_t g = 0;
     V sum = 0;
     if (sum == x) return std::vector<std::size_t>{};
-    const std::uint64_t end = std::uint64_t{1} << b.size();  // b.size() ≤ 63
+    const std::uint64_t end = std::uint64_t{1} << b.size();  // b.size() <= 63
     for (std::uint64_t k = 1; k < end; ++k) {
         const int j = std::countr_zero(k);
         g ^= std::uint64_t{1} << j;
@@ -51,7 +51,7 @@ ExactAnswer<V> brute_force(std::span<const V> a) {
     const Preliminary<V> pre = preliminary_checks(a);
     if (pre.verdict) return trivial_answer(pre, n);
 
-    // a[n − 1] stays in B (Lemma 2.2), so A is a subset of the first n − 1.
+    // a[n - 1] can always stay in B, so A is a subset of the first n - 1.
     std::optional<std::vector<std::size_t>> A = find_subset(a.first(n - 1), pre.T);
     if (!A) return std::nullopt;
     return balanced_partition<V>(n, std::move(*A));

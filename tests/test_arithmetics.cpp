@@ -32,7 +32,7 @@ std::vector<V> convert(const std::vector<Native>& a, const std::string& zeros = 
     return result;
 }
 
-// The text of d · 10^(zeros.size()).
+// The text of d * 10^(zeros.size()).
 std::string scaled(Native d, const std::string& zeros) {
     return d == 0 ? "0" : to_string(d) + zeros;
 }

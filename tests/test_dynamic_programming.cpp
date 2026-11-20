@@ -15,7 +15,7 @@ using partition_check::answers;
 namespace {
 
 // n random non-negative values with the sum 2T, each at most T, so that the
-// test reaches the bitset and does not stop at the checks of Section 4.1.
+// test reaches the bitset and does not stop at the check max a[i] > T.
 std::vector<Value> random_split(std::size_t T, std::size_t n) {
     std::uniform_int_distribution<std::size_t> cut(0, 2 * T);
     while (true) {
@@ -33,7 +33,7 @@ std::vector<Value> random_split(std::size_t T, std::size_t n) {
 void test_dynamic_programming() {
     using V = std::vector<Value>;
 
-    // The examples of Section 4.4.
+    // Small worked examples.
     CHECK(answers(dp_partition<Value>, V{3, 1, 4, 2}, Verdict::Yes));
     CHECK(answers(dp_partition<Value>, V{2, 2, 3, 5}, Verdict::No));
 
@@ -48,7 +48,7 @@ void test_dynamic_programming() {
     CHECK(answers(dp_partition<Value>, V(1001, 2), Verdict::No));      // T = 1001 is odd, all elements even
 
     // Reading back from T: T is first reached with a[2] = 4 from the sum 1 of
-    // a[1], so A = {a[1], a[2]}, the values 1 and 4 (Section 4.4).
+    // a[1], so A = {a[1], a[2]}, the values 1 and 4.
     CHECK(dp_partition<Value>(V{3, 1, 4, 2})->A == (std::vector<std::size_t>{1, 2}));
 
     // A large value skips the bitset when the checks decide.
@@ -67,7 +67,7 @@ void test_dynamic_programming() {
         }
     }
 
-    // Equal to brute force on random sets with n ≤ 20, duplicates and zeros.
+    // Equal to brute force on random sets with n <= 20, duplicates and zeros.
     for (int round = 0; round < 400; ++round) {
         const std::size_t n = random_sets::size_between(2, 20);
         const std::uint64_t max_value = round % 3 == 0 ? 3 : (round % 3 == 1 ? 50 : 3000);

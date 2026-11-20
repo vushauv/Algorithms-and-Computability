@@ -1,7 +1,6 @@
 #!/bin/sh
 # Tests of the program as a whole (run by make test, from the repository root):
-# the exit codes, the results file, and the same text with and without colours
-# (CONSTITUTION points 3 and 4).
+# the exit codes, the results file, and the same text with and without colours.
 #
 #   sh tests/cli_test.sh build/linux/partition
 #
@@ -113,7 +112,7 @@ fi
 mkdir "$TMP/blocked_two_output.txt"
 expect 4 --algorithm bf "$TMP/blocked_two.txt"
 
-# The results file: _output.txt in place of .txt, in Homenda's format, no
+# The results file: _output.txt in place of .txt, in the course's format, no
 # newline at the end; none for an invalid input file.
 "$PROGRAM" deliverable/examples/01_report_examples.txt >/dev/null 2>&1
 printf '4 2\n\n10 3 1 4 2\n5 4 1\n5 3 2\n0\n\n9 2 3 4\n4 4\n5 3 2\n1\n\n%s\n%s\n%s\n0\n\n%s\n%s\n%s\n2' \

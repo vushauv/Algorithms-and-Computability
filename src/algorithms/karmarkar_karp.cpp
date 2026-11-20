@@ -21,7 +21,7 @@ Partition<V> karmarkar_karp(std::span<const V> a) {
     while (H.size() > 1) {
         const auto [x, u] = H.top();
         H.pop();
-        const auto [y, v] = H.top();  // x ≥ y
+        const auto [y, v] = H.top();  // x >= y
         H.pop();
         H.emplace(x - y, u);  // the difference keeps the index of the larger element
         E[u].push_back(v);

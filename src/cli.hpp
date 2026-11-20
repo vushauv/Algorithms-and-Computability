@@ -11,18 +11,17 @@
 #include "number.hpp"
 #include "solve.hpp"
 
-// Default limits of the exact algorithms. Provisional, see task.md section 6.
+// Default limits of the exact algorithms.
 inline constexpr std::size_t kDefaultNMitm = 44;
 // About 4 bytes per unit of T (the step table), so 1.2 GB at the default.
 inline constexpr std::uint64_t kDefaultTDp = 300'000'000;
-// Limit on n · T for DP, whose time is about n · T / 64. Roughly 10 s worst case on a laptop.
+// Limit on n * T for DP, whose time is about n * T / 64.
 inline constexpr std::uint64_t kDefaultWDp = 1'000'000'000'000;
 
 // Hard cap for meet in the middle: a subset mask has to fit in 64 bits.
 inline constexpr std::size_t kMaxNMitm = 64;
 
-// K is the number of subsets Homenda passes to every program. We only split in two,
-// so K has to be 2.
+// K is the number of subsets. We only split in two, so K has to be 2.
 inline constexpr std::size_t kSubsets = 2;
 
 // What --algorithm picks: SOLVE by default, or one algorithm alone (for timings).

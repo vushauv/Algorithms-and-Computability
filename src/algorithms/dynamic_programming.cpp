@@ -20,9 +20,9 @@ bool test_bit(const std::vector<Word>& bits, std::size_t s) {
     return (bits[s / kWordBits] >> (s % kWordBits)) & 1;
 }
 
-// reach |= reach << shift on the bits 0..top (Section 4.2), and first[s] = step for every
+// reach |= reach << shift on the bits 0..top, and first[s] = step for every
 // bit that becomes set. Words go from the highest to the lowest, so every word we read
-// is still from the previous row. Needs 0 < shift ≤ top.
+// is still from the previous row. Needs 0 < shift <= top.
 void shift_or(std::vector<Word>& reach, std::vector<Step>& first, std::size_t shift,
               std::size_t top, Step step) {
     const std::size_t word_shift = shift / kWordBits;
@@ -36,7 +36,7 @@ void shift_or(std::vector<Word>& reach, std::vector<Step>& first, std::size_t sh
         if (bit_shift != 0 && source > 0) {
             shifted |= reach[source - 1] >> (kWordBits - bit_shift);
         }
-        // Cut at top; the bits above it are false in both rows (Lemma 4.1).
+        // Cut at top; the bits above it are false in both rows.
         if (w == top_word) shifted &= top_mask;
         for (Word fresh = shifted & ~reach[w]; fresh != 0; fresh &= fresh - 1) {
             first[w * kWordBits + static_cast<std::size_t>(std::countr_zero(fresh))] = step;
@@ -45,8 +45,8 @@ void shift_or(std::vector<Word>& reach, std::vector<Step>& first, std::size_t sh
     }
 }
 
-// The subset with sum T, read back from first. If first[s] = i + 1, then s − a[i] was
-// reachable before step i + 1 and a[i] > 0 (a zero sets no bit), so first[s − a[i]] <
+// The subset with sum T, read back from first. If first[s] = i + 1, then s - a[i] was
+// reachable before step i + 1 and a[i] > 0 (a zero sets no bit), so first[s - a[i]] <
 // i + 1. The indices strictly decrease, so they are distinct, and the sum drops to 0.
 std::vector<std::size_t> read_back(std::span<const std::size_t> a, const std::vector<Step>& first,
                                    std::size_t T) {
@@ -69,13 +69,13 @@ ExactAnswer<V> dp_partition(std::span<const V> a) {
     }
     const Preliminary<V> pre = preliminary_checks(a);
     if (pre.verdict) return trivial_answer(pre, n);
-    if (*std::max_element(a.begin(), a.end()) > pre.T) return std::nullopt;  // Section 4.1
+    if (*std::max_element(a.begin(), a.end()) > pre.T) return std::nullopt;  // some a[i] > T
     const std::optional<std::uint64_t> target = to_u64(pre.T);
     if (!target || *target > kMaxDpTarget) {
         throw std::invalid_argument("the target is too large for dynamic programming");
     }
 
-    // Now every a[i] ≤ T, so it fits in size_t. Convert once; the table uses machine words.
+    // Now every a[i] <= T, so it fits in size_t. Convert once; the table uses machine words.
     const auto T = static_cast<std::size_t>(*target);
     std::vector<std::size_t> values(n);
     for (std::size_t i = 0; i < n; ++i) values[i] = static_cast<std::size_t>(*to_u64(a[i]));
@@ -87,7 +87,7 @@ ExactAnswer<V> dp_partition(std::span<const V> a) {
     std::size_t top = 0;  // no reachable sum is above this
     for (std::size_t i = 0; i < n; ++i) {
         const std::size_t ai = values[i];
-        top = std::min(T, top + ai);  // top + ai ≤ 2T, no overflow
+        top = std::min(T, top + ai);  // top + ai <= 2T, no overflow
         if (ai > 0) shift_or(reach, first, ai, top, static_cast<Step>(i + 1));  // a zero changes nothing
         if (test_bit(reach, T)) return balanced_partition<V>(n, read_back(values, first, T));
     }

@@ -14,8 +14,8 @@ inline Value sum_of(const std::vector<Value>& a, const std::vector<std::size_t>&
     return total_sum<Value>(values_at<Value>(a, indices));
 }
 
-// A and B are non-empty, disjoint and cover 0..n−1, and d is the difference
-// of their sums (Section 1.2).
+// A and B are non-empty, disjoint and cover 0..n-1, and d is the difference
+// of their sums.
 inline bool is_partition(const std::vector<Value>& a, const Partition<Value>& p) {
     if (p.A.empty() || p.B.empty()) return false;
     std::vector<std::size_t> all = p.A;

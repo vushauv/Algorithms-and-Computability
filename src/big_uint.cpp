@@ -25,7 +25,7 @@ BigUint& BigUint::operator+=(const BigUint& other) {
     std::uint64_t carry = 0;
     for (std::size_t i = 0; i < cells_.size(); ++i) {
         if (i >= other.cells_.size() && carry == 0) break;  // the rest is unchanged
-        // Two cells and a carry: below 2 · base ≤ 2^33.
+        // Two cells and a carry: below 2 * base <= 2^33.
         std::uint64_t sum = cells_[i] + carry + (i < other.cells_.size() ? other.cells_[i] : 0);
         carry = sum >= base_ ? 1 : 0;
         if (carry) sum -= base_;
@@ -69,7 +69,7 @@ bool BigUint::is_odd() const {
 }
 
 void BigUint::multiply_add(Cell factor, Cell addend) {
-    // cell · factor + carry < base · factor ≤ 2^64, and the new carry stays
+    // cell * factor + carry < base * factor <= 2^64, and the new carry stays
     // below the factor.
     std::uint64_t carry = addend;
     for (Cell& cell : cells_) {
@@ -96,7 +96,7 @@ std::optional<std::uint64_t> BigUint::to_u64() const {
     __extension__ using Wide = unsigned __int128;
     Wide value = 0;
     for (std::size_t i = cells_.size(); i-- > 0;) {
-        value = value * base_ + cells_[i];  // below 2^64 · 2^32 + 2^32
+        value = value * base_ + cells_[i];  // below 2^64 * 2^32 + 2^32
         if (value > std::numeric_limits<std::uint64_t>::max()) return std::nullopt;
     }
     return static_cast<std::uint64_t>(value);

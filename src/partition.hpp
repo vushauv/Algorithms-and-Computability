@@ -1,5 +1,5 @@
-// Types shared by the algorithms, and the checks every exact algorithm does first
-// (report, Section 1.2). Indices are 0-based here, so the report's a[i] is a[i - 1].
+// Types shared by the algorithms, and the checks every exact algorithm does first.
+// Indices are 0-based.
 // V is the type of the numbers (number.hpp).
 #pragma once
 
@@ -11,10 +11,10 @@
 #include "number.hpp"
 
 // Answer to the decision problem. Unknown only comes from SOLVE, when no exact
-// algorithm is in range (report, Section 6.2).
+// algorithm is in range.
 enum class Verdict { No, Yes, Unknown };
 
-// A partition into the index sets A and B with discrepancy d = |Σ(A) − Σ(B)|.
+// A partition into the index sets A and B with discrepancy d = |sum(A) - sum(B)|.
 template <class V>
 struct Partition {
     std::vector<std::size_t> A;
@@ -26,7 +26,7 @@ struct Partition {
 template <class V>
 using ExactAnswer = std::optional<Partition<V>>;
 
-// Result of the trivial cases (Section 1.2): a verdict if S is odd (NO) or 0 (YES),
+// Result of the trivial cases: a verdict if S is odd (NO) or 0 (YES),
 // otherwise no verdict and T = S / 2.
 template <class V>
 struct Preliminary {
@@ -35,7 +35,7 @@ struct Preliminary {
     V T;
 };
 
-// S = Σ a[i]. Throws std::overflow_error if S ≥ 2^128 (Native only). read_instances
+// S = sum of a[i]. Throws std::overflow_error if S >= 2^128 (Native only). read_instances
 // already rejects such sets, so only data made in code can hit this.
 template <class V>
 V total_sum(std::span<const V> a);
@@ -51,7 +51,7 @@ std::vector<V> values_at(std::span<const V> a, const std::vector<std::size_t>& i
 template <class V>
 ExactAnswer<V> trivial_answer(const Preliminary<V>& pre, std::size_t n);
 
-// A and its complement B, both sorted, d = 0. The caller has checked that Σ(A) = S/2.
+// A and its complement B, both sorted, d = 0. The caller has checked that sum(A) = S/2.
 template <class V>
 Partition<V> balanced_partition(std::size_t n, std::vector<std::size_t> A);
 

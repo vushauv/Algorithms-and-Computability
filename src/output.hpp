@@ -1,4 +1,4 @@
-// Coloured terminal output (CONSTITUTION point 4). The only module that talks to the
+// Coloured terminal output. The only module that talks to the
 // terminal and the only one with Windows-specific code.
 //
 // stdout and stderr are decided separately: colours only if the stream is a terminal,

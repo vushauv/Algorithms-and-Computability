@@ -1,6 +1,6 @@
 // Reads the input file: line 1 is the number of sets, then one set per line.
 // Extra spaces and tabs are accepted. No limit on the number of sets or of numbers in
-// a set, and none on their size except with Native: task.md section 7.
+// a set, and none on their size except with Native.
 #pragma once
 
 #include <cstddef>

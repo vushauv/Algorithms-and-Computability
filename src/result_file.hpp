@@ -1,5 +1,4 @@
-// The results file, in Homenda's format (raw_regulations/email_27.10.26.txt, its
-// corrections of 28.10 and 29.10, example AaClab_output.txt):
+// The results file, in the course's format:
 //
 //   N K                 number of sets and of subsets
 //                       a blank line before every set
