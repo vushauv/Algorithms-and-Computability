@@ -32,7 +32,7 @@ point can be reproduced. Four families:
 | `trap` | $n - 1$ values $4 r_i$ and one value $4r + 2$, with random $r_i$, $r$ | $S \equiv 2 \pmod 4$, so $T$ is odd while every subset sum is even: the answer is NO with an even sum. It is the worst case of all three exact algorithms: brute force visits all $2^{n-1}$ masks, meet in the middle sweeps both lists to the end, dynamic programming runs all $n$ steps. Karmarkar-Karp gives an even $d \ge 2$. |
 | `random` | $n$ values with $D$ digits, uniform ($D$ = 3, 10, 25, 38) | the typical case; quality of Karmarkar-Karp |
 | `yes` | random values, balanced by construction (as `large_yes_instance` in `tests/random_sets.hpp`) | the early exit of the exact algorithms; how often Karmarkar-Karp misses |
-| examples | `examples/*.txt`, `raw_regulations/*.txt` | sanity check of `SOLVE` on the files of the demo |
+| examples | `deliverable/examples/*.txt`, `raw_regulations/*.txt` | sanity check of `SOLVE` on the files of the demo |
 
 The magnitude of the values does not change the time of brute force, meet in
 the middle or Karmarkar-Karp (Section 1.4 of the report), so their series use
@@ -74,7 +74,7 @@ memory than half of the machine's.
 - **Build and machine.** The `make` build (`-O2`), the same binary for all
   points, one machine for all final numbers, nothing else running. The report
   states the CPU, memory, system and compiler. A few points are repeated on a
-  lab machine with `dist/partition.exe` to show that the demo executable
+  lab machine with `deliverable/partition.exe` to show that the demo executable
   behaves the same.
 - **Data.** One CSV line per run: experiment, algorithm, family, $n$, $T$,
   digits, seed, repetition, time (s), peak memory (MB), answer, $d$. Data in

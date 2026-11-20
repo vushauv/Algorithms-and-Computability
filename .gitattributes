@@ -1,8 +1,8 @@
 # Kept byte for byte: the CRLF sample input, the batch file for cmd.exe, the executable,
 # and Homenda's output example.
-examples/09_windows_line_endings.txt -text
+deliverable/examples/09_windows_line_endings.txt -text
 raw_regulations/AaClab*.txt -text
 *.bat eol=crlf
 *.exe binary
 # Read in Notepad on the lab machines.
-dist/readme.txt eol=crlf
+deliverable/readme.txt eol=crlf

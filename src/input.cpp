@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <string_view>
 
 namespace {
@@ -15,15 +16,14 @@ std::string location(std::size_t line, std::size_t column) {
     return text + ": ";
 }
 
-// Reads the next line without its line ending (\n or \r\n). A file converted
-// twice can end its lines with \r\r\n, so every \r at the end is dropped.
+// Next line without its line ending. A file converted twice can end in \r\r\n, so all
+// trailing \r are dropped.
 bool next_line(std::istream& in, std::string& line) {
     if (!std::getline(in, line)) return false;
     while (!line.empty() && line.back() == '\r') line.pop_back();
     return true;
 }
 
-// A number of a line with its column.
 struct Field {
     std::string_view text;
     std::size_t column;
@@ -33,9 +33,8 @@ bool is_blank(char c) {
     return c == ' ' || c == '\t';
 }
 
-// The numbers of a line. A single space separates them in the format of the
-// assignment; extra spaces and tabs, also at either end of the line, are
-// skipped, so that a stray space does not reject the whole file.
+// Splits a line into numbers. Extra spaces and tabs, also at the ends, are skipped so a
+// stray space doesn't reject the whole file.
 std::vector<Field> split_fields(std::string_view line) {
     std::vector<Field> fields;
     std::size_t i = 0;
@@ -51,14 +50,16 @@ std::vector<Field> split_fields(std::string_view line) {
     return fields;
 }
 
-Value parse_field(const Field& field, std::size_t line_number) {
-    ParsedValue parsed = parse_value(field.text);
+template <class V>
+V parse_field(const Field& field, std::size_t line_number) {
+    ParsedValue<V> parsed = parse_value<V>(field.text);
     switch (parsed.status) {
         case ParseStatus::Ok:
-            return parsed.value;
-        case ParseStatus::TooLarge:
+            return std::move(parsed.value);
+        case ParseStatus::TooLarge:  // Native only
             throw InputError(line_number, field.column,
-                             "the number has to be below 10^38 (at most 38 digits)");
+                             "the number has to be below 10^38 (at most 38 digits) with "
+                             "--arithmetic native");
         case ParseStatus::Empty:
         case ParseStatus::NotDigit:
             break;
@@ -72,36 +73,38 @@ Value parse_field(const Field& field, std::size_t line_number) {
 std::size_t read_set_count(std::istream& in) {
     std::string line;
     if (!next_line(in, line)) throw InputError(0, 0, "the file is empty");
-    // Some Windows editors start a UTF-8 file with a byte order mark.
+    // Some Windows editors add a UTF-8 byte order mark.
     if (line.starts_with(kUtf8Bom)) line.erase(0, kUtf8Bom.size());
     std::vector<Field> fields = split_fields(line);
     if (fields.size() != 1)
         throw InputError(1, 0, "the first line must contain only the number of sets");
-    Value count = parse_field(fields[0], 1);
-    if (count < 1 || count > kMaxSets)
-        throw InputError(1, 1, "the number of sets must be between 1 and " + std::to_string(kMaxSets));
+    // Only 0 and a count that doesn't fit in size_t are errors: no file has that many lines.
+    const BoostInt count = parse_field<BoostInt>(fields[0], 1);
+    if (count < 1) throw InputError(1, 1, "the number of sets must be at least 1");
+    if (count > std::numeric_limits<std::size_t>::max())
+        throw InputError(1, 1, "the number of sets is too large");
     return static_cast<std::size_t>(count);
 }
 
-Instance read_set(const std::string& line, std::size_t line_number) {
+template <class V>
+Instance<V> read_set(const std::string& line, std::size_t line_number) {
     std::vector<Field> fields = split_fields(line);
     if (fields.empty())
         throw InputError(line_number, 0, "empty line; a set needs at least " +
                                              std::to_string(kMinElements) + " numbers");
-    if (fields.size() > kMaxElements)
-        throw InputError(line_number, 0, "a set may have at most " + std::to_string(kMaxElements) +
-                                             " numbers, found " + std::to_string(fields.size()));
 
-    // The numbers are parsed before their count is checked, so that "1,2"
-    // is reported as a bad character and not as a set with one element.
-    Instance instance{{}, 0, line_number};
+    // Parse the numbers before counting them, so "1,2" is a bad character and not a set
+    // with one element.
+    Instance<V> instance{{}, 0, line_number};
     instance.values.reserve(fields.size());
     for (const Field& field : fields) {
-        Value value = parse_field(field, line_number);
-        std::optional<Value> sum = checked_add(instance.sum, value);
-        if (!sum) throw InputError(line_number, field.column, "the sum of the set exceeds 2^128 - 1");
-        instance.sum = *sum;
-        instance.values.push_back(value);
+        V value = parse_field<V>(field, line_number);
+        std::optional<V> sum = checked_add(instance.sum, value);
+        if (!sum)  // Native only
+            throw InputError(line_number, field.column,
+                             "the sum of the set exceeds 2^128 - 1 with --arithmetic native");
+        instance.sum = std::move(*sum);
+        instance.values.push_back(std::move(value));
     }
 
     if (instance.values.size() < kMinElements)
@@ -115,10 +118,11 @@ Instance read_set(const std::string& line, std::size_t line_number) {
 InputError::InputError(std::size_t line, std::size_t column, const std::string& message)
     : std::runtime_error(location(line, column) + message), line_(line), column_(column) {}
 
-std::vector<Instance> read_instances(std::istream& in) {
+template <class V>
+std::vector<Instance<V>> read_instances(std::istream& in) {
     std::size_t count = read_set_count(in);
 
-    std::vector<Instance> instances;
+    std::vector<Instance<V>> instances;
     std::string line;
     std::size_t line_number = 1;
     while (instances.size() < count) {
@@ -127,10 +131,10 @@ std::vector<Instance> read_instances(std::istream& in) {
                                        " sets, but the file has only " +
                                        std::to_string(instances.size()));
         ++line_number;
-        instances.push_back(read_set(line, line_number));
+        instances.push_back(read_set<V>(line, line_number));
     }
 
-    // Empty and blank lines at the end are tolerated, anything else is not.
+    // Blank lines at the end are fine, anything else is an error.
     while (next_line(in, line)) {
         ++line_number;
         if (!split_fields(line).empty())
@@ -140,12 +144,19 @@ std::vector<Instance> read_instances(std::istream& in) {
     return instances;
 }
 
-std::vector<Instance> read_instances_from_file(const std::string& path) {
-    // A directory opens without error on Linux and then reads as empty.
+template <class V>
+std::vector<Instance<V>> read_instances_from_file(const std::string& path) {
+    // On Linux a directory opens fine and reads as empty.
     std::error_code ignored;
     if (std::filesystem::is_directory(path, ignored))
         throw InputError(0, 0, "is a directory, not a file");
-    std::ifstream file(path, std::ios::binary);  // binary: \r\n is handled by next_line
+    std::ifstream file(path, std::ios::binary);  // binary, next_line handles \r\n
     if (!file) throw InputError(0, 0, "cannot open the file");
-    return read_instances(file);
+    return read_instances<V>(file);
 }
+
+#define INSTANTIATE(V)                                                 \
+    template std::vector<Instance<V>> read_instances<V>(std::istream&); \
+    template std::vector<Instance<V>> read_instances_from_file<V>(const std::string&);
+FOR_EACH_NUMBER_TYPE(INSTANTIATE)
+#undef INSTANTIATE

@@ -1,9 +1,10 @@
 # Partition problem: build of the program and the tests.
 #
 #   make           the program, build/linux/partition
-#   make test      build and run the tests
+#   make test      build and run the tests (at most 90 s once built; tests/README.md)
+#   make test-quick   the tests without the slow checks (about 15 s once built)
 #   make windows   static Windows executable, build/windows/partition.exe
-#   make dist      the same, copied to dist/partition.exe (committed for the demo)
+#   make deliverable   the same, copied to deliverable/partition.exe (committed for the demo)
 #   make clean     remove build/
 #
 # The README lists the same compiler commands for building without make.
@@ -11,12 +12,15 @@
 CXX      = g++
 MINGW    = x86_64-w64-mingw32-g++
 CXXFLAGS = -std=c++20 -O2 -Wall -Wextra -Wpedantic
+# Boost.Multiprecision (header-only, third_party/README.md); -isystem keeps
+# the warnings to our own code.
+INCLUDES = -Isrc -isystem third_party -DBOOST_MP_STANDALONE
 
 BUILD    = build/linux
 PROGRAM  = $(BUILD)/partition
 TESTS    = $(BUILD)/run_tests
 WINDOWS  = build/windows/partition.exe
-DIST     = dist/partition.exe
+DELIVERABLE = deliverable/partition.exe
 
 MAIN_SRC = src/main.cpp
 LIB_SRC  = $(filter-out $(MAIN_SRC),$(wildcard src/*.cpp src/algorithms/*.cpp))
@@ -26,7 +30,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test windows dist clean
+.PHONY: all test test-quick windows deliverable clean
 
 all: $(PROGRAM)
 
@@ -40,20 +44,24 @@ test: $(TESTS) $(PROGRAM)
 	./$(TESTS)
 	sh tests/cli_test.sh $(PROGRAM)
 
+# The same without the slow checks (about 15 s once built; see tests/README.md).
+test-quick: $(TESTS) $(PROGRAM)
+	./$(TESTS) quick
+	sh tests/cli_test.sh $(PROGRAM) quick
+
 # One compiler call from the sources; -static so that no DLL beyond the
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
 windows:
 	mkdir -p build/windows
-	$(MINGW) $(CXXFLAGS) -static -s -Isrc $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
+	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) $(MAIN_SRC) $(LIB_SRC) -o $(WINDOWS)
 
-dist: windows
-	mkdir -p dist
-	cp $(WINDOWS) $(DIST)
+deliverable: windows
+	cp $(WINDOWS) $(DELIVERABLE)
 
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -Isrc -MMD -MP -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 clean:
 	rm -rf build

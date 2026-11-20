@@ -1,10 +1,8 @@
-// A check of the memory of the exact algorithms before they allocate.
+// Checks the size of a table before an exact algorithm allocates it.
 //
-// Linux overcommits: an allocation larger than the free memory succeeds and
-// the process is killed later, while the table is being filled, instead of
-// getting std::bad_alloc. So a table larger than the physical memory is
-// refused up front. Windows commits memory at allocation time, where
-// std::bad_alloc comes in time, so there the size is unknown and not checked.
+// Linux overcommits: a table bigger than RAM is allocated without error and the
+// process is killed later, while filling it. So we refuse up front. On Windows the
+// allocation fails with std::bad_alloc right away, so there is nothing to check.
 #pragma once
 
 #include <cstdint>
@@ -12,9 +10,8 @@
 
 #include "number.hpp"
 
-// The physical memory of the machine in bytes, or 0 if it is not known.
+// Physical memory in bytes, 0 if unknown.
 std::uint64_t physical_memory_bytes();
 
-// Throws std::runtime_error if the table of the algorithm needs more bytes
-// than the physical memory has.
-void require_memory(std::string_view algorithm, Value bytes);
+// Throws std::runtime_error if the table needs more than the physical memory.
+void require_memory(std::string_view algorithm, Native bytes);
