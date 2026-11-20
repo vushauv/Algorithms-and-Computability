@@ -10,7 +10,7 @@ RUN (from the console, in this folder; no installation needed)
                 non-negative integers of any size, separated by spaces
     K           the number of subsets: 2 (the default and the only value)
 
-    Example:    partition.exe examples\10_homenda_example.txt 2
+    Example:    partition.exe examples\10_course_example.txt 2
 
     All sample inputs at once: examples\run_examples.bat
     (examples\README.md says what each file shows).
@@ -19,7 +19,7 @@ RESULTS
 
     Printed in the console and saved next to the input file, with
     _output.txt in place of .txt:
-    examples\10_homenda_example.txt -> examples\10_homenda_example_output.txt
+    examples\10_course_example.txt -> examples\10_course_example_output.txt
 
     For every set: its sum and numbers, the two subsets with their sums, and
     the difference of the two sums (0 for an equal split). If no equal split

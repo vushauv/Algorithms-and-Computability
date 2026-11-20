@@ -44,7 +44,7 @@ Run it on an input file, optionally followed by the number of subsets `K`
 
 The results are printed and also saved next to the input, with `_output.txt`
 in place of `.txt` (`AaC_example_1.txt` gives `AaC_example_1_output.txt`), in
-Homenda's format (`raw_regulations/email_27.10.26.txt`, corrected on 28.10
+the course's format (`raw_regulations/email_27.10.26.txt`, corrected on 28.10
 and 29.10): the
 line `N 2`, then for every set, after a blank line, its sum and numbers, the
 two subsets with their sums (numbers largest first, the subsets in
@@ -83,11 +83,11 @@ works on machine words in all of them: its target is at most `--t-dp`.
 
 `deliverable/` is the folder to hand over: `partition.exe` (the prebuilt static
 executable, `make deliverable`; it needs only the system DLLs), `readme.txt`
-(the short guide Homenda asked for) and `examples/`. On the lab machine:
+(the short guide the course asks for) and `examples/`. On the lab machine:
 
 ```bat
 cd deliverable
-partition.exe examples\10_homenda_example.txt 2
+partition.exe examples\10_course_example.txt 2
 examples\run_examples.bat
 ```
 

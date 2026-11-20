@@ -26,10 +26,10 @@ its results next to the input, for example `01_report_examples_output.txt`
 | `07_unknown.txt` | 2 | $n = 100$ and $1000$ values of 25 digits: no exact algorithm is in range, the answer is UNKNOWN with the Karmarkar-Karp partition |
 | `08_limits.txt` | 3 | values $10^{38} - 1$ (the largest that `--arithmetic native` allows) and leading zeros |
 | `09_windows_line_endings.txt` | 2 | CRLF line endings |
-| `10_homenda_example.txt` | 2 | the input of Homenda's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
+| `10_course_example.txt` | 2 | the input of the course's output example (`raw_regulations/AaClab.txt`): YES, and NO with an odd sum ($d = 1$) |
 | `11_extra_spaces.txt` | 3 | spaces at the ends of the lines, two spaces and tabs between the numbers: accepted and read as single spaces |
-| `12_homenda_example_1.txt` | 2 | Homenda's input example `raw_regulations/AaC_example_1.txt`, copied unchanged: small numbers, YES and NO with an odd sum |
-| `13_homenda_example_2.txt` | 1 | Homenda's input example `raw_regulations/AaC_example_2.txt`, copied unchanged: one set of 25-digit values, NO with an odd sum |
+| `12_course_example_1.txt` | 2 | The course's input example `raw_regulations/AaC_example_1.txt`, copied unchanged: small numbers, YES and NO with an odd sum |
+| `13_course_example_2.txt` | 1 | The course's input example `raw_regulations/AaC_example_2.txt`, copied unchanged: one set of 25-digit values, NO with an odd sum |
 | `14_beyond_128_bits.txt` | 6 | numbers of 39, 50 and 180 digits, which need the long arithmetic: $10^{38}$ twice; a sum above $2^{128}$; YES that Karmarkar-Karp misses, found by meet in the middle; NO with an even and with an odd sum; YES with 180 digits |
 | `15_many_sets.txt` | 500 | 500 sets of 2 to 6 numbers below 1000: the list of sets, the answers and the results file at the scale of a long file |
 | `16_huge_numbers.txt` | 1 | 20 numbers of 1000 digits, every one twice: YES, found by Karmarkar-Karp; needs the long arithmetic |
