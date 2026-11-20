@@ -52,7 +52,8 @@ lexicographically non-increasing order) and the difference of the two sums.
 The subsets are the balanced partition when one is found, otherwise the
 Karmarkar-Karp partition. These files are not committed (`.gitignore`).
 
-Options: `--no-color`; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
+Options: `--no-color`; `--quiet` (`-q`), nothing on the console but errors and
+warnings, the results file is still saved; `--n-mitm N`, `--t-dp T` and `--w-dp W`, the ranges of
 meet in the middle ($n \le N$, default 44) and dynamic programming ($S/2 \le T$,
 default $3 \cdot 10^8$, and $n \cdot S/2 \le W$, default $10^{12}$, which bounds its
 time); `--algorithm solve|bf|mitm|dp|kk` to run one algorithm alone;

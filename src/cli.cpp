@@ -54,6 +54,8 @@ Options parse_options(int argc, char** argv) {
             options.help = true;
         } else if (arg == "--no-color") {
             options.no_color = true;
+        } else if (arg == "-q" || arg == "--quiet") {
+            options.quiet = true;
         } else if (arg == "--n-mitm") {
             const std::uint64_t n = parse_number_option(arg, value_of_option());
             if (n > kMaxNMitm)
@@ -120,6 +122,8 @@ std::string usage_text() {
            "Options:\n"
            "  --no-color     plain output (also when NO_COLOR is set or the output\n"
            "                 is not a terminal)\n"
+           "  -q, --quiet    print nothing but errors and warnings; the results\n"
+           "                 file is still saved\n"
            "  --n-mitm N     meet in the middle only for sets of at most N numbers\n"
            "                 (default " + std::to_string(kDefaultNMitm) + ", at most " +
            std::to_string(kMaxNMitm) + ")\n"

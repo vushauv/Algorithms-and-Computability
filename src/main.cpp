@@ -100,6 +100,9 @@ int main(int argc, char** argv) {
         std::cout << usage_text();
         return 0;
     }
+    // --quiet: a failed stream drops everything written to it. Errors and warnings
+    // go to stderr and stay.
+    if (options.quiet) std::cout.setstate(std::ios::badbit);
 
     switch (options.arithmetic) {
         case Arithmetic::Native:

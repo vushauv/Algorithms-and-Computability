@@ -40,6 +40,8 @@ OPTIONS
                               of a set below 2^128 (else an error)
                     The results are the same; only the speed differs.
     --no-color      plain text, no colours
+    --quiet, -q     print nothing besides errors and warnings (the results
+                    file is still saved)
     --help          all options
 
 EXIT CODES

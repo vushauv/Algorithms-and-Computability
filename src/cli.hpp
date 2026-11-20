@@ -1,5 +1,5 @@
 // Command-line options:
-//   partition [--no-color] [--n-mitm N] [--t-dp T] [--w-dp W] [--algorithm A]
+//   partition [--no-color] [--quiet] [--n-mitm N] [--t-dp T] [--w-dp W] [--algorithm A]
 //             [--arithmetic boost|own|native] [--base B] FILE [K]
 #pragma once
 
@@ -35,6 +35,7 @@ struct Options {
     std::string path;
     std::size_t subsets = kSubsets;
     bool no_color = false;
+    bool quiet = false;  // nothing on stdout; errors and warnings still go to stderr
     bool help = false;
     std::size_t n_mitm = kDefaultNMitm;
     std::uint64_t t_dp = kDefaultTDp;
