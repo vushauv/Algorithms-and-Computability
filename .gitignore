@@ -3,3 +3,7 @@ build/
 # is kept.
 *_output.txt
 !raw_regulations/AaClab_output.txt
+# Copies made by make deliverable-source; only deliverable/source/Makefile is
+# committed.
+deliverable/source/src/
+deliverable/source/third_party/
