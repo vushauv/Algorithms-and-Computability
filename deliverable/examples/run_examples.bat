@@ -1,11 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 rem Runs partition.exe on every sample input, valid ones first. Each run
-rem saves NAME_output.txt next to its input; those files are skipped here.
+rem saves NAME_output.txt next to its input; those files and readme.txt are
+rem skipped here.
 set EXE=%~dp0..\partition.exe
 for %%f in ("%~dp0*.txt") do (
     set "name=%%~nf"
-    if /i not "!name:~-7!"=="_output" (
+    if /i not "!name:~-7!"=="_output" if /i not "!name!"=="readme" (
         echo ===== %%~nxf
         "%EXE%" "%%f" 2
         echo.

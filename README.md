@@ -93,7 +93,7 @@ examples\run_examples.bat
 ```
 
 The sample inputs and their expected results are described in
-`deliverable/examples/README.md`.
+`deliverable/examples/readme.txt`.
 
 ## Stage 2 report
 

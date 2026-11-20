@@ -13,7 +13,7 @@ RUN (from the console, in this folder; no installation needed)
     Example:    partition.exe examples\10_course_example.txt 2
 
     All sample inputs at once: examples\run_examples.bat
-    (examples\README.md says what each file shows).
+    (examples\readme.txt says what each file shows).
 
 RESULTS
 

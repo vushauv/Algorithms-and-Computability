@@ -38,7 +38,7 @@ expect() {
 
 # 0: valid files, help, a skipped exact algorithm (a warning, not an error), K = 2.
 for f in deliverable/examples/*.txt raw_regulations/AaC_example_*.txt; do
-    case $f in *_output.txt) continue ;; esac  # results left by earlier runs
+    case $f in *_output.txt|*/readme.txt) continue ;; esac  # results of earlier runs, the description
     expect 0 "$f"
 done
 expect 0 --help
