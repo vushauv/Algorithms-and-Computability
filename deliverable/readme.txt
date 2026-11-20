@@ -10,7 +10,7 @@ RUN (from the console, in this folder; no installation needed)
                 non-negative integers of any size, separated by spaces
     K           the number of subsets: 2 (the default and the only value)
 
-    Example:    partition.exe examples\10_course_example.txt 2
+    Example:    .\partition.exe examples\10_course_example.txt 2
 
     All sample inputs at once: examples\run_examples.bat
     (examples\readme.txt says what each file shows).
