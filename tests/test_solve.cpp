@@ -11,7 +11,7 @@
 
 namespace {
 
-// No bound on the work n · T of dynamic programming.
+// No bound on the work n * T of dynamic programming.
 constexpr std::uint64_t kAnyWork = ~std::uint64_t{0};
 
 // Theorem 6.1: the partition of Karmarkar-Karp is valid, and a balanced
@@ -84,21 +84,21 @@ void test_solve() {
     CHECK(choose_exact<Value>(40, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::MeetInTheMiddle);
     CHECK(choose_exact<Value>(100, Value{1} << 100, Ranges{44, kAnyWork, kAnyWork}) == Method::None);  // > kMaxDpTarget
 
-    // The work bound n · T ≤ w_dp, exactly at the limit and one above it.
+    // The work bound n * T <= w_dp, exactly at the limit and one above it.
     CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 1000}) == DpLimit::InRange);
     CHECK(dp_limit<Value>(10, 100, Ranges{0, 100, 999}) == DpLimit::Work);
     CHECK(dp_limit<Value>(10, 101, Ranges{0, 100, kAnyWork}) == DpLimit::Target);
     CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 21}) == DpLimit::InRange);  // 21 / 3 = 7
     CHECK(dp_limit<Value>(3, 7, Ranges{0, 100, 20}) == DpLimit::Work);     // 20 / 3 = 6
-    // No overflow of n · T: T at the cap, where 2 · T is the largest bound
-    // on the work (2^64 − 2), and the largest n of the input, far above it.
+    // No overflow of n * T: T at the cap, where 2 * T is the largest bound
+    // on the work (2^64 - 2), and the largest n of the input, far above it.
     CHECK(dp_limit<Value>(2, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::InRange);
     CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Work);
     CHECK(dp_limit<Value>(2, Value{1} << 64, Ranges{0, kMaxDpTarget, kAnyWork}) == DpLimit::Target);
     CHECK(dp_limit<Value>(1'000'000, kMaxDpTarget, Ranges{0, kMaxDpTarget, 1'000'000}) == DpLimit::Work);
     CHECK(choose_exact<Value>(10, 100, Ranges{10, 100, 999}) == Method::MeetInTheMiddle);
     CHECK(choose_exact<Value>(10, 100, Ranges{9, 100, 999}) == Method::None);
-    const Solution<Value> by_work = solve<Value>(missed, Ranges{44, 18, 5 * 18 - 1});  // n · T = 90
+    const Solution<Value> by_work = solve<Value>(missed, Ranges{44, 18, 5 * 18 - 1});  // n * T = 90
     CHECK(by_work.decided_by == Method::MeetInTheMiddle);
     CHECK(by_work.answer == Verdict::Yes);
     CHECK(solve<Value>(missed, Ranges{44, 18, 5 * 18}).decided_by == Method::DynamicProgramming);

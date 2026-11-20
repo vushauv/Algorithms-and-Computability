@@ -27,7 +27,7 @@ template <class V>
 Preliminary<V> preliminary_checks(std::span<const V> a) {
     const V S = total_sum(a);
     if (is_odd(S)) return {Verdict::No, S, 0};
-    if (S == 0) return {Verdict::Yes, S, 0};  // {a[0]} against the rest, n ≥ 2
+    if (S == 0) return {Verdict::Yes, S, 0};  // {a[0]} against the rest, n >= 2
     return {std::nullopt, S, half(S)};
 }
 

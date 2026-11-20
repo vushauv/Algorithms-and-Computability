@@ -27,7 +27,7 @@ void test_brute_force() {
     CHECK(values_at<Value>(V{5, 6, 7, 8}, I{3, 0}) == (V{8, 5}));
     CHECK(values_at<Value>(V{5, 6}, I{}).empty());
 
-    // The partition of 0..n−1 into A and its complement.
+    // The partition of 0..n-1 into A and its complement.
     const Partition<Value> p = balanced_partition<Value>(5, I{3, 0});
     CHECK(p.A == (I{0, 3}) && p.B == (I{1, 2, 4}) && p.d == 0);
 
@@ -76,7 +76,7 @@ void test_brute_force() {
     CHECK(answers(brute_force<Value>, V{1, 1, 1, 1, 1, 1, 6}, Verdict::Yes));  // the last element alone
     CHECK(answers(brute_force<Value>, V{10, 1, 1}, Verdict::No));            // one element larger than T
 
-    // 25-digit numbers: 10^24 + 1, 10^24 + 2, 2 · 10^24 + 3.
+    // 25-digit numbers: 10^24 + 1, 10^24 + 2, 2 * 10^24 + 3.
     const Value e24 = parse_value<Value>("1000000000000000000000000").value;
     CHECK(answers(brute_force<Value>, V{e24 + 1, e24 + 2, 2 * e24 + 3}, Verdict::Yes));
     CHECK(answers(brute_force<Value>, V{e24 + 1, e24 + 2, 2 * e24 + 5}, Verdict::No));

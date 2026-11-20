@@ -67,7 +67,7 @@ void test_dynamic_programming() {
         }
     }
 
-    // Equal to brute force on random sets with n ≤ 20, duplicates and zeros.
+    // Equal to brute force on random sets with n <= 20, duplicates and zeros.
     for (int round = 0; round < 400; ++round) {
         const std::size_t n = random_sets::size_between(2, 20);
         const std::uint64_t max_value = round % 3 == 0 ? 3 : (round % 3 == 1 ? 50 : 3000);

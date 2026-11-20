@@ -40,7 +40,6 @@ struct Solution {
     V T;  // S / 2
 };
 
-
 // Asked only for a target in the range of DP, so 64 bits.
 bool dp_is_cheaper(std::size_t n, std::uint64_t T);
 
@@ -48,6 +47,6 @@ bool dp_is_cheaper(std::size_t n, std::uint64_t T);
 template <class V>
 Method choose_exact(std::size_t n, const V& T, const Ranges& ranges);
 
-// Needs n ≥ 2 and, for Native, S < 2^128 (read_instances checks both).
+// Needs n >= 2 and, for Native, S < 2^128 (read_instances checks both).
 template <class V>
 Solution<V> solve(std::span<const V> a, const Ranges& ranges);

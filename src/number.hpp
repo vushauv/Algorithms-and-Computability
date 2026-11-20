@@ -5,7 +5,7 @@
 //   BoostInt  cpp_int of Boost.Multiprecision, of any size;
 //   BigUint   our own long arithmetic of any size, with the base of --base.
 //
-// The algorithms are templates over the type V of the numbers. They use +, −
+// The algorithms are templates over the type V of the numbers. They use +, -
 // (never below zero), the comparisons, and the functions declared here.
 #pragma once
 
@@ -64,7 +64,7 @@ bool is_odd(Native value);
 bool is_odd(const BoostInt& value);
 bool is_odd(const BigUint& value);
 
-// ⌊value / 2⌋.
+// value / 2, rounded down.
 Native half(Native value);
 BoostInt half(const BoostInt& value);
 BigUint half(const BigUint& value);

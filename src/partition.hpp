@@ -14,7 +14,7 @@
 // algorithm is in range (report, Section 6.2).
 enum class Verdict { No, Yes, Unknown };
 
-// A partition into the index sets A and B with discrepancy d = |Σ(A) − Σ(B)|.
+// A partition into the index sets A and B with discrepancy d = |sum(A) - sum(B)|.
 template <class V>
 struct Partition {
     std::vector<std::size_t> A;
@@ -35,7 +35,7 @@ struct Preliminary {
     V T;
 };
 
-// S = Σ a[i]. Throws std::overflow_error if S ≥ 2^128 (Native only). read_instances
+// S = sum of a[i]. Throws std::overflow_error if S >= 2^128 (Native only). read_instances
 // already rejects such sets, so only data made in code can hit this.
 template <class V>
 V total_sum(std::span<const V> a);
@@ -51,7 +51,7 @@ std::vector<V> values_at(std::span<const V> a, const std::vector<std::size_t>& i
 template <class V>
 ExactAnswer<V> trivial_answer(const Preliminary<V>& pre, std::size_t n);
 
-// A and its complement B, both sorted, d = 0. The caller has checked that Σ(A) = S/2.
+// A and its complement B, both sorted, d = 0. The caller has checked that sum(A) = S/2.
 template <class V>
 Partition<V> balanced_partition(std::size_t n, std::vector<std::size_t> A);
 

@@ -23,9 +23,9 @@ Value total(std::span<const Value> values) {
     return sum;
 }
 
-// raw_regulations/AaClab_output.txt, Homenda's example with K = 5. Its line "61 7 8 9 10 11 2 3 4 6 1 " ends with a space, which no
+// raw_regulations/AaClab_output.txt, the course's example with K = 5. Its line "61 7 8 9 10 11 2 3 4 6 1 " ends with a space, which no
 // other line has; it is left out here.
-const std::string kHomendaExample =
+const std::string kCourseExample =
     "2 5\n"
     "\n"
     "66 2 2 1 7 8 1 3 1 4 4 4 1 5 5 5 1 6 6\n"
@@ -113,14 +113,14 @@ void test_result_file() {
     CHECK(result_file::path_for("in.txt.bak") == "in.txt.bak_output.txt");
     CHECK(result_file::path_for(".txt") == "_output.txt");
 
-    // Homenda's example, from its subsets given in any order.
+    // The course's example, from its subsets given in any order.
     std::vector<Value> first{2, 2, 1, 7, 8, 1, 3, 1, 4, 4, 4, 1, 5, 5, 5, 1, 6, 6};
     std::vector<Value> second{7, 8, 9, 10, 11, 2, 3, 4, 6, 1};
     const std::string text =
         result_file::header(2, 5) + "\n\n" +
         result_file::format_set<Value>(first, {{1, 4, 5}, {2, 1, 4, 5}, {1, 4, 1, 5}, {2, 7, 8}, {6, 1, 6, 3}}) +
         "\n\n" + result_file::format_set<Value>(second, {{4, 6, 7}, {3, 8}, {11}, {1, 10}, {2, 9}});
-    CHECK(text == kHomendaExample);
+    CHECK(text == kCourseExample);
 
     // Two subsets: the one with the larger first number comes first, not the
     // one with the larger sum.

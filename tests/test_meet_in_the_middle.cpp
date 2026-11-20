@@ -37,7 +37,7 @@ void test_meet_in_the_middle() {
     CHECK(answers(meet_in_the_middle<Value>, V{7, 1, 1, 5}, Verdict::Yes));  // first hit: left sum 0
     CHECK(answers(meet_in_the_middle<Value>, V{10, 1, 1}, Verdict::No));
 
-    // Equal to brute force on random sets with n ≤ 20, duplicates and zeros.
+    // Equal to brute force on random sets with n <= 20, duplicates and zeros.
     for (int round = 0; round < 400; ++round) {
         const std::size_t n = random_sets::size_between(2, 20);
         const std::uint64_t max_value = round % 3 == 0 ? 3 : (round % 3 == 1 ? 50 : 100000);
@@ -91,7 +91,7 @@ void test_meet_in_the_middle() {
     if (physical > 0) {
         CHECK_THROWS(require_memory("test", Value{physical} + 1), std::runtime_error);
         require_memory("test", physical);
-        CHECK_THROWS(meet_in_the_middle<Value>(V(124, 1)), std::runtime_error);  // 2 · 2^62 sums
+        CHECK_THROWS(meet_in_the_middle<Value>(V(124, 1)), std::runtime_error);  // 2 * 2^62 sums
         CHECK_THROWS(dp_partition<Value>(V{kMaxDpTarget, kMaxDpTarget}), std::runtime_error);
     }
 }

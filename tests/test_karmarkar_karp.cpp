@@ -13,8 +13,8 @@ using partition_check::answers;
 
 namespace {
 
-// Theorem 5.2: A and B are non-empty, disjoint and cover 0..n−1, and d is the
-// difference of their sums. Also d ≤ max a[i] (Proposition 5.3) and d has the
+// Theorem 5.2: A and B are non-empty, disjoint and cover 0..n-1, and d is the
+// difference of their sums. Also d <= max a[i] (Proposition 5.3) and d has the
 // parity of S.
 bool is_valid_result(const std::vector<Value>& a, const Partition<Value>& p) {
     const Value S = partition_check::sum_of(a, p.A) + partition_check::sum_of(a, p.B);

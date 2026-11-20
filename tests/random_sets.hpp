@@ -49,7 +49,7 @@ inline std::vector<Value> large_yes_instance(std::size_t n) {
     for (std::size_t i = 0; i + 1 < n / 2; ++i) left += a[i];
     Value right = 0;
     for (std::size_t i = n / 2; i < n; ++i) right += a[i];
-    // Choose a[n/2 − 1] so that the first half has the sum of the second one.
+    // Choose a[n/2 - 1] so that the first half has the sum of the second one.
     if (left <= right) {
         a[n / 2 - 1] = right - left;
     } else {
