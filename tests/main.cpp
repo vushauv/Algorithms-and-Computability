@@ -27,6 +27,7 @@ const Test kTests[] = {
     {"result_file", test_result_file, false},
     {"arithmetics", test_arithmetics, false},
     {"scale", test_scale, true},
+    {"benchmark_generator", test_benchmark_generator, false},
 };
 
 }  // namespace

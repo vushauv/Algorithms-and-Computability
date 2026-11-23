@@ -34,7 +34,15 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test test-quick windows deliverable deliverable-source clean
+.PHONY: all test test-quick windows deliverable deliverable-source bench-build bench-windows clean
+
+ifeq ($(OS),Windows_NT)
+MKDIR = powershell -NoProfile -Command "New-Item -ItemType Directory -Force '$(subst /,\,$1)' | Out-Null"
+RUN_CLI_TEST = @echo "cli_test.sh requires a POSIX shell; unit tests passed"
+else
+MKDIR = mkdir -p $1
+RUN_CLI_TEST = sh tests/cli_test.sh $(1) $(2)
+endif
 
 all: $(PROGRAM)
 
@@ -46,12 +54,24 @@ $(TESTS): $(TEST_OBJ) $(LIB_OBJ)
 
 test: $(TESTS) $(PROGRAM)
 	./$(TESTS)
-	sh tests/cli_test.sh $(PROGRAM)
+	$(call RUN_CLI_TEST,$(PROGRAM),)
 
 # The same without the slow checks (about 15 s once built; see tests/README.md).
 test-quick: $(TESTS) $(PROGRAM)
 	./$(TESTS) quick
-	sh tests/cli_test.sh $(PROGRAM) quick
+	$(call RUN_CLI_TEST,$(PROGRAM),quick)
+
+BENCH_BUILD = build/linux
+BENCH_GENERATE = $(BENCH_BUILD)/generate
+BENCH_WINDOWS_GENERATE = build/windows/generate.exe
+
+bench-build:
+	$(call MKDIR,$(BENCH_BUILD))
+	$(CXX) $(CXXFLAGS) $(INCLUDES) bench/generate.cpp -o $(BENCH_GENERATE)
+
+bench-windows:
+	$(call MKDIR,build/windows)
+	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) bench/generate.cpp -o $(BENCH_WINDOWS_GENERATE)
 
 # One compiler call from the sources; -static so that no DLL beyond the
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
@@ -69,7 +89,7 @@ deliverable-source:
 
 # -MMD -MP: dependency files, so that a changed header rebuilds its users.
 $(BUILD)/%.o: %.cpp
-	@mkdir -p $(dir $@)
+	@$(call MKDIR,$(dir $@))
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MMD -MP -c $< -o $@
 
 clean:
