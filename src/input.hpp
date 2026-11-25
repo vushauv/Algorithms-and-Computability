@@ -20,16 +20,21 @@ struct Instance {
     std::size_t line;  // line of the file, for messages
 };
 
+enum class InputErrorKind { InvalidInput, NativeLimit };
+
 // Bad input. line and column count from 1; 0 means the whole line or file.
 class InputError : public std::runtime_error {
 public:
-    InputError(std::size_t line, std::size_t column, const std::string& message);
+    InputError(std::size_t line, std::size_t column, const std::string& message,
+               InputErrorKind kind = InputErrorKind::InvalidInput);
     std::size_t line() const { return line_; }
     std::size_t column() const { return column_; }
+    InputErrorKind kind() const { return kind_; }
 
 private:
     std::size_t line_;
     std::size_t column_;
+    InputErrorKind kind_;
 };
 
 template <class V>

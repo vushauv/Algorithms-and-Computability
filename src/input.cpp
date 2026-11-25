@@ -59,7 +59,7 @@ V parse_field(const Field& field, std::size_t line_number) {
         case ParseStatus::TooLarge:  // Native only
             throw InputError(line_number, field.column,
                              "the number has to be below 10^38 (at most 38 digits) with "
-                             "--arithmetic native");
+                             "--arithmetic native", InputErrorKind::NativeLimit);
         case ParseStatus::Empty:
         case ParseStatus::NotDigit:
             break;
@@ -102,7 +102,8 @@ Instance<V> read_set(const std::string& line, std::size_t line_number) {
         std::optional<V> sum = checked_add(instance.sum, value);
         if (!sum)  // Native only
             throw InputError(line_number, field.column,
-                             "the sum of the set exceeds 2^128 - 1 with --arithmetic native");
+                             "the sum of the set exceeds 2^128 - 1 with --arithmetic native",
+                             InputErrorKind::NativeLimit);
         instance.sum = std::move(*sum);
         instance.values.push_back(std::move(value));
     }
@@ -115,8 +116,10 @@ Instance<V> read_set(const std::string& line, std::size_t line_number) {
 
 }  // namespace
 
-InputError::InputError(std::size_t line, std::size_t column, const std::string& message)
-    : std::runtime_error(location(line, column) + message), line_(line), column_(column) {}
+InputError::InputError(std::size_t line, std::size_t column, const std::string& message,
+                       InputErrorKind kind)
+    : std::runtime_error(location(line, column) + message), line_(line), column_(column),
+      kind_(kind) {}
 
 template <class V>
 std::vector<Instance<V>> read_instances(std::istream& in) {
