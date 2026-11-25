@@ -1,0 +1,8 @@
+system: Windows
+os: Microsoft Windows 11 Home (10.0.26300)
+cpu: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+cores: 4
+memory: 11.7 GiB (12,594,225,152 bytes)
+threads: 8
+compiler: 13.2.0
+date: 2026-11-25T17:51:16Z
