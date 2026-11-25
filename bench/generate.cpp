@@ -2,6 +2,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -151,7 +152,28 @@ void generate_file(const ExperimentFile& file, const std::string& experiment,
 }
 
 #ifndef BENCH_GENERATOR_NO_MAIN
-int main() {
+int main(int argc, char** argv) {
+    if (argc > 2 || (argc == 2 && std::string(argv[1]).empty())) {
+        std::cerr << "usage: generate [E1|E2|E3a|E3b|E4|E5|E6|E7|A1|A2|A3|A4]\n";
+        return 2;
+    }
+
+    const std::string selected = argc == 2 ? argv[1] : "";
+    if (!selected.empty()) {
+        const auto experiment = std::find_if(
+            experiments::kExperiments.begin(), experiments::kExperiments.end(),
+            [&selected](const Experiment& candidate) { return candidate.name == selected; });
+        if (experiment == experiments::kExperiments.end()) {
+            std::cerr << "unknown experiment: " << selected << '\n';
+            return 2;
+        }
+
+        const std::string directory = "inputs/" + experiment->name;
+        for (const ExperimentFile& file : experiment->files)
+            generate_file(file, experiment->name, directory);
+        return 0;
+    }
+
     const std::string root = "inputs";
     for (const Experiment& experiment : experiments::kExperiments) {
         const std::string directory = root + "/" + experiment.name;

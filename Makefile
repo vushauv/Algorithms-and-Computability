@@ -34,7 +34,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test test-quick windows deliverable deliverable-source bench-build bench-windows clean
+.PHONY: all test test-quick windows deliverable deliverable-source bench-build bench-windows generate-experiment clean
 
 ifeq ($(OS),Windows_NT)
 MKDIR = powershell -NoProfile -Command "New-Item -ItemType Directory -Force '$(subst /,\,$1)' | Out-Null"
@@ -72,6 +72,15 @@ bench-build:
 bench-windows:
 	$(call MKDIR,build/windows)
 	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) bench/generate.cpp -o $(BENCH_WINDOWS_GENERATE)
+
+ifeq ($(OS),Windows_NT)
+generate-experiment: bench-windows
+	powershell -NoProfile -Command "Set-Location bench; & ..\build\windows\generate.exe '$(EX)'; exit $$LASTEXITCODE"
+else
+generate-experiment: bench-build
+	@test -n "$(EX)" || (echo "EX is required, e.g. EX=E6" >&2; exit 2)
+	cd bench && ../$(BENCH_GENERATE) "$(EX)"
+endif
 
 # One compiler call from the sources; -static so that no DLL beyond the
 # system ones (KERNEL32, msvcrt) is needed, -s drops the symbols.
