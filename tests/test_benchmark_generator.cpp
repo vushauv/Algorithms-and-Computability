@@ -21,6 +21,16 @@ void test_benchmark_generator() {
     for (const std::string& value : trap) sum += boost::multiprecision::cpp_int(value);
     CHECK((sum % 4) == 2);
 
+    std::mt19937_64 target_engine(bench_hash_seed("E3a", "n100_T1000.txt"));
+    std::vector<std::string> target_values =
+        generate_set(GeneratorFamily::Target, 100, 0, 1000, 0, target_engine);
+    boost::multiprecision::cpp_int target_sum = 0;
+    for (const std::string& value : target_values)
+        target_sum += boost::multiprecision::cpp_int(value);
+    const boost::multiprecision::cpp_int actual_target = target_sum / 2;
+    CHECK(actual_target >= 750);
+    CHECK(actual_target <= 1250);
+
     std::mt19937_64 yes_engine(bench_hash_seed("E6", "yes_d3_n20.txt"));
     std::vector<std::string> yes =
         generate_set(GeneratorFamily::Yes, 20, 3, 0, 0, yes_engine);

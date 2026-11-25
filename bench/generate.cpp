@@ -94,7 +94,7 @@ std::vector<std::string> generate_set(GeneratorFamily family, std::size_t n,
     }
 
     if (family == GeneratorFamily::Target) {
-        const std::uint64_t limit = target / (2 * n);
+        const std::uint64_t limit = target / n;
         for (std::size_t i = 0; i + 1 < n; ++i) {
             const std::uint64_t r = bench_randrange(limit + 1, engine);
             values.push_back(std::to_string(r * 4));
