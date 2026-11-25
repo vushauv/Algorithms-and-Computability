@@ -34,7 +34,7 @@ LIB_OBJ  = $(LIB_SRC:%.cpp=$(BUILD)/%.o)
 MAIN_OBJ = $(MAIN_SRC:%.cpp=$(BUILD)/%.o)
 TEST_OBJ = $(TEST_SRC:%.cpp=$(BUILD)/%.o)
 
-.PHONY: all test test-quick windows deliverable deliverable-source bench-build bench-windows generate-experiment clean
+.PHONY: all test test-quick windows deliverable deliverable-source bench-build bench bench-windows generate-experiment bench-experiment bench-experiment-windows clean
 
 ifeq ($(OS),Windows_NT)
 MKDIR = powershell -NoProfile -Command "New-Item -ItemType Directory -Force '$(subst /,\,$1)' | Out-Null"
@@ -63,15 +63,45 @@ test-quick: $(TESTS) $(PROGRAM)
 
 BENCH_BUILD = build/linux
 BENCH_GENERATE = $(BENCH_BUILD)/generate
+BENCH_PROGRAM = $(BENCH_BUILD)/bench
 BENCH_WINDOWS_GENERATE = build/windows/generate.exe
+BENCH_WINDOWS_PROGRAM = build/windows/bench.exe
+empty :=
+space := $(empty) $(empty)
+comma := ,
+BENCH_CXXFLAGS = $(subst $(space),$(comma),$(CXXFLAGS))
+BENCH_MINGWFLAGS = $(subst $(space),$(comma),$(CXXFLAGS) -static -s)
 
 bench-build:
 	$(call MKDIR,$(BENCH_BUILD))
 	$(CXX) $(CXXFLAGS) $(INCLUDES) bench/generate.cpp -o $(BENCH_GENERATE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -DBENCH_COMMIT=\"$(shell git rev-parse --short HEAD)\" -DBENCH_FLAGS=\"$(BENCH_CXXFLAGS)\" bench/bench.cpp $(LIB_SRC) -o $(BENCH_PROGRAM)
 
 bench-windows:
 	$(call MKDIR,build/windows)
 	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) bench/generate.cpp -o $(BENCH_WINDOWS_GENERATE)
+	$(MINGW) $(CXXFLAGS) -static -s $(INCLUDES) -DBENCH_COMMIT=\"$(shell git rev-parse --short HEAD)\" -DBENCH_FLAGS=\"$(BENCH_MINGWFLAGS)\" bench/bench.cpp $(LIB_SRC) -o $(BENCH_WINDOWS_PROGRAM)
+
+ifeq ($(OS),Windows_NT)
+bench: bench-windows
+	powershell -NoProfile -Command "Set-Location bench; & ..\build\windows\generate.exe; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & ..\build\windows\bench.exe; exit $$LASTEXITCODE"
+
+bench-experiment: bench-windows
+	powershell -NoProfile -Command "Set-Location bench; & ..\build\windows\generate.exe '$(EX)'; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; & ..\build\windows\bench.exe '$(EX)'; exit $$LASTEXITCODE"
+
+bench-experiment-windows: bench-experiment
+else
+bench: bench-build
+	cd bench && ../$(BENCH_GENERATE) && ../$(BENCH_PROGRAM)
+
+bench-experiment: bench-build
+	@test -n "$(EX)" || (echo "EX is required, e.g. EX=E6" >&2; exit 2)
+	cd bench && ../$(BENCH_GENERATE) "$(EX)" && ../$(BENCH_PROGRAM) "$(EX)"
+
+bench-experiment-windows: bench-windows
+	@echo "The Windows benchmark executables can only be run on Windows." >&2
+	@exit 2
+endif
 
 ifeq ($(OS),Windows_NT)
 generate-experiment: bench-windows

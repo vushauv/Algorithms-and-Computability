@@ -16,15 +16,21 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #ifndef BENCH_COMMIT
 #define BENCH_COMMIT "unknown"
+#endif
+#ifndef BENCH_FLAGS
+#define BENCH_FLAGS "unknown"
 #endif
 
 namespace {
@@ -40,8 +46,9 @@ struct Baseline {
 template <class V>
 struct BenchResult {
     Verdict answer;
-    std::string d;
-    std::string decided_by;
+    std::optional<Partition<V>> partition;
+    ExactAnswer<V> balanced;
+    Method decided_by;
 };
 
 std::string algorithm_name(Algorithm algorithm) {
@@ -119,55 +126,79 @@ void verify_partition(std::span<const V> values, const std::vector<std::size_t>&
 }
 
 template <class V>
-BenchResult<V> call_algorithm(Algorithm algorithm, std::span<const V> values) {
+BenchResult<V> run_algorithm(Algorithm algorithm, std::span<const V> values) {
     if (algorithm == Algorithm::BruteForce) {
-        const ExactAnswer<V> answer = brute_force<V>(values);
-        if (!answer) return {Verdict::No, "NA", "NA"};
-        verify_partition<V>(values, answer->A, answer->B);
-        if (partition_sum<V>(values, answer->A) != partition_sum<V>(values, answer->B))
-            throw std::runtime_error("brute-force partition is not balanced");
-        return {Verdict::Yes, "NA", "NA"};
+        ExactAnswer<V> answer = brute_force<V>(values);
+        const Verdict verdict = verdict_of(answer);
+        return {verdict, std::move(answer), std::nullopt, Method::None};
     }
     if (algorithm == Algorithm::MeetInTheMiddle) {
-        const ExactAnswer<V> answer = meet_in_the_middle<V>(values);
-        if (!answer) return {Verdict::No, "NA", "NA"};
-        verify_partition<V>(values, answer->A, answer->B);
-        if (partition_sum<V>(values, answer->A) != partition_sum<V>(values, answer->B))
-            throw std::runtime_error("meet-in-the-middle partition is not balanced");
-        return {Verdict::Yes, "NA", "NA"};
+        ExactAnswer<V> answer = meet_in_the_middle<V>(values);
+        const Verdict verdict = verdict_of(answer);
+        return {verdict, std::move(answer), std::nullopt, Method::None};
     }
     if (algorithm == Algorithm::DynamicProgramming) {
-        const ExactAnswer<V> answer = dp_partition<V>(values);
-        if (!answer) return {Verdict::No, "NA", "NA"};
-        verify_partition<V>(values, answer->A, answer->B);
-        if (partition_sum<V>(values, answer->A) != partition_sum<V>(values, answer->B))
-            throw std::runtime_error("dynamic-programming partition is not balanced");
-        return {Verdict::Yes, "NA", "NA"};
+        ExactAnswer<V> answer = dp_partition<V>(values);
+        const Verdict verdict = verdict_of(answer);
+        return {verdict, std::move(answer), std::nullopt, Method::None};
     }
     if (algorithm == Algorithm::KarmarkarKarp) {
-        const Partition<V> answer = karmarkar_karp<V>(values);
-        verify_partition<V>(values, answer.A, answer.B);
-        const V sum_a = partition_sum<V>(values, answer.A);
-        const V sum_b = partition_sum<V>(values, answer.B);
-        if (sum_a == sum_b && answer.d != 0)
-            throw std::runtime_error("Karmarkar-Karp discrepancy is inconsistent");
-        if (sum_a != sum_b && answer.d == 0)
-            throw std::runtime_error("Karmarkar-Karp discrepancy is zero incorrectly");
-        const V difference = sum_a >= sum_b ? sum_a - sum_b : sum_b - sum_a;
-        if (difference != answer.d)
-            throw std::runtime_error("Karmarkar-Karp discrepancy is wrong");
-        return {answer.d == 0 ? Verdict::Yes : Verdict::No, to_string(answer.d), "NA"};
+        Partition<V> answer = karmarkar_karp<V>(values);
+        const Verdict verdict = answer.d == 0 ? Verdict::Yes : Verdict::Unknown;
+        return {verdict, std::move(answer), std::nullopt, Method::KarmarkarKarp};
     }
 
-    const Solution<V> answer = solve<V>(values, Ranges{kDefaultNMitm, kDefaultTDp, kDefaultWDp});
-    verify_partition<V>(values, answer.partition.A, answer.partition.B);
-    if (answer.balanced) {
-        const Partition<V>& balanced = *answer.balanced;
-        verify_partition<V>(values, balanced.A, balanced.B);
-        if (partition_sum<V>(values, balanced.A) != partition_sum<V>(values, balanced.B))
-            throw std::runtime_error("SOLVE balanced partition is not balanced");
+    Solution<V> answer = solve<V>(values, Ranges{kDefaultNMitm, kDefaultTDp, kDefaultWDp});
+    return {answer.answer, std::move(answer.partition), std::move(answer.balanced),
+            answer.decided_by};
+}
+
+template <class V>
+void verify_result(Algorithm algorithm, std::span<const V> values,
+                   const BenchResult<V>& result) {
+    const bool exact = algorithm == Algorithm::BruteForce ||
+                       algorithm == Algorithm::MeetInTheMiddle ||
+                       algorithm == Algorithm::DynamicProgramming;
+    if (exact) {
+        if (result.answer == Verdict::Yes) {
+            if (!result.partition)
+                throw std::runtime_error("exact algorithm returned YES without a partition");
+            verify_partition<V>(values, result.partition->A, result.partition->B);
+            if (partition_sum<V>(values, result.partition->A) !=
+                partition_sum<V>(values, result.partition->B))
+                throw std::runtime_error("exact algorithm returned an unbalanced partition");
+        } else if (result.partition) {
+            throw std::runtime_error("exact algorithm returned a partition for NO");
+        }
+        return;
     }
-    return {answer.answer, to_string(answer.partition.d), method_name(answer.decided_by)};
+
+    if (!result.partition)
+        throw std::runtime_error("approximation algorithm returned no partition");
+    verify_partition<V>(values, result.partition->A, result.partition->B);
+    const V sum_a = partition_sum<V>(values, result.partition->A);
+    const V sum_b = partition_sum<V>(values, result.partition->B);
+    const V difference = sum_a >= sum_b ? sum_a - sum_b : sum_b - sum_a;
+    if (difference != result.partition->d)
+        throw std::runtime_error("partition discrepancy is wrong");
+
+    if (algorithm == Algorithm::KarmarkarKarp) {
+        const Verdict expected = difference == 0 ? Verdict::Yes : Verdict::Unknown;
+        if (result.answer != expected)
+            throw std::runtime_error("Karmarkar-Karp verdict does not match its discrepancy");
+        return;
+    }
+
+    if (result.answer == Verdict::Yes) {
+        if (!result.balanced)
+            throw std::runtime_error("SOLVE returned YES without a balanced partition");
+        verify_partition<V>(values, result.balanced->A, result.balanced->B);
+        if (partition_sum<V>(values, result.balanced->A) !=
+            partition_sum<V>(values, result.balanced->B))
+            throw std::runtime_error("SOLVE balanced partition is not balanced");
+    } else if (result.balanced) {
+        throw std::runtime_error("SOLVE returned a balanced partition without YES");
+    }
 }
 
 template <class V>
@@ -207,59 +238,75 @@ void verify_known_answer(const ExperimentFile& file, Algorithm algorithm,
 template <class V>
 bool baseline_matches(std::map<std::pair<std::string, std::size_t>, Baseline>& baselines,
                       const std::string& key, std::size_t set,
-                      const BenchResult<V>& result) {
+                      const BenchResult<V>& result, const std::string& discrepancy) {
     const auto found = baselines.find({key, set});
     if (found == baselines.end()) {
-        baselines[{key, set}] = {result.answer, result.d};
+        baselines[{key, set}] = {result.answer, discrepancy};
         return true;
     }
     return found->second.answer == result.answer &&
-           (result.d == "NA" || found->second.d == "NA" ||
-            found->second.d == result.d);
+           (discrepancy == "NA" || found->second.d == "NA" ||
+            found->second.d == discrepancy);
 }
 
 template <class V>
-void run_typed(const Experiment& experiment, const ExperimentFile& file,
-               Arithmetic arithmetic, std::uint64_t base,
-               const std::vector<Algorithm>& algorithms,
-               std::ofstream& out,
-               std::map<std::pair<std::string, std::size_t>, Baseline>& baselines,
-               bool& over_limit_seen,
-               const std::chrono::steady_clock::time_point& file_start) {
+double run_typed(const Experiment& experiment, const ExperimentFile& file,
+                 Arithmetic arithmetic, std::uint64_t base,
+                 const std::vector<Algorithm>& algorithms,
+                 std::ofstream& out,
+                 std::map<std::pair<std::string, std::size_t>, Baseline>& baselines,
+                 bool& over_limit_seen) {
     if (arithmetic == Arithmetic::Own) BigUint::set_base(base);
 
     const std::string path = "inputs/" + experiment.name + "/" + file.name;
+    std::vector<Algorithm> file_algorithms;
+    for (const Algorithm algorithm : algorithms) {
+        if (experiment.name == "A4" &&
+            ((algorithm == Algorithm::KarmarkarKarp && file.n != 10000) ||
+             (algorithm == Algorithm::MeetInTheMiddle && file.n != 30)))
+            continue;
+        file_algorithms.push_back(algorithm);
+    }
+
     std::vector<Instance<V>> instances;
     try {
         instances = read_instances_from_file<V>(path);
-    } catch (const InputError&) {
-        out << row(experiment.name, algorithm_name(experiment.algorithm),
-                   arithmetic_name(arithmetic), base == 0 ? "NA" : std::to_string(base),
-                   file.name, "NA", "NA", "NA", "NA", "NA", "NA", "NA",
-                   "NA", "NA", "NA", "unsupported") << '\n';
-        return;
+    } catch (const InputError& error) {
+        if (arithmetic == Arithmetic::Native &&
+            error.kind() == InputErrorKind::NativeLimit) {
+            for (const Algorithm algorithm : file_algorithms) {
+                out << row(experiment.name, algorithm_name(algorithm),
+                           arithmetic_name(arithmetic), "NA", file.name,
+                           "NA", "NA", "NA", "NA", "NA", "NA", "NA",
+                           "NA", "NA", "NA", "unsupported") << '\n';
+            }
+            return 0.0;
+        }
+        throw std::runtime_error("cannot read " + path + ": " + error.what());
     }
 
-    for (const Algorithm algorithm : algorithms) {
-        if (experiment.name == "A4") {
-            if (algorithm == Algorithm::KarmarkarKarp && file.n != 10000) continue;
-            if (algorithm == Algorithm::MeetInTheMiddle && file.n != 30) continue;
-        }
-
+    const auto file_start = std::chrono::steady_clock::now();
+    for (const Algorithm algorithm : file_algorithms) {
         if (over_limit_seen) break;
 
         for (std::size_t set = 0; set < instances.size(); ++set) {
+            if (std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                              file_start).count() >= kOverLimitSeconds) {
+                over_limit_seen = true;
+                break;
+            }
+
             const std::span<const V> values(instances[set].values);
             const std::size_t n = values.size();
             const std::size_t digits = largest_digits<V>(values);
             const std::optional<std::uint64_t> target = to_u64(half(instances[set].sum));
             const std::string target_text = target ? std::to_string(*target) : "NA";
 
-            BenchResult<V> warm_result;
-            bool warm_valid = false;
+            BenchResult<V> warm_result{Verdict::Unknown, std::nullopt, std::nullopt,
+                                       Method::None};
             try {
-                warm_result = call_algorithm<V>(algorithm, values);
-                warm_valid = true;
+                warm_result = run_algorithm<V>(algorithm, values);
+                verify_result<V>(algorithm, values, warm_result);
                 verify_known_answer<V>(file, algorithm, warm_result);
             } catch (const std::bad_alloc&) {
                 for (int rep = 1; rep <= experiment.reps; ++rep) {
@@ -293,80 +340,86 @@ void run_typed(const Experiment& experiment, const ExperimentFile& file,
                                          ": " + error.what());
             }
 
+            if (std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                              file_start).count() >= kOverLimitSeconds) {
+                over_limit_seen = true;
+                break;
+            }
+
             std::uint64_t calls = 1;
             volatile std::uint64_t keepalive = 0;
-            double per_call_seconds = 0.0;
+            double elapsed = 0.0;
+            BenchResult<V> last{Verdict::Unknown, std::nullopt, std::nullopt,
+                                Method::None};
             for (int rep = 1; rep <= experiment.reps; ++rep) {
-                if (std::chrono::duration<double>(std::chrono::steady_clock::now() - file_start).count() >
-                    kOverLimitSeconds) {
+                if (std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                                  file_start).count() >= kOverLimitSeconds) {
                     over_limit_seen = true;
-                    out << row(experiment.name, algorithm_name(algorithm),
-                               arithmetic_name(arithmetic), base == 0 ? "NA" : std::to_string(base),
-                               file.name, std::to_string(set + 1), std::to_string(n),
-                               std::to_string(digits), target_text, std::to_string(rep),
-                               "0", "NA", "NA", "NA", "NA", "over_limit") << '\n';
-                    continue;
+                    break;
                 }
 
                 if (rep == 1) {
-                    const auto start = std::chrono::steady_clock::now();
                     calls = 1;
-                    BenchResult<V> last;
                     for (;;) {
+                        const auto start = std::chrono::steady_clock::now();
                         for (std::uint64_t i = 0; i < calls; ++i) {
-                            last = call_algorithm<V>(algorithm, values);
-                            keepalive += last.answer == Verdict::Yes ? 1 : 0;
+                            BenchResult<V> current = run_algorithm<V>(algorithm, values);
+                            keepalive += current.answer == Verdict::Yes ? 1 : 0;
+                            if (i + 1 == calls) last = std::move(current);
                         }
-                        const double elapsed =
+                        elapsed =
                             std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
                         if (elapsed >= kMinimumTimedSeconds)
                             break;
+                        if (calls > std::numeric_limits<std::uint64_t>::max() / 2)
+                            throw std::runtime_error("too many repetitions for timer calibration");
                         calls *= 2;
                     }
-                    verify_known_answer<V>(file, algorithm, last);
-                    per_call_seconds =
-                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() /
-                        static_cast<double>(calls);
                 } else {
                     const auto start = std::chrono::steady_clock::now();
-                    BenchResult<V> last;
                     for (std::uint64_t i = 0; i < calls; ++i) {
-                        last = call_algorithm<V>(algorithm, values);
-                        keepalive += last.answer == Verdict::Yes ? 1 : 0;
+                        BenchResult<V> current = run_algorithm<V>(algorithm, values);
+                        keepalive += current.answer == Verdict::Yes ? 1 : 0;
+                        if (i + 1 == calls) last = std::move(current);
                     }
-                    verify_known_answer<V>(file, algorithm, last);
-                    per_call_seconds =
-                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() /
-                        static_cast<double>(calls);
+                    elapsed =
+                        std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
                 }
 
-                BenchResult<V> checked =
-                    warm_valid ? warm_result : call_algorithm<V>(algorithm, values);
-                verify_known_answer<V>(file, algorithm, checked);
+                verify_result<V>(algorithm, values, last);
+                verify_known_answer<V>(file, algorithm, last);
+                const std::string discrepancy =
+                    (algorithm == Algorithm::KarmarkarKarp || algorithm == Algorithm::Solve) &&
+                            last.partition
+                        ? to_string(last.partition->d)
+                        : "NA";
                 if (!baseline_matches<V>(baselines,
                                          experiment.name + "/" + algorithm_name(algorithm) + "/" + file.name,
-                                         set + 1, checked))
+                                         set + 1, last, discrepancy))
                     throw std::runtime_error("arithmetics disagree for " + path +
                                              ", set " + std::to_string(set + 1));
 
                 std::ostringstream seconds;
-                seconds << std::fixed << std::setprecision(9) << per_call_seconds;
+                seconds << std::fixed << std::setprecision(9)
+                        << elapsed / static_cast<double>(calls);
                 out << row(experiment.name, algorithm_name(algorithm),
                            arithmetic_name(arithmetic), base == 0 ? "NA" : std::to_string(base),
                            file.name, std::to_string(set + 1), std::to_string(n),
                            std::to_string(digits), target_text, std::to_string(rep),
                            std::to_string(calls), seconds.str(),
-                           verdict_name(checked.answer), checked.d,
-                           checked.decided_by, "ok") << '\n';
+                           verdict_name(last.answer), discrepancy,
+                           algorithm == Algorithm::Solve ? method_name(last.decided_by) : "NA",
+                           "ok") << '\n';
             }
             (void)keepalive;
-
-            if (std::chrono::duration<double>(std::chrono::steady_clock::now() - file_start).count() >
-                kOverLimitSeconds) {
+            if (std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                              file_start).count() >= kOverLimitSeconds)
                 over_limit_seen = true;
-            }
+            if (over_limit_seen) break;
         }
     }
+    return std::chrono::duration<double>(std::chrono::steady_clock::now() -
+                                         file_start).count();
 }
 
 std::string result_header() {
@@ -380,8 +433,12 @@ void write_machine_file() {
     out << "system: ";
 #ifdef _WIN32
     out << "Windows";
-#else
+#elif defined(__APPLE__)
+    out << "macOS";
+#elif defined(__linux__)
     out << "Linux";
+#else
+    out << "Unknown";
 #endif
     out << '\n';
     out << "threads: " << std::thread::hardware_concurrency() << '\n';
@@ -403,56 +460,59 @@ int main(int argc, char** argv) {
         std::filesystem::create_directories("results");
         write_machine_file();
         const auto run_start = std::chrono::steady_clock::now();
+        std::string compiler_flags = BENCH_FLAGS;
+        std::replace(compiler_flags.begin(), compiler_flags.end(), ',', ' ');
 
         bool found = selected.empty();
         for (const Experiment& experiment : experiments::kExperiments) {
             if (!selected.empty() && experiment.name == selected) found = true;
             if (!selected.empty() && experiment.name != selected) continue;
-        const std::string result_path = "results/" + experiment.name + ".tsv";
-        std::ofstream out(result_path, std::ios::binary | std::ios::trunc);
-        if (!out) {
-            std::cerr << "cannot write " << result_path << '\n';
-            return 4;
-        }
-        out << "# experiment: " << experiment.name << '\n';
-        out << "# date: " << utc_date() << '\n';
-        out << "# commit: " << BENCH_COMMIT << '\n';
-        out << "# compiler: " << __VERSION__ << " (flags: -std=c++20 -O2)\n";
-        out << "# generator seed: 20261204\n";
-        out << result_header() << '\n';
-
-        std::map<std::pair<std::string, std::size_t>, Baseline> baselines;
-        for (const ArithmeticRun& run : experiment.arithmetics) {
-            bool over_limit_seen = false;
-            for (const ExperimentFile& file : experiment.files) {
-                if (over_limit_seen) break;
-                const auto file_start = std::chrono::steady_clock::now();
-                std::cout << experiment.name << " " << arithmetic_name(run.arithmetic)
-                          << " " << file.name << " 0.000 s\n";
-                std::vector<Algorithm> algorithms =
-                    experiment.algorithms.empty()
-                        ? std::vector<Algorithm>{experiment.algorithm}
-                        : experiment.algorithms;
-
-                if (run.arithmetic == Arithmetic::Native) {
-                    run_typed<Native>(experiment, file, run.arithmetic, run.base, algorithms,
-                                      out, baselines, over_limit_seen, file_start);
-                } else if (run.arithmetic == Arithmetic::Boost) {
-                    run_typed<BoostInt>(experiment, file, run.arithmetic, run.base, algorithms,
-                                        out, baselines, over_limit_seen, file_start);
-                } else {
-                    run_typed<BigUint>(experiment, file, run.arithmetic, run.base, algorithms,
-                                       out, baselines, over_limit_seen, file_start);
-                }
-
-                const double seconds =
-                    std::chrono::duration<double>(std::chrono::steady_clock::now() - file_start).count();
-                std::cout << experiment.name << " " << arithmetic_name(run.arithmetic)
-                          << " " << file.name << " " << std::fixed << std::setprecision(3)
-                          << seconds << " s\n";
-                out.flush();
+            const std::string result_path = "results/" + experiment.name + ".tsv";
+            std::ofstream out(result_path, std::ios::binary | std::ios::trunc);
+            if (!out) {
+                std::cerr << "cannot write " << result_path << '\n';
+                return 4;
             }
-        }
+            out << "# experiment: " << experiment.name << '\n';
+            out << "# date: " << utc_date() << '\n';
+            out << "# commit: " << BENCH_COMMIT << '\n';
+            out << "# compiler: " << __VERSION__ << " (flags: " << compiler_flags << ")\n";
+            out << "# generator seed: 20261204\n";
+            out << result_header() << '\n';
+
+            std::map<std::pair<std::string, std::size_t>, Baseline> baselines;
+            for (const ArithmeticRun& run : experiment.arithmetics) {
+                bool over_limit_seen = false;
+                for (const ExperimentFile& file : experiment.files) {
+                    if (over_limit_seen) break;
+                    std::cout << experiment.name << " " << arithmetic_name(run.arithmetic)
+                              << " " << file.name << " 0.000 s\n";
+                    std::vector<Algorithm> algorithms =
+                        experiment.algorithms.empty()
+                            ? std::vector<Algorithm>{experiment.algorithm}
+                            : experiment.algorithms;
+
+                    double file_seconds = 0.0;
+                    if (run.arithmetic == Arithmetic::Native) {
+                        file_seconds = run_typed<Native>(
+                            experiment, file, run.arithmetic, run.base, algorithms,
+                            out, baselines, over_limit_seen);
+                    } else if (run.arithmetic == Arithmetic::Boost) {
+                        file_seconds = run_typed<BoostInt>(
+                            experiment, file, run.arithmetic, run.base, algorithms,
+                            out, baselines, over_limit_seen);
+                    } else {
+                        file_seconds = run_typed<BigUint>(
+                            experiment, file, run.arithmetic, run.base, algorithms,
+                            out, baselines, over_limit_seen);
+                    }
+
+                    std::cout << experiment.name << " " << arithmetic_name(run.arithmetic)
+                              << " " << file.name << " " << std::fixed
+                              << std::setprecision(3) << file_seconds << " s\n";
+                    out.flush();
+                }
+            }
         }
 
         const double seconds =

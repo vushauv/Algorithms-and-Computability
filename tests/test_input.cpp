@@ -90,6 +90,18 @@ void test_input() {
 
     // A sum of 2^128 or more: 4 elements just below 10^38 exceed 2^128 ~ 3.4 * 10^38.
     CHECK(error_line("1\n" + max38 + " " + max38 + " " + max38 + " " + max38 + "\n") == 2);
+    try {
+        read("1\n" + std::string(39, '9') + " 0\n");
+        CHECK(false);
+    } catch (const InputError& error) {
+        CHECK(error.kind() == InputErrorKind::NativeLimit);
+    }
+    try {
+        read("1\n" + max38 + " " + max38 + " " + max38 + " " + max38 + "\n");
+        CHECK(false);
+    } catch (const InputError& error) {
+        CHECK(error.kind() == InputErrorKind::NativeLimit);
+    }
 
     // The column of the offending number.
     try {
@@ -100,7 +112,12 @@ void test_input() {
         CHECK(std::string(error.what()) == "line 2, column 4: '3x' is not a non-negative integer (digits only)");
     }
 
-    CHECK_THROWS(read_instances_from_file<Value>("no/such/file.txt"), InputError);
+    try {
+        read_instances_from_file<Value>("no/such/file.txt");
+        CHECK(false);
+    } catch (const InputError& error) {
+        CHECK(error.kind() == InputErrorKind::InvalidInput);
+    }
     try {
         read_instances_from_file<Value>("raw_regulations");
         CHECK(false);
